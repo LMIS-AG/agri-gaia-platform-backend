@@ -1,0 +1,14 @@
+# See https://aka.ms/yaml
+
+pool:
+  name: Java
+  demands: maven
+
+steps:
+  - task: Maven@3
+    displayName: 'Maven pom.xml'
+    inputs:
+      goals: 'clean verify'
+      testResultsFiles: '**/TEST-*.xml'
+      checkStyleRunAnalysis: false
+      pmdRunAnalysis: false

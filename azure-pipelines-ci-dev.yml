@@ -1,0 +1,36 @@
+# See https://aka.ms/yaml
+
+trigger:
+  - develop
+
+pool:
+  name: Java
+  demands: maven
+
+variables:
+  JAVA_HOME: /opt/system/java/jdk-11.0.1
+
+steps:
+  - task: Maven@3
+    displayName: 'Maven pom.xml'
+    inputs:
+      goals: 'clean deploy'
+      testResultsFiles: '**/TEST-*.xml'
+      checkStyleRunAnalysis: false
+      pmdRunAnalysis: false
+
+  - task: CopyFiles@2
+    displayName: 'Copy Files to: $(Build.ArtifactStagingDirectory)'
+    inputs:
+      SourceFolder: 'platform-application/target'
+      Contents: |
+        *.jar
+        dockerfile
+      TargetFolder: '$(Build.ArtifactStagingDirectory)'
+      CleanTargetFolder: true
+      OverWrite: true
+
+  - task: PublishBuildArtifacts@1
+    displayName: 'Publish Artifact: platform-backend'
+    inputs:
+      ArtifactName: 'platform-backend'

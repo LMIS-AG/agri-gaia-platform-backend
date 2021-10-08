@@ -1,0 +1,17 @@
+spring:
+  datasource:
+    url: # jdbc:mariadb://127.0.0.1:3306/agrigaia_platform_db
+    driver-class-name: # org.mariadb.jdbc.Driver
+    username: # agrigaia
+    password: # agrigaia
+  jpa:
+    hibernate:
+      ddl-auto: # update
+    show-sql: # true
+
+logging:
+  level:
+    de.agrigaia.platform: TRACE
+
+agrigaia-platform:
+  allowed-origins: #
