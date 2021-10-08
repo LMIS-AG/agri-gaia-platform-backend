@@ -5,10 +5,7 @@ trigger:
 
 pool:
   name: Java
-  demands: maven
-
-variables:
-  JAVA_HOME: /opt/system/java/jdk-11.0.1
+  demands: Maven
 
 steps:
   - task: Maven@3
