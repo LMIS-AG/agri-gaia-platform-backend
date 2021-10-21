@@ -21,7 +21,9 @@ open class WebSecurityConfig @Autowired constructor(private val applicationPrope
             .cors()
             .and()
 
-            .authorizeRequests().anyRequest().permitAll()
+            .authorizeRequests()
+            .antMatchers("/actuator/**").permitAll()
+            .anyRequest().permitAll()
             .and()
 
             .sessionManagement()
