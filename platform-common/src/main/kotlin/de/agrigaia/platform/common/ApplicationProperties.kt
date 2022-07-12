@@ -10,4 +10,9 @@ open class ApplicationProperties {
      * Comma-separated list of allowed CORS origins.
      */
     lateinit var allowedOrigins: Array<String>
+
+    /**
+     * Keycloak ClientID
+     */
+    lateinit var clientId: String
 }
