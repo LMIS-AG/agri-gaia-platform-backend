@@ -1,6 +1,6 @@
 spring:
   datasource:
-    url: mariadb.agrigaia-ui.svc.cluster.local
+    url: jdbc:mariadb.agrigaia-ui.svc.cluster.local
     driver-class-name: org.mariadb.jdbc.Driver
     username: agrigaia
     password: agrigaia
