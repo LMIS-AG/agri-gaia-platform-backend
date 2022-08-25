@@ -4,10 +4,10 @@ spring:
     driver-class-name: # org.mariadb.jdbc.Driver
     username: # agrigaia
     password: # agrigaia
-  jpa:
-    hibernate:
-      ddl-auto: # update
-    show-sql: # true
+#  jpa:
+#    hibernate:
+#      ddl-auto: # update
+#    show-sql: # true
 #  security:
 #    oauth2:
 #      resourceserver:
