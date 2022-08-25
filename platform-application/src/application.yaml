@@ -18,6 +18,6 @@ spring:
 #  level:
 #    de.agrigaia.platform: TRACE
 #
-#agrigaia-platform:
-#  allowed-origins: #
-#    client-id: # platform
+agrigaia-platform:
+  allowed-origins: *
+    client-id: platform
