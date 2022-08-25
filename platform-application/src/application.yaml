@@ -19,5 +19,5 @@ spring:
 #    de.agrigaia.platform: TRACE
 #
 agrigaia-platform:
-  allowed-origins: *
+  allowed-origins: '*'
     client-id: platform
