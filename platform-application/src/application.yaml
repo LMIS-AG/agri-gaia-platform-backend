@@ -1,6 +1,6 @@
 spring:
   datasource:
-    url: jdbc:mariadb://172.30.84.196:3306
+    url: jdbc:mariadb://172.30.84.196:3306/mariadb
     driver-class-name: org.mariadb.jdbc.Driver
     username: agrigaia
     password: agrigaia
