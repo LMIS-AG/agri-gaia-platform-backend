@@ -20,4 +20,4 @@ spring:
 #
 agrigaia-platform:
   allowed-origins: '*'
-    client-id: platform
+#    client-id: platform
