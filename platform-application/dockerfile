@@ -9,3 +9,5 @@ USER 1000
 EXPOSE 8080
 
 CMD ["java", "-jar", "/opt/application/application.jar"]
+
+#test
