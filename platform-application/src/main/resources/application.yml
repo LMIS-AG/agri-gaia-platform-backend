@@ -21,3 +21,7 @@ logging:
 agrigaia-platform:
   allowed-origins: #
     client-id: # platform
+    
+resources:
+  cpu: 2
+  memory_gb: 2.0
