@@ -1,9 +1,9 @@
 spring:
   datasource:
-    url: mariadb.agrigaia-ui.svc.cluster.local
-    driver-class-name: org.mariadb.jdbc.Driver
-    username: agrigaia
-    password: agrigaia
+    url: # mariadb.agrigaia-ui.svc.cluster.local
+    driver-class-name: # org.mariadb.jdbc.Driver
+    username: # agrigaia
+    password: # agrigaia
   jpa:
     hibernate:
       ddl-auto: # update
