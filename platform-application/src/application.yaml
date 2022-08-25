@@ -13,11 +13,11 @@ spring:
       resourceserver:
         jwt:
           issuer-uri: https://account.platform.agri-gaia.com/auth/realms/agri-gaia
-#
-#logging:
-#  level:
-#    de.agrigaia.platform: TRACE
-#
+
+logging:
+  level:
+    de.agrigaia.platform: TRACE
+
 agrigaia-platform:
   allowed-origins: '*'
-#    client-id: platform
+  client-id: platform
