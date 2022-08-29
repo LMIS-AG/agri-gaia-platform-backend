@@ -21,15 +21,17 @@ import org.springframework.web.bind.annotation.RestController
 @RequestMapping("/examples")
 class ExampleController @Autowired constructor(
     private val exampleService: ExampleService,
-    private val mapper: ExampleMapper,
+    //private val mapper: ExampleMapper,
 ) : BaseController() {
 
     @GetMapping
     fun getExamples(): ResponseEntity<List<ExampleDto>> {
-        val exampleDtos = this.exampleService.getExamples().toDtos(this.mapper)
-        return ResponseEntity.ok(exampleDtos)
+        //val exampleDtos = this.exampleService.getExamples().toDtos(this.mapper)
+        //return ResponseEntity.ok(exampleDtos)
+        return ResponseEntity.ok(listOf(ExampleDto(123, "exampleOne", "exampleTwo")))
     }
 
+    /*
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     fun createExample(@RequestBody exampleDto: ExampleDto) {
@@ -57,6 +59,7 @@ class ExampleController @Autowired constructor(
         val exampleDtos = this.exampleService.getStaticExamples().toDtos(this.mapper)
         return ResponseEntity.ok(exampleDtos)
     }
+    */
 
     @GetMapping("true")
     fun getTrue() = true
