@@ -1,0 +1,5 @@
+FROM mariadb:10.6
+ENV MYSQL_ROOT_PASSWORD=root
+ENV MYSQL_DATABASE=agrigaia_platform_db
+ENV MYSQL_USER=agrigaia
+ENV MYSQL_PASSWORD=agrigaia

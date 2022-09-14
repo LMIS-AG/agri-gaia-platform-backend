@@ -1,0 +1,31 @@
+spring:
+  datasource:
+    url: jdbc:mariadb://mariadb.agrigaia-ui.svc.cluster.local/sampledb
+    driver-class-name: org.mariadb.jdbc.Driver
+    username: agrigaia
+    password: agrigaia
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: https://account.platform.agri-gaia.com/auth/realms/agri-gaia
+#          jwk-set-uri: https://account.platform.agri-gaia.com/auth/realms/agri-gaia/protocol/openid-connect/certs
+
+logging:
+  level:
+    de: DEBUG
+    com: DEBUG
+    org: DEBUG
+    de.agrigaia.platform: DEBUG
+
+agrigaia-platform:
+    allowed-origins: '*'
+    client-id: platform-ui
+
+server:
+  servlet:
+    context-path: /api
