@@ -69,13 +69,15 @@ private val log = getLogger()
 
         this.log.debug("Trying to extract authorities")
 
-        val groups: List<String> = jwt.getClaim("groups")
+        /*val groups: List<String> = jwt.getClaim("groups")
         val authorities = groups
             .map { role: String -> "GROUP_" + role.removeRange(0,1).replace("/", "_").uppercase(Locale.getDefault()) }
             .map { role: String? -> SimpleGrantedAuthority(role) }
-            .toList()
+            .toList()*/
+        this.log.debug("DONE extracting authorities; authorities = hardcoded null")
+        val authorities = null // TODO adjust when keycloak roles and groups are configured
 
-        this.log.debug("DONE extracting authorities")
+        //this.log.debug("DONE extracting authorities")
 
         return JwtAuthenticationToken(jwt, authorities)
     }
