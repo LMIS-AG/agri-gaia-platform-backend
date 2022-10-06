@@ -28,14 +28,14 @@ class CoopSpaceService @Autowired constructor(private val exampleRepository: Exa
         }
 
         var x = webClient.post()
-            .uri("https://kr-eventsource-argo-events.platform.agri-gaia.com/example")
+            .uri("https://argo.platform.agri-gaia.com/")
             .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
-            .accept(MediaType.TEXT_PLAIN) // no effect!?
+            .accept(MediaType.TEXT_HTML)
             .body(Mono.just(body)) //.bodyMono.just(coopSpace), CoopSpace::class.java)
             .retrieve()
             .onStatus(HttpStatus::is4xxClientError) { test4xx() }
             .onStatus(HttpStatus::is5xxServerError) { test5xx() }
-            .bodyToMono(String.javaClass) // still not accepted
+            .bodyToMono(String.javaClass) // Content type 'text/html;charset=utf-8' not supported for bodyType=kotlin.jvm.internal.StringCompanionObject
             .block()
 
         logger.info(x.toString());
