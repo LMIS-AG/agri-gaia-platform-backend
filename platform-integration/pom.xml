@@ -11,5 +11,11 @@
   </parent>
 
   <artifactId>platform-integration</artifactId>
+
+  <dependencies>
+    <dependency>
+      <groupId>org.keycloak</groupId><artifactId>keycloak-admin-client</artifactId>
+    </dependency>
+  </dependencies>
 </project>
 
