@@ -6,6 +6,7 @@ import de.agrigaia.platform.business.services.coopspace.CoopSpaceService
 import de.agrigaia.platform.integration.keycloak.KeycloakService
 import de.agrigaia.platform.model.coopspace.Member
 import de.agrigaia.platform.model.coopspace.CoopSpace
+import de.agrigaia.platform.model.coopspace.CoopSpaceRole
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
@@ -33,8 +34,11 @@ class CoopSpaceController @Autowired constructor(
     @GetMapping("/members")
     fun getMembers(): ResponseEntity<List<MemberDto>> {
         // Arbeitsstand / Versuch Keycloak anzusprechen
-        this.keycloakService.getUserResource("0e68593d-6604-4e7a-aa53-15b1af988c2d"); //
-        return ResponseEntity.ok(listOf(MemberDto(1,"Marvin", "LMIS")))
+        //this.keycloakService.getUserResource("0e68593d-6604-4e7a-aa53-15b1af988c2d"); //
+        return ResponseEntity.ok(listOf(
+            MemberDto(1,"Marvin", "LMIS", "abcd@test.de", CoopSpaceRole.VIEWER),
+            MemberDto(1,"Nivram", "LMIS", "efgh@test.de", CoopSpaceRole.EDITOR)
+        ))
     }
 
     @PostMapping
