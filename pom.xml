@@ -31,7 +31,7 @@
 
     <spring-boot.version>2.7.1</spring-boot.version>
     <mapstruct.version>1.5.2.Final</mapstruct.version>
-    <keycloak.version>18.0.2</keycloak.version>
+    <keycloak.version>19.0.3</keycloak.version>
   </properties>
 
   <dependencyManagement>

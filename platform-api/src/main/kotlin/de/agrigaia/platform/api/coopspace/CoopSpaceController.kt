@@ -34,7 +34,8 @@ class CoopSpaceController @Autowired constructor(
     @GetMapping("/members")
     fun getMembers(): ResponseEntity<List<MemberDto>> {
         // Arbeitsstand / Versuch Keycloak anzusprechen
-        //this.keycloakService.getUserResource("0e68593d-6604-4e7a-aa53-15b1af988c2d"); //
+        // this.keycloakService.getUserResource("0e68593d-6604-4e7a-aa53-15b1af988c2d"); TODO Move into service method in business layer
+
         return ResponseEntity.ok(listOf(
             MemberDto(1,"Marvin", "LMIS", "abcd@test.de", CoopSpaceRole.VIEWER),
             MemberDto(1,"Nivram", "LMIS", "efgh@test.de", CoopSpaceRole.EDITOR)

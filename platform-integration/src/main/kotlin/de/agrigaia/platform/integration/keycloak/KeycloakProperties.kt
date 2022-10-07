@@ -1,9 +1,7 @@
 package de.agrigaia.platform.integration.keycloak
 
-
 import org.springframework.boot.context.properties.ConfigurationProperties
 import org.springframework.context.annotation.Configuration
-
 
 @Configuration
 @ConfigurationProperties(prefix = "agrigaia-platform.keycloak")
