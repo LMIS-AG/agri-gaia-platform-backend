@@ -1,0 +1,11 @@
+# curl -d '{"message":"this is my first webhook"}' -H "Content-Type: application/json" -X POST https://kr-eventsource-ag-test-argo-events.platform.agri-gaia.com/example
+POST https://argo.platform.agri-gaia.com
+Content-Type: application/json
+
+{
+  "message": "this is my first webhook"
+}
+
+###
+
+

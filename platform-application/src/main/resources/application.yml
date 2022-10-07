@@ -26,6 +26,14 @@ agrigaia-platform:
   allowed-origins: '*'
   client-id: ag-test-platform-ui
 
+  keycloak:
+    serverUrl: # URL Authentication server
+    realm: #
+    clientId: # realm-management
+    clientSecret: #
+    userName: # Technical user name
+    password: # Technical user password
+
 server:
   servlet:
     context-path: /api

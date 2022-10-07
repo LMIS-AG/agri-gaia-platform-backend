@@ -3,6 +3,7 @@ package de.agrigaia.platform.api.coopspace
 import de.agrigaia.platform.api.BaseController
 import de.agrigaia.platform.api.toEntity
 import de.agrigaia.platform.business.services.coopspace.CoopSpaceService
+import de.agrigaia.platform.integration.keycloak.KeycloakService
 import de.agrigaia.platform.model.coopspace.Member
 import de.agrigaia.platform.model.coopspace.CoopSpace
 import org.springframework.beans.factory.annotation.Autowired
@@ -19,6 +20,7 @@ import org.springframework.web.bind.annotation.RestController
 @RequestMapping("/coopspaces")
 class CoopSpaceController @Autowired constructor(
     private val coopSpaceService: CoopSpaceService,
+    private val keycloakService: KeycloakService,
     private val mapper: CoopSpaceMapper,
 ) : BaseController() {
 
@@ -26,6 +28,13 @@ class CoopSpaceController @Autowired constructor(
     fun getCoopSpaces(): ResponseEntity<List<CoopSpaceDto>> {
         return ResponseEntity.ok(listOf(CoopSpaceDto(123, "exampleOne", "exampleTwo", mutableListOf())))
         // TODO implement real business logic
+    }
+
+    @GetMapping("/members")
+    fun getMembers(): ResponseEntity<List<MemberDto>> {
+        // Arbeitsstand / Versuch Keycloak anzusprechen
+        this.keycloakService.getUserResource("0e68593d-6604-4e7a-aa53-15b1af988c2d"); //
+        return ResponseEntity.ok(listOf(MemberDto(1,"Marvin", "LMIS")))
     }
 
     @PostMapping
