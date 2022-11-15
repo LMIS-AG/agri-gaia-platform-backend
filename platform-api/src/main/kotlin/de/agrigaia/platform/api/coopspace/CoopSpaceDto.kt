@@ -6,5 +6,6 @@ data class CoopSpaceDto(
     var id: Long?,
     var name: String?,
     var company: String?,
+    var mandant: String?,
     var members: List<MemberDto>?
 ) : BaseDto()

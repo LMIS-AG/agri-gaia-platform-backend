@@ -10,27 +10,37 @@ import org.springframework.http.MediaType
 import org.springframework.stereotype.Service
 import org.springframework.web.reactive.function.client.*
 import reactor.core.publisher.Mono
-import java.util.stream.Collectors
 
 @Service
-class CoopSpaceService @Autowired constructor(private val exampleRepository: ExampleRepository) {
+class CoopSpaceService @Autowired constructor() {
     private val webClient: WebClient = WebClient.create();
     private val logger = LoggerFactory.getLogger(this::class.java)
 
-
-    // TODO remove later
+    // TODO rename
     fun log(coopSpace: CoopSpace) {
 
-        var body = object{
-            val oidc_name = coopSpace.name
-            val oidc_organisation = coopSpace.company
-            val members = coopSpace.members.stream().map { it -> it.name }.collect(Collectors.toList())
+        // TODO surround with try catch block -> because text/plain throws exception. Response is always the same.
+
+        var body = object {
+            val mandant = object {
+                val username = coopSpace.mandant
+            }
+            val coop_room = object {
+                val name = coopSpace.name
+                val organisation = object {
+                    val name = coopSpace.company
+                }
+                val users_in_role = listOf<UsersInRole>(UsersInRole("Admin", listOf()), UsersInRole("User", listOf()), UsersInRole("Guest", listOf()))
+            }
+            val delete_bucket = true;
+            val upload_policies = true;
+            val no_bucket = false;
         }
 
         var x = webClient.post()
-            .uri("https://argo.platform.agri-gaia.com/")
+            .uri("https://create-cooperation-room-eventsource.platform.agri-gaia.com") // TODO move into config
             .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
-            .accept(MediaType.TEXT_HTML)
+            .accept(MediaType.TEXT_PLAIN)
             .body(Mono.just(body)) //.bodyMono.just(coopSpace), CoopSpace::class.java)
             .retrieve()
             .onStatus(HttpStatus::is4xxClientError) { test4xx() }

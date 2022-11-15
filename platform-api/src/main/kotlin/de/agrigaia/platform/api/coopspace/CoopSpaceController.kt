@@ -27,7 +27,7 @@ class CoopSpaceController @Autowired constructor(
 
     @GetMapping
     fun getCoopSpaces(): ResponseEntity<List<CoopSpaceDto>> {
-        return ResponseEntity.ok(listOf(CoopSpaceDto(123, "exampleOne", "exampleTwo", mutableListOf())))
+        return ResponseEntity.ok(listOf(CoopSpaceDto(123, "exampleOne", "exampleTwo", "mgrave", mutableListOf())))
         // TODO implement real business logic
     }
 
