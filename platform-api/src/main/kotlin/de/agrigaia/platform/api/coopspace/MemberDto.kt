@@ -8,5 +8,6 @@ data class MemberDto (
     var name: String?,
     var company: String?,
     var email: String?,
-    var role: CoopSpaceRole?
+    var role: CoopSpaceRole?,
+    var username: String?
 ) : BaseDto()

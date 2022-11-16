@@ -11,6 +11,7 @@ class Member (
     var company: String? = null,
     var email: String? = null,
     @Enumerated(EnumType.STRING)
-    var role: CoopSpaceRole? = null
+    var role: CoopSpaceRole? = null,
+    var username: String? = null
 ) : BaseEntity()
 

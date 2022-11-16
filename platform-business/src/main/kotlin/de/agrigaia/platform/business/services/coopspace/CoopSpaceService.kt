@@ -1,7 +1,6 @@
 package de.agrigaia.platform.business.services.coopspace
 
 import de.agrigaia.platform.model.coopspace.CoopSpace
-import de.agrigaia.platform.persistence.repository.ExampleRepository
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.HttpHeaders
@@ -16,10 +15,7 @@ class CoopSpaceService @Autowired constructor() {
     private val webClient: WebClient = WebClient.create();
     private val logger = LoggerFactory.getLogger(this::class.java)
 
-    // TODO rename
-    fun log(coopSpace: CoopSpace) {
-
-        // TODO surround with try catch block -> because text/plain throws exception. Response is always the same.
+    fun createCoopSpace(coopSpace: CoopSpace) {
 
         var body = object {
             val mandant = object {
@@ -37,32 +33,26 @@ class CoopSpaceService @Autowired constructor() {
             val no_bucket = false;
         }
 
-        var x = webClient.post()
-            .uri("https://create-cooperation-room-eventsource.platform.agri-gaia.com") // TODO move into config
-            .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
-            .accept(MediaType.TEXT_PLAIN)
-            .body(Mono.just(body)) //.bodyMono.just(coopSpace), CoopSpace::class.java)
-            .retrieve()
-            .onStatus(HttpStatus::is4xxClientError) { test4xx() }
-            .onStatus(HttpStatus::is5xxServerError) { test5xx() }
-            .bodyToMono(String.javaClass) // Content type 'text/html;charset=utf-8' not supported for bodyType=kotlin.jvm.internal.StringCompanionObject
-            .block()
-
-        logger.info(x.toString());
+        try {
+            var response = webClient.post()
+                .uri("https://create-cooperation-room-eventsource.platform.agri-gaia.com") // TODO move into config
+                .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+                .accept(MediaType.TEXT_PLAIN)
+                .body(Mono.just(body))
+                .retrieve()
+                .onStatus(HttpStatus::is4xxClientError) { clientResponse -> handleClientError(clientResponse) }
+                .onStatus(HttpStatus::is5xxServerError) { clientResponse -> handleClientError(clientResponse) }
+                .bodyToMono(String.javaClass) // Content type 'text/html;charset=utf-8' not supported for bodyType=kotlin.jvm.internal.StringCompanionObject
+                .block()
+            logger.info(response.toString());
+        } catch (e: Exception){
+            logger.error(e.stackTrace.toString())
+        }
     }
 
-    fun test4xx(): Mono<out Throwable> {
-        logger.info("Error 4xx")
-        return TODO("Provide the return value - 4xx")
-    }
-
-    fun test5xx(): Mono<out Throwable> {
-        logger.info("Error 5xx")
-        return TODO("Provide the return value - 5xx")
-    }
-
-    fun test(coopSpace: CoopSpace) {
-        logger.info("Test CoopSpaceService") // TODO remove
+    fun handleClientError(clientResponse: ClientResponse): Mono<out Throwable> {
+        logger.info("Error " + clientResponse.rawStatusCode())
+        return clientResponse.createException()
     }
 
 }

@@ -37,8 +37,8 @@ class CoopSpaceController @Autowired constructor(
         // this.keycloakService.getUserResource("0e68593d-6604-4e7a-aa53-15b1af988c2d"); TODO Move into service method in business layer
 
         return ResponseEntity.ok(listOf(
-            MemberDto(1,"Marvin", "LMIS", "abcd@test.de", CoopSpaceRole.VIEWER),
-            MemberDto(1,"Nivram", "LMIS", "efgh@test.de", CoopSpaceRole.EDITOR)
+            MemberDto(1,"Alopez", "LMIS", "abcd@test.de",  CoopSpaceRole.VIEWER, "alopez"),
+            MemberDto(1,"Jende", "LMIS", "efgh@test.de", CoopSpaceRole.EDITOR, "jende")
         ))
     }
 
@@ -52,7 +52,7 @@ class CoopSpaceController @Autowired constructor(
         var member2: Member = Member("alopez", "bosch")
         coopSpace.members = mutableListOf(member1, member2)
 
-        this.coopSpaceService.log(coopSpace)
+        this.coopSpaceService.createCoopSpace(coopSpace)
         // TODO implement real business logic
     }
 
