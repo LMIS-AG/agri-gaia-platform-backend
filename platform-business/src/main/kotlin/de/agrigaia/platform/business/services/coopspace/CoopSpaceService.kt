@@ -18,9 +18,10 @@ class CoopSpaceService @Autowired constructor() {
     private val logger = LoggerFactory.getLogger(this::class.java)
 
     fun createCoopSpace(coopSpace: CoopSpace) {
-        val owners:List<User> = coopSpace.members.filter { member: Member -> member.role == CoopSpaceRole.OWNER && member.username != null }.map { member: Member -> User(member.username!!) }
-        val editors:List<User> = coopSpace.members.filter { member: Member -> member.role == CoopSpaceRole.EDITOR && member.username != null }.map { member: Member -> User(member.username!!) }
-        val viewers:List<User> = coopSpace.members.filter { member: Member -> member.role == CoopSpaceRole.VIEWER && member.username != null }.map { member: Member -> User(member.username!!) }
+        val owners:List<String> = coopSpace.members.filter { member: Member -> member.role == CoopSpaceRole.OWNER && member.username != null }.map { member: Member -> member.username!! }
+        val editors:List<String> = coopSpace.members.filter { member: Member -> member.role == CoopSpaceRole.EDITOR && member.username != null }.map { member: Member -> member.username!! }
+        val viewers:List<String> = coopSpace.members.filter { member: Member -> member.role == CoopSpaceRole.VIEWER && member.username != null }.map { member: Member -> member.username!! }
+
 
         var body = object {
             val mandant = object {
