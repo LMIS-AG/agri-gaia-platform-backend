@@ -38,7 +38,8 @@ class CoopSpaceController @Autowired constructor(
 
         return ResponseEntity.ok(listOf(
             MemberDto(1,"Alopez", "LMIS", "abcd@test.de",  CoopSpaceRole.VIEWER, "alopez"),
-            MemberDto(1,"Jende", "LMIS", "efgh@test.de", CoopSpaceRole.EDITOR, "jende")
+            MemberDto(2,"Jende", "LMIS", "efgh@test.de", CoopSpaceRole.EDITOR, "jende"),
+            MemberDto(3,"Ebelli", "LMIS", "ijkl@test.de", CoopSpaceRole.EDITOR, "ebelli")
         ))
     }
 
@@ -46,14 +47,7 @@ class CoopSpaceController @Autowired constructor(
     @ResponseStatus(HttpStatus.CREATED)
     fun createCoopSpace(@RequestBody coopSpaceDto: CoopSpaceDto) {
         val coopSpace: CoopSpace = coopSpaceDto.toEntity(this.mapper)
-
-        // TODO remove when not needed anymore
-        var member1: Member = Member("jende", "lmis")
-        var member2: Member = Member("alopez", "bosch")
-        coopSpace.members = mutableListOf(member1, member2)
-
         this.coopSpaceService.createCoopSpace(coopSpace)
-        // TODO implement real business logic
     }
 
 }

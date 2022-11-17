@@ -1,6 +1,8 @@
 package de.agrigaia.platform.business.services.coopspace
 
 import de.agrigaia.platform.model.coopspace.CoopSpace
+import de.agrigaia.platform.model.coopspace.CoopSpaceRole
+import de.agrigaia.platform.model.coopspace.Member
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.HttpHeaders
@@ -16,6 +18,9 @@ class CoopSpaceService @Autowired constructor() {
     private val logger = LoggerFactory.getLogger(this::class.java)
 
     fun createCoopSpace(coopSpace: CoopSpace) {
+        val owners:List<User> = coopSpace.members.filter { member: Member -> member.role == CoopSpaceRole.OWNER && member.username != null }.map { member: Member -> User(member.username!!) }
+        val editors:List<User> = coopSpace.members.filter { member: Member -> member.role == CoopSpaceRole.EDITOR && member.username != null }.map { member: Member -> User(member.username!!) }
+        val viewers:List<User> = coopSpace.members.filter { member: Member -> member.role == CoopSpaceRole.VIEWER && member.username != null }.map { member: Member -> User(member.username!!) }
 
         var body = object {
             val mandant = object {
@@ -26,7 +31,7 @@ class CoopSpaceService @Autowired constructor() {
                 val organisation = object {
                     val name = coopSpace.company
                 }
-                val users_in_role = listOf<UsersInRole>(UsersInRole("Admin", listOf()), UsersInRole("User", listOf()), UsersInRole("Guest", listOf()))
+                val users_in_role = listOf<UsersInRole>(UsersInRole("Admin", owners), UsersInRole("User", editors), UsersInRole("Guest", viewers))
             }
             val delete_bucket = true;
             val upload_policies = true;
