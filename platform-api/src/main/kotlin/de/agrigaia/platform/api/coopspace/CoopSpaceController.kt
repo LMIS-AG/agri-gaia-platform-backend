@@ -2,7 +2,7 @@ package de.agrigaia.platform.api.coopspace
 
 import de.agrigaia.platform.api.BaseController
 import de.agrigaia.platform.api.toEntity
-import de.agrigaia.platform.business.services.coopspace.CoopSpaceService
+import de.agrigaia.platform.integration.coopspace.CoopSpaceService
 import de.agrigaia.platform.integration.keycloak.KeycloakService
 import de.agrigaia.platform.integration.minio.MinioService
 import de.agrigaia.platform.model.coopspace.CoopSpace
@@ -11,6 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.GetMapping
+import org.springframework.web.bind.annotation.PutMapping
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
@@ -54,6 +55,13 @@ class CoopSpaceController @Autowired constructor(
     fun createCoopSpace(@RequestBody coopSpaceDto: CoopSpaceDto) {
         val coopSpace: CoopSpace = coopSpaceDto.toEntity(this.mapper)
         this.coopSpaceService.createCoopSpace(coopSpace)
+    }
+
+    @PutMapping
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    fun deleteCoopSpace(@RequestBody coopSpaceDto: CoopSpaceDto) {
+        val coopSpace: CoopSpace = coopSpaceDto.toEntity(this.mapper)
+        this.coopSpaceService.deleteCoopSpace(coopSpace)
     }
 
 }

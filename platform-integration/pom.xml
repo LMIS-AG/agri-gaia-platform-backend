@@ -25,6 +25,14 @@
       <artifactId>minio</artifactId>
       <version>8.4.5</version>
     </dependency>
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-webflux</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>de.agrigaia.platform</groupId>
+      <artifactId>platform-model</artifactId>
+    </dependency>
   </dependencies>
 </project>
 
