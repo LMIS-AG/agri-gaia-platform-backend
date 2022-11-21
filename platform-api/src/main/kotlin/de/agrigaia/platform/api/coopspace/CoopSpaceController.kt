@@ -4,7 +4,7 @@ import de.agrigaia.platform.api.BaseController
 import de.agrigaia.platform.api.toEntity
 import de.agrigaia.platform.business.services.coopspace.CoopSpaceService
 import de.agrigaia.platform.integration.keycloak.KeycloakService
-import de.agrigaia.platform.model.coopspace.Member
+import de.agrigaia.platform.integration.minio.MinioService
 import de.agrigaia.platform.model.coopspace.CoopSpace
 import de.agrigaia.platform.model.coopspace.CoopSpaceRole
 import org.springframework.beans.factory.annotation.Autowired
@@ -23,10 +23,16 @@ class CoopSpaceController @Autowired constructor(
     private val coopSpaceService: CoopSpaceService,
     private val keycloakService: KeycloakService,
     private val mapper: CoopSpaceMapper,
+    private val minioService: MinioService,
 ) : BaseController() {
 
     @GetMapping
     fun getCoopSpaces(): ResponseEntity<List<CoopSpaceDto>> {
+        // TODO use minio service
+        /*println(" getCoopSpaces ");
+        val buckets = minioService.listBuckets()
+        print(buckets)*/
+
         return ResponseEntity.ok(listOf(CoopSpaceDto(123, "exampleOne", "exampleTwo", "mgrave", mutableListOf())))
         // TODO implement real business logic
     }
