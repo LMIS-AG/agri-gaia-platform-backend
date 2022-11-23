@@ -29,10 +29,9 @@ class CoopSpaceController @Autowired constructor(
 
     @GetMapping
     fun getCoopSpaces(): ResponseEntity<List<CoopSpaceDto>> {
-        // TODO use minio service
-        /*println(" getCoopSpaces ");
+        println(" getCoopSpaces ");
         val buckets = minioService.listBuckets()
-        print(buckets)*/
+        print(buckets)
 
         return ResponseEntity.ok(listOf(CoopSpaceDto(123, "exampleOne", "exampleTwo", "mgrave", mutableListOf())))
         // TODO implement real business logic
