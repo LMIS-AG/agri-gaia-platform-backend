@@ -14,7 +14,7 @@ class MinioService constructor() {
         //.credentials("api-test-user", "test1234")
         .build()
 
-    fun listBuckets(): MutableList<Bucket>? {
+    fun listBuckets(jwt: String): MutableList<Bucket>? {
         println(" listBuckets ");
         var buckets = minioClient.listBuckets();
         return buckets;

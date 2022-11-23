@@ -10,6 +10,8 @@ import de.agrigaia.platform.model.coopspace.CoopSpaceRole
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
+import org.springframework.security.core.context.SecurityContextHolder
+import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PutMapping
 import org.springframework.web.bind.annotation.PostMapping
@@ -29,8 +31,11 @@ class CoopSpaceController @Autowired constructor(
 
     @GetMapping
     fun getCoopSpaces(): ResponseEntity<List<CoopSpaceDto>> {
+        val jwtAuthenticationToken = SecurityContextHolder.getContext().authentication as JwtAuthenticationToken
+        val jwt = jwtAuthenticationToken.token.tokenValue
+        val buckets = minioService.listBuckets(jwt)
+
         println(" getCoopSpaces ");
-        val buckets = minioService.listBuckets()
         print(buckets)
 
         return ResponseEntity.ok(listOf(CoopSpaceDto(123, "exampleOne", "exampleTwo", "mgrave", mutableListOf())))
