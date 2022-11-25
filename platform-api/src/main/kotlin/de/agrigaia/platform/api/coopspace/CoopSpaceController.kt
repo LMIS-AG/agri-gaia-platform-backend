@@ -10,6 +10,8 @@ import de.agrigaia.platform.model.coopspace.CoopSpaceRole
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
+import org.springframework.security.core.context.SecurityContextHolder
+import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PutMapping
 import org.springframework.web.bind.annotation.PostMapping
@@ -29,10 +31,12 @@ class CoopSpaceController @Autowired constructor(
 
     @GetMapping
     fun getCoopSpaces(): ResponseEntity<List<CoopSpaceDto>> {
-        // TODO use minio service
-        /*println(" getCoopSpaces ");
-        val buckets = minioService.listBuckets()
-        print(buckets)*/
+        val jwtAuthenticationToken = SecurityContextHolder.getContext().authentication as JwtAuthenticationToken
+        val jwt = jwtAuthenticationToken.token.tokenValue
+        val buckets = minioService.listBuckets(jwt)
+
+        println(" getCoopSpaces ");
+        print(buckets)
 
         return ResponseEntity.ok(listOf(CoopSpaceDto(123, "exampleOne", "exampleTwo", "mgrave", mutableListOf())))
         // TODO implement real business logic
@@ -44,9 +48,11 @@ class CoopSpaceController @Autowired constructor(
         // this.keycloakService.getUserResource("0e68593d-6604-4e7a-aa53-15b1af988c2d"); TODO Move into service method in business layer
 
         return ResponseEntity.ok(listOf(
-            MemberDto(1,"Alopez", "LMIS", "abcd@test.de",  CoopSpaceRole.VIEWER, "alopez"),
-            MemberDto(2,"Jende", "LMIS", "efgh@test.de", CoopSpaceRole.EDITOR, "jende"),
-            MemberDto(3,"Ebelli", "LMIS", "ijkl@test.de", CoopSpaceRole.EDITOR, "ebelli")
+            MemberDto(1,"Alejandro Lopez", "Bosch", "alejandro.lopez2@de.bosch.com",  CoopSpaceRole.VIEWER, "alopez"),
+            MemberDto(2,"Julian Ende", "LMIS", "julian.ende@lmis.de", CoopSpaceRole.EDITOR, "jende"),
+            MemberDto(3,"Enis Belli", "LMIS", "enis.belli@lmis.de", CoopSpaceRole.EDITOR, "ebelli"),
+            MemberDto(4,"Katharina Beckwermert", "LMIS", "katharina.beckwermert@lmis.de", CoopSpaceRole.EDITOR, "kbeckwermert"),
+            MemberDto(5,"Henning Wuebben", "LMIS", "henning.wuebben@lmis.de", CoopSpaceRole.EDITOR, "hwuebben")
         ))
     }
 
