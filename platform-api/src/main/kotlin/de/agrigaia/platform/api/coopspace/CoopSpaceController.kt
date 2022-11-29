@@ -2,8 +2,7 @@ package de.agrigaia.platform.api.coopspace
 
 import de.agrigaia.platform.api.BaseController
 import de.agrigaia.platform.api.toEntity
-import de.agrigaia.platform.integration.coopspace.CoopSpaceService
-import de.agrigaia.platform.integration.keycloak.KeycloakService
+import de.agrigaia.platform.business.coopspace.CoopSpaceService
 import de.agrigaia.platform.integration.minio.MinioService
 import de.agrigaia.platform.model.coopspace.CoopSpace
 import de.agrigaia.platform.model.coopspace.CoopSpaceRole
@@ -12,34 +11,25 @@ import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken
-import org.springframework.web.bind.annotation.GetMapping
-import org.springframework.web.bind.annotation.PutMapping
-import org.springframework.web.bind.annotation.PostMapping
-import org.springframework.web.bind.annotation.RequestBody
-import org.springframework.web.bind.annotation.RequestMapping
-import org.springframework.web.bind.annotation.ResponseStatus
-import org.springframework.web.bind.annotation.RestController
+import org.springframework.web.bind.annotation.*
 
 @RestController
 @RequestMapping("/coopspaces")
 class CoopSpaceController @Autowired constructor(
     private val coopSpaceService: CoopSpaceService,
-    private val keycloakService: KeycloakService,
-    private val mapper: CoopSpaceMapper,
-    private val minioService: MinioService,
+    private val coopSpaceMapper: CoopSpaceMapper,
+    private val minioService: MinioService
 ) : BaseController() {
 
     @GetMapping
     fun getCoopSpaces(): ResponseEntity<List<CoopSpaceDto>> {
-        val jwtAuthenticationToken = SecurityContextHolder.getContext().authentication as JwtAuthenticationToken
-        val jwt = jwtAuthenticationToken.token.tokenValue
-        val buckets = minioService.listBuckets(jwt)
+        val mapToDtos = this.coopSpaceMapper.mapToDtos(this.coopSpaceService.findAllBySomething())
+        return ResponseEntity.ok(mapToDtos)
+    }
 
-        println(" getCoopSpaces ");
-        print(buckets)
-
-        return ResponseEntity.ok(listOf(CoopSpaceDto(123, "exampleOne", "exampleTwo", "mgrave", mutableListOf())))
-        // TODO implement real business logic
+    @GetMapping("{id}")
+    fun getCoopSpace(@PathVariable id: Long): ResponseEntity<CoopSpaceDto> {
+        return ResponseEntity.ok(this.coopSpaceMapper.map(this.coopSpaceService.findCoopSpace(id)))
     }
 
     @GetMapping("/members")
@@ -59,16 +49,34 @@ class CoopSpaceController @Autowired constructor(
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     fun createCoopSpace(@RequestBody coopSpaceDto: CoopSpaceDto) {
-        val coopSpace: CoopSpace = coopSpaceDto.toEntity(this.mapper)
+        val coopSpace: CoopSpace = coopSpaceDto.toEntity(this.coopSpaceMapper)
         this.coopSpaceService.createCoopSpace(coopSpace)
     }
 
-    @PutMapping
+    @PostMapping("delete")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     fun deleteCoopSpace(@RequestBody coopSpaceDto: CoopSpaceDto) {
-        val coopSpace: CoopSpace = coopSpaceDto.toEntity(this.mapper)
-        this.coopSpaceService.deleteCoopSpace(coopSpace)
+        val jwtAuthenticationToken = SecurityContextHolder.getContext().authentication as JwtAuthenticationToken
+        val jwt = jwtAuthenticationToken.token.tokenValue
+        val coopSpace: CoopSpace = coopSpaceDto.toEntity(this.coopSpaceMapper)
+        this.coopSpaceService.deleteCoopSpace(jwt, coopSpace)
     }
 
+    @GetMapping("{id}/assets")
+    fun getAssetsForCoopSpace(@PathVariable id: Long): ResponseEntity<Any> {
+        val coopSpace = this.coopSpaceService.findCoopSpace(id)
+        val company = coopSpace.company?.lowercase()
+        val bucketName = coopSpace.name!!
+        val jwtAuthenticationToken = SecurityContextHolder.getContext().authentication as JwtAuthenticationToken
+        val jwt = jwtAuthenticationToken.token.tokenValue
+        return try {
+            val assetsForBucket = this.minioService.getAssetsForBucket(jwt, company!!, bucketName)
+                .map { it.get() }
+                .map { AssetDto(it.etag(), it.objectName(), it.lastModified().toString(), it.lastModified().toString(), "${it.size()}MB", "label", bucketName) }
+            ResponseEntity.ok(assetsForBucket)
+        } catch (e: Exception) {
+            ResponseEntity.noContent().build()
+        }
+    }
 }
 

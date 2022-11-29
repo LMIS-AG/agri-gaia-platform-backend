@@ -63,7 +63,7 @@ open class AgriGaiaPlatformExceptionHandler : ResponseEntityExceptionHandler(), 
 
     private fun getStatus(errorType: ErrorType): HttpStatus {
         return when (errorType) {
-            ErrorType.EXAMPLE, ErrorType.RESOURCE_ID_MISMATCH -> HttpStatus.BAD_REQUEST
+            ErrorType.EXAMPLE, ErrorType.RESOURCE_ID_MISMATCH, ErrorType.BUCKET_NOT_EMPTY -> HttpStatus.BAD_REQUEST
             ErrorType.NOT_FOUND -> HttpStatus.NOT_FOUND
             ErrorType.UNKNOWN -> HttpStatus.INTERNAL_SERVER_ERROR
         }
