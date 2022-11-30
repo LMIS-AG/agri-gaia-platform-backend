@@ -9,4 +9,5 @@ enum class ErrorType {
 
     // Specific errors
     EXAMPLE,
+    BUCKET_NOT_EMPTY,
 }
