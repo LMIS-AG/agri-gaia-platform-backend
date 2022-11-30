@@ -20,7 +20,8 @@ import org.springframework.web.reactive.function.client.body
 import reactor.core.publisher.Mono
 
 @Service
-class CoopSpaceService @Autowired constructor(
+class CoopSpaceService(
+    private val coopSpacesProperties: CoopSpacesProperties,
     private val coopSpaceRepository: CoopSpaceRepository,
     private val minioService: MinioService
 ) {
@@ -52,26 +53,23 @@ class CoopSpaceService @Autowired constructor(
             val no_bucket = false;
         }
 
-        try {
-            val response = webClient.post()
-                .uri("https://create-cooperation-room-eventsource.platform.agri-gaia.com") // TODO move into config
-                .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
-                .accept(MediaType.TEXT_PLAIN)
-                .body(Mono.just(body))
-                .retrieve()
-                .onStatus(HttpStatus::is4xxClientError) { clientResponse -> handleClientError(clientResponse) }
-                .onStatus(HttpStatus::is5xxServerError) { clientResponse -> handleClientError(clientResponse) }
-                .bodyToMono(String::class.java)
-                .block()
-            logger.info(response.toString());
-            this.coopSpaceRepository.save(coopSpace)
-        } catch (e: Exception) {
-            logger.error(e.stackTrace.toString())
-        }
+        val response = webClient.post()
+            .uri(this.coopSpacesProperties.createCoopSpaceUrl!!)
+            .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+            .accept(MediaType.TEXT_PLAIN)
+            .body(Mono.just(body))
+            .retrieve()
+            .onStatus(HttpStatus::is4xxClientError, ::handleClientError)
+            .onStatus(HttpStatus::is5xxServerError, ::handleClientError)
+            .bodyToMono(String::class.java)
+            .block()
+        // FIXME Properly handle errors
+        this.coopSpaceRepository.save(coopSpace)
+
     }
 
-    fun handleClientError(clientResponse: ClientResponse): Mono<out Throwable> {
-        logger.info("Error " + clientResponse.rawStatusCode())
+    private fun handleClientError(clientResponse: ClientResponse): Mono<out Throwable> {
+        this.logger.error("Got error during REST call: ${clientResponse.rawStatusCode()}")
         return clientResponse.createException()
     }
 
@@ -96,38 +94,27 @@ class CoopSpaceService @Autowired constructor(
             val no_bucket = false;
         }
 
-        try {
-            val response = webClient.post()
-                .uri("https://delete-cooperation-room-eventsource.platform.agri-gaia.com") // TODO move into config
-                .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
-                .accept(MediaType.TEXT_PLAIN)
-                .body(Mono.just(body))
-                .retrieve()
-                .onStatus(HttpStatus::is4xxClientError) { clientResponse -> handleClientError(clientResponse) }
-                .onStatus(HttpStatus::is5xxServerError) { clientResponse -> handleClientError(clientResponse) }
-                .bodyToMono(String::class.java)
-                .block()
-            logger.info(response.toString());
-            this.coopSpaceRepository.delete(coopSpace)
-        } catch (e: Exception) {
-            logger.error(e.stackTrace.toString())
-        }
+        val response = webClient.post()
+            .uri(this.coopSpacesProperties.deleteCoopSpaceUrl!!) // TODO move into config
+            .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+            .accept(MediaType.TEXT_PLAIN)
+            .body(Mono.just(body))
+            .retrieve()
+            .onStatus(HttpStatus::is4xxClientError, ::handleClientError)
+            .onStatus(HttpStatus::is5xxServerError, ::handleClientError)
+            .bodyToMono(String::class.java)
+            .block()
+        // FIXME Properly handle errors
+        this.coopSpaceRepository.delete(coopSpace)
     }
 
-    fun findAllBySomething(): List<CoopSpace> {
+    fun findAll(): List<CoopSpace> {
         return this.coopSpaceRepository.findAll()
     }
 
     fun findCoopSpace(id: Long): CoopSpace {
         return coopSpaceRepository
             .findById(id)
-            .orElseThrow { BusinessException("Error Message", ErrorType.NOT_FOUND) }
-    }
-
-    fun getMembers(id: Long): List<Member> {
-        return this.coopSpaceRepository
-            .findById(id)
-            .orElseThrow { BusinessException("Not Found", ErrorType.NOT_FOUND) }
-            .members
+            .orElseThrow { BusinessException("CoopSpace with id $id does not exist.", ErrorType.NOT_FOUND) }
     }
 }

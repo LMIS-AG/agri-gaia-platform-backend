@@ -13,6 +13,8 @@ import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken
 import org.springframework.web.bind.annotation.*
 
+
+// TODO Parse JWT and look for roles to see if the user has the rights for the coopspaces and buckets (local db and minio)
 @RestController
 @RequestMapping("/coopspaces")
 class CoopSpaceController @Autowired constructor(
@@ -23,7 +25,7 @@ class CoopSpaceController @Autowired constructor(
 
     @GetMapping
     fun getCoopSpaces(): ResponseEntity<List<CoopSpaceDto>> {
-        val mapToDtos = this.coopSpaceMapper.mapToDtos(this.coopSpaceService.findAllBySomething())
+        val mapToDtos = this.coopSpaceMapper.mapToDtos(this.coopSpaceService.findAll())
         return ResponseEntity.ok(mapToDtos)
     }
 
@@ -35,7 +37,7 @@ class CoopSpaceController @Autowired constructor(
     @GetMapping("/members")
     fun getMembers(): ResponseEntity<List<MemberDto>> {
         // Arbeitsstand / Versuch Keycloak anzusprechen
-        // this.keycloakService.getUserResource("0e68593d-6604-4e7a-aa53-15b1af988c2d"); TODO Move into service method in business layer
+        // this.keycloakService.getUserResource("0e68593d-6604-4e7a-aa53-15b1af988c2d")
 
         return ResponseEntity.ok(listOf(
             MemberDto(1,"Alejandro Lopez", "Bosch", "alejandro.lopez2@de.bosch.com",  CoopSpaceRole.VIEWER, "alopez"),

@@ -11,7 +11,7 @@ import org.springframework.stereotype.Service
 
 
 @Service
-class MinioService {
+class MinioService (private val minioProperties: MinioProperties){
     fun listBuckets(jwt: String): MutableList<Bucket> {
         val minioClient = getMinioClient(jwt)
 
@@ -33,10 +33,10 @@ class MinioService {
         .credentialsProvider(
             WebIdentityProvider(
                 { Jwt(jwt, 8600) },
-                "https://minio-test-api.platform.agri-gaia.com",
+                this.minioProperties.url!!,
                 null, null, null, null, null
             )
         )
-        .endpoint("https://minio-test-api.platform.agri-gaia.com")
+        .endpoint(this.minioProperties.url)
         .build()
 }
