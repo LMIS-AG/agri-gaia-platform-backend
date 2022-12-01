@@ -3,7 +3,6 @@ package de.agrigaia.platform.api.assets
 
 import de.agrigaia.platform.api.BaseController
 import de.agrigaia.platform.integration.assets.AssetsService
-import de.agrigaia.platform.integration.coopspace.CoopSpaceService
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.HttpStatus
 import org.springframework.web.bind.annotation.PostMapping

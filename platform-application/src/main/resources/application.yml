@@ -33,6 +33,11 @@ agrigaia-platform:
     clientSecret: #
     userName: # Technical user name
     password: # Technical user password
+  minio:
+    url: #
+  coopSpaces:
+    createCoopSpaceUrl: #
+    deleteCoopSpaceUrl: #
 
 server:
   servlet:

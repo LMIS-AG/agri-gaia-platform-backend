@@ -8,4 +8,4 @@ data class CoopSpaceDto(
     var company: String?,
     var mandant: String?,
     var members: List<MemberDto>?
-) : BaseDto()
+): BaseDto()
