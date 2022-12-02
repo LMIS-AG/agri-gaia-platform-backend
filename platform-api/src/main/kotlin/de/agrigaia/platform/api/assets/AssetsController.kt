@@ -8,12 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.HttpStatus
 import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken
-import org.springframework.web.bind.annotation.PathVariable
-import org.springframework.web.bind.annotation.PostMapping
-import org.springframework.web.bind.annotation.RequestBody
-import org.springframework.web.bind.annotation.RequestMapping
-import org.springframework.web.bind.annotation.ResponseStatus
-import org.springframework.web.bind.annotation.RestController
+import org.springframework.web.bind.annotation.*
 
 @RestController
 @RequestMapping("/assets")
@@ -24,7 +19,7 @@ class AssetsController @Autowired constructor(
 
     @PostMapping("{bucket}/{name}")
     @ResponseStatus(HttpStatus.CREATED)
-    fun createCoopSpace(@PathVariable bucket: String, @PathVariable name: String) {
+    fun publishAssets(@PathVariable bucket: String, @PathVariable name: String) {
         val jwtAuthenticationToken = SecurityContextHolder.getContext().authentication as JwtAuthenticationToken
         val jwt = jwtAuthenticationToken.token.tokenValue
 
@@ -32,7 +27,22 @@ class AssetsController @Autowired constructor(
         val policyJson = this.minioService.getFileContent(jwt, bucket, "config/${name}/policy.json")
         val catalogJson = this.minioService.getFileContent(jwt, bucket, "config/${name}/catalog.json")
 
-        this.assetsService.publishAssets(assetJson, policyJson, catalogJson)
+        this.assetsService.publishAsset(assetJson, policyJson, catalogJson)
+    }
+
+    //TODO maybe refactor duplicated code
+
+    @DeleteMapping("{bucket}/{name}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    fun deleteAssets(@PathVariable bucket: String, @PathVariable name: String) {
+        val jwtAuthenticationToken = SecurityContextHolder.getContext().authentication as JwtAuthenticationToken
+        val jwt = jwtAuthenticationToken.token.tokenValue
+
+        val assetJson = this.minioService.getFileContent(jwt, bucket, "config/${name}/asset.json")
+        val policyJson = this.minioService.getFileContent(jwt, bucket, "config/${name}/policy.json")
+        val catalogJson = this.minioService.getFileContent(jwt, bucket, "config/${name}/catalog.json")
+
+        this.assetsService.deleteAsset(assetJson, policyJson, catalogJson)
     }
 
 }
