@@ -44,7 +44,8 @@ class CoopSpaceController @Autowired constructor(
             MemberDto(2,"Julian Ende", "LMIS", "julian.ende@lmis.de", CoopSpaceRole.EDITOR, "jende"),
             MemberDto(3,"Enis Belli", "LMIS", "enis.belli@lmis.de", CoopSpaceRole.EDITOR, "ebelli"),
             MemberDto(4,"Katharina Beckwermert", "LMIS", "katharina.beckwermert@lmis.de", CoopSpaceRole.EDITOR, "kbeckwermert"),
-            MemberDto(5,"Henning Wuebben", "LMIS", "henning.wuebben@lmis.de", CoopSpaceRole.EDITOR, "hwuebben")
+            MemberDto(5,"Henning Wuebben", "LMIS", "henning.wuebben@lmis.de", CoopSpaceRole.EDITOR, "hwuebben"),
+            MemberDto(6,"Christoph Manß", "DFKI", "christoph.manss@dfki.de", CoopSpaceRole.EDITOR, "cmanss")
         ))
     }
 
