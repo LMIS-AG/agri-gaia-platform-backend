@@ -9,71 +9,52 @@ import org.springframework.web.reactive.function.client.body
 import reactor.core.publisher.Mono
 
 @Service
-class AssetsService @Autowired constructor(){
+class AssetsService {
     private val webClient: WebClient = WebClient.create();
     private val logger = LoggerFactory.getLogger(this::class.java)
+    private val connectorEndpoint = "https://connector-consumer-9192.platform.agri-gaia.com/api/v1/data"
 
-    fun publishAssets() {
-        logger.info("Test AssetsService") // TODO remove
-        this.sendAssetRequest();
-        this.sendPolicyRequest();
-        this.sendCatalogRequest();
+    fun publishAssets(assetJson: String, policyJson: String, catalogJson: String) {
+        this.sendAssetRequest(fixString(assetJson));
+        this.sendPolicyRequest(fixString(policyJson));
+        this.sendCatalogRequest(fixString(catalogJson));
     }
 
-    private fun sendCatalogRequest() {
-        val assetBody = object {
-            val asset = object {
-                val test = "test"
-            }
-            val dataAddress = object {
-            }
-        }
+    // TODO Please fix this, it's so bad
+    private fun fixString(assetJson: String) =
+        "{" + assetJson.replace("\" ", " ").replace("\",", ",").replace("\"\n", "\n").replace("\"\"", "\"")
 
+
+    private fun sendAssetRequest(assetJson: String) {
         val response = this.webClient.post()
-            .uri("https://connector-provider-8182.platform.agri-gaia.com/api/v1/data/assets")
-            .contentType(MediaType.APPLICATION_JSON)
-            .header("X-Api-Key", "password")
-            .body(Mono.just(assetBody))
-            .retrieve()
-            .bodyToMono(String.javaClass)
-            .block();
+                .uri("$connectorEndpoint/assets")
+                .contentType(MediaType.APPLICATION_JSON)
+                .header("X-Api-Key", "password")
+                .body(Mono.just(assetJson))
+                .retrieve()
+                .bodyToMono(String::class.java)
+                .block();
     }
 
-    private fun sendPolicyRequest() {
-        val policyBody = object {
-            val asset = object {
-                val test = "test"
-            }
-            val dataAddress = object {
-            }
-        }
-
+    private fun sendPolicyRequest(policyJson: String) {
         val response = this.webClient.post()
-            .uri("https://connector-provider-8182.platform.agri-gaia.com/api/v1/data/policydefinitions")
-            .contentType(MediaType.APPLICATION_JSON)
-            .header("X-Api-Key", "password")
-            .body(Mono.just(policyBody))
-            .retrieve()
-            .bodyToMono(String.javaClass)
-            .block();
+                .uri("$connectorEndpoint/policydefinitions")
+                .contentType(MediaType.APPLICATION_JSON)
+                .header("X-Api-Key", "password")
+                .body(Mono.just(policyJson))
+                .retrieve()
+                .bodyToMono(String::class.java)
+                .block();
     }
 
-    private fun sendAssetRequest() {
-        val catalogBody = object {
-            val asset = object {
-                val test = "test"
-            }
-            val dataAddress = object {
-            }
-        }
-
+    private fun sendCatalogRequest(catalogJson: String) {
         val response = this.webClient.post()
-            .uri("https://connector-provider-8182.platform.agri-gaia.com/api/v1/data/contractdefinitions")
-            .contentType(MediaType.APPLICATION_JSON)
-            .header("X-Api-Key", "password")
-            .body(Mono.just(catalogBody))
-            .retrieve()
-            .bodyToMono(String.javaClass)
-            .block();
+                .uri("$connectorEndpoint/contractdefinitions")
+                .contentType(MediaType.APPLICATION_JSON)
+                .header("X-Api-Key", "password")
+                .body(Mono.just(catalogJson))
+                .retrieve()
+                .bodyToMono(String::class.java)
+                .block();
     }
 }
