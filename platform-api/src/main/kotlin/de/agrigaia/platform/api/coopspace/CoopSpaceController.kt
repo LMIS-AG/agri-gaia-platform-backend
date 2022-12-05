@@ -4,10 +4,8 @@ import de.agrigaia.platform.api.BaseController
 import de.agrigaia.platform.api.toEntity
 import de.agrigaia.platform.business.coopspace.CoopSpaceService
 import de.agrigaia.platform.business.keycloak.KeycloakService
-import de.agrigaia.platform.integration.keycloak.KeycloakConnectorService
 import de.agrigaia.platform.integration.minio.MinioService
 import de.agrigaia.platform.model.coopspace.CoopSpace
-import de.agrigaia.platform.model.coopspace.CoopSpaceRole
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
@@ -23,7 +21,8 @@ class CoopSpaceController @Autowired constructor(
     private val coopSpaceService: CoopSpaceService,
     private val coopSpaceMapper: CoopSpaceMapper,
     private val minioService: MinioService,
-    private val keycloakService: KeycloakService
+    private val keycloakService: KeycloakService,
+    private val memberMapper: MemberMapper
 ) : BaseController() {
 
     @GetMapping
@@ -38,22 +37,26 @@ class CoopSpaceController @Autowired constructor(
     }
 
     @GetMapping("/members")
-    fun getMembers(): ResponseEntity<List<MemberDto>> {
+    fun getKeycloakUsers(): ResponseEntity<List<MemberDto>> {
         // Arbeitsstand / Versuch Keycloak anzusprechen
         // this.keycloakService.getUserResource("0e68593d-6604-4e7a-aa53-15b1af988c2d")
 
         val jwtAuthenticationToken = SecurityContextHolder.getContext().authentication as JwtAuthenticationToken
-        this.keycloakService.getKeycloakUsers()
-        return ResponseEntity.ok(.filter {
-            it.username != jwtAuthenticationToken.token.claims["email"]
-        })
+        val members = this.keycloakService.getKeycloakUsers().filter {
+            it.username != jwtAuthenticationToken.token.claims["preferred_username"]
+        }
+
+        val memberDtos = this.memberMapper.mapToDtos(members)
+        return ResponseEntity.ok(memberDtos)
     }
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     fun createCoopSpace(@RequestBody coopSpaceDto: CoopSpaceDto) {
+        val jwtAuthenticationToken = SecurityContextHolder.getContext().authentication as JwtAuthenticationToken
+        val creator = this.keycloakService.findKeycloakUserByMail(jwtAuthenticationToken.token.claims["email"] as String)
         val coopSpace: CoopSpace = coopSpaceDto.toEntity(this.coopSpaceMapper)
-        this.coopSpaceService.createCoopSpace(coopSpace)
+        this.coopSpaceService.createCoopSpace(coopSpace, creator)
     }
 
     @PostMapping("delete")
@@ -75,7 +78,17 @@ class CoopSpaceController @Autowired constructor(
         return try {
             val assetsForBucket = this.minioService.getAssetsForCoopscpae(jwt, company!!, bucketName)
                 .map { it.get() }
-                .map { AssetDto(it.etag(), it.objectName(), it.lastModified().toString(), it.lastModified().toString(), "${it.size()}MB", "label", bucketName) }
+                .map {
+                    AssetDto(
+                        it.etag(),
+                        it.objectName(),
+                        it.lastModified().toString(),
+                        it.lastModified().toString(),
+                        "${it.size()}MB",
+                        "label",
+                        bucketName
+                    )
+                }
             ResponseEntity.ok(assetsForBucket)
         } catch (e: Exception) {
             ResponseEntity.noContent().build()
