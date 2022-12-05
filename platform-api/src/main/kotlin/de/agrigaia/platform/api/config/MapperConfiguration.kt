@@ -1,6 +1,7 @@
 package de.agrigaia.platform.api.config
 
 import de.agrigaia.platform.api.coopspace.CoopSpaceMapper
+import de.agrigaia.platform.api.coopspace.MemberMapper
 import de.agrigaia.platform.api.example.ExampleMapper
 import org.mapstruct.InjectionStrategy
 import org.mapstruct.MapperConfig
@@ -16,5 +17,5 @@ import org.mapstruct.ReportingPolicy
     componentModel = "spring",
     injectionStrategy = InjectionStrategy.CONSTRUCTOR,
     unmappedTargetPolicy = ReportingPolicy.ERROR,
-    uses = [ExampleMapper::class, CoopSpaceMapper::class])
-interface MapperConfiguration 
+    uses = [ExampleMapper::class, CoopSpaceMapper::class, MemberMapper::class])
+interface MapperConfiguration

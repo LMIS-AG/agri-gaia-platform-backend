@@ -7,7 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
 @Service
-class KeycloakService @Autowired constructor(private val keycloakProperties: KeycloakProperties) {
+class KeycloakConnectorService @Autowired constructor(private val keycloakProperties: KeycloakProperties) {
 
     private var keycloak: Keycloak =  Keycloak.getInstance(
         keycloakProperties.serverUrl,

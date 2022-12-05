@@ -34,10 +34,10 @@ agrigaia-platform:
     userName: # Technical user name
     password: # Technical user password
   minio:
-    url: #
+    url: https://minio-test-api.platform.agri-gaia.com #
   coopSpaces:
-    createCoopSpaceUrl: #
-    deleteCoopSpaceUrl: #
+    createCoopSpaceUrl: https://create-cooperation-room-eventsource.platform.agri-gaia.com #
+    deleteCoopSpaceUrl: https://delete-cooperation-room-eventsource.platform.agri-gaia.com #
 
 server:
   servlet:

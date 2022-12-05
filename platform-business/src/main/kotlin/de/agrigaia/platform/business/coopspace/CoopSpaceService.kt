@@ -9,7 +9,6 @@ import de.agrigaia.platform.model.coopspace.CoopSpaceRole
 import de.agrigaia.platform.model.coopspace.Member
 import de.agrigaia.platform.persistence.repository.CoopSpaceRepository
 import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
@@ -28,13 +27,18 @@ class CoopSpaceService(
     private val webClient: WebClient = WebClient.create();
     private val logger = LoggerFactory.getLogger(this::class.java)
 
-    fun createCoopSpace(coopSpace: CoopSpace) {
-        val owners: List<String> =
-            coopSpace.members.filter { member: Member -> member.role == CoopSpaceRole.OWNER && member.username != null }.map { member: Member -> member.username!! }
+    fun createCoopSpace(coopSpace: CoopSpace, creator: Member) {
+        val owners: MutableList<String> =
+            coopSpace.members.filter { member: Member -> member.role == CoopSpaceRole.OWNER && member.username != null }
+                .map { member: Member -> member.username!! }
+                .toMutableList()
+        owners.add(creator.username!!)
         val editors: List<String> =
-            coopSpace.members.filter { member: Member -> member.role == CoopSpaceRole.EDITOR && member.username != null }.map { member: Member -> member.username!! }
+            coopSpace.members.filter { member: Member -> member.role == CoopSpaceRole.EDITOR && member.username != null }
+                .map { member: Member -> member.username!! }
         val viewers: List<String> =
-            coopSpace.members.filter { member: Member -> member.role == CoopSpaceRole.VIEWER && member.username != null }.map { member: Member -> member.username!! }
+            coopSpace.members.filter { member: Member -> member.role == CoopSpaceRole.VIEWER && member.username != null }
+                .map { member: Member -> member.username!! }
 
 
         val body = object {
@@ -46,7 +50,11 @@ class CoopSpaceService(
                 val organisation = object {
                     val name = coopSpace.company
                 }
-                val users_in_role = listOf<UsersInRole>(UsersInRole("Admin", owners), UsersInRole("User", editors), UsersInRole("Guest", viewers))
+                val users_in_role = listOf<UsersInRole>(
+                    UsersInRole("Admin", owners),
+                    UsersInRole("User", editors),
+                    UsersInRole("Guest", viewers)
+                )
             }
             val delete_bucket = true;
             val upload_policies = true;
@@ -64,6 +72,11 @@ class CoopSpaceService(
             .bodyToMono(String::class.java)
             .block()
         // FIXME Properly handle errors
+
+        val members = coopSpace.members.toMutableList()
+        members.add(creator)
+        coopSpace.members = members
+
         this.coopSpaceRepository.save(coopSpace)
 
     }
@@ -74,7 +87,8 @@ class CoopSpaceService(
     }
 
     fun deleteCoopSpace(jwt: String, coopSpace: CoopSpace) {
-        val assetsForBucket = this.minioService.getAssetsForBucket(jwt, coopSpace.company!!.lowercase(), coopSpace.name!!)
+        val assetsForBucket =
+            this.minioService.getAssetsForCoopscpae(jwt, coopSpace.company!!.lowercase(), coopSpace.name!!)
         if (assetsForBucket.isNotEmpty()) {
             throw BusinessException("Cannot delete bucket with assets inside", ErrorType.BUCKET_NOT_EMPTY)
         }
