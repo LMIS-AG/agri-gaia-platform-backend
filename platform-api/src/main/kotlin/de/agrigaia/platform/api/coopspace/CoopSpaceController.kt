@@ -3,6 +3,8 @@ package de.agrigaia.platform.api.coopspace
 import de.agrigaia.platform.api.BaseController
 import de.agrigaia.platform.api.toEntity
 import de.agrigaia.platform.business.coopspace.CoopSpaceService
+import de.agrigaia.platform.business.keycloak.KeycloakService
+import de.agrigaia.platform.integration.keycloak.KeycloakConnectorService
 import de.agrigaia.platform.integration.minio.MinioService
 import de.agrigaia.platform.model.coopspace.CoopSpace
 import de.agrigaia.platform.model.coopspace.CoopSpaceRole
@@ -20,7 +22,8 @@ import org.springframework.web.bind.annotation.*
 class CoopSpaceController @Autowired constructor(
     private val coopSpaceService: CoopSpaceService,
     private val coopSpaceMapper: CoopSpaceMapper,
-    private val minioService: MinioService
+    private val minioService: MinioService,
+    private val keycloakService: KeycloakService
 ) : BaseController() {
 
     @GetMapping
@@ -39,14 +42,11 @@ class CoopSpaceController @Autowired constructor(
         // Arbeitsstand / Versuch Keycloak anzusprechen
         // this.keycloakService.getUserResource("0e68593d-6604-4e7a-aa53-15b1af988c2d")
 
-        return ResponseEntity.ok(listOf(
-            MemberDto(1,"Alejandro Lopez", "Bosch", "alejandro.lopez2@de.bosch.com",  CoopSpaceRole.VIEWER, "alopez"),
-            MemberDto(2,"Julian Ende", "LMIS", "julian.ende@lmis.de", CoopSpaceRole.EDITOR, "jende"),
-            MemberDto(3,"Enis Belli", "LMIS", "enis.belli@lmis.de", CoopSpaceRole.EDITOR, "ebelli"),
-            MemberDto(4,"Katharina Beckwermert", "LMIS", "katharina.beckwermert@lmis.de", CoopSpaceRole.EDITOR, "kbeckwermert"),
-            MemberDto(5,"Henning Wuebben", "LMIS", "henning.wuebben@lmis.de", CoopSpaceRole.EDITOR, "hwuebben"),
-            MemberDto(6,"Christoph Manß", "DFKI", "christoph.manss@dfki.de", CoopSpaceRole.EDITOR, "cmanss")
-        ))
+        val jwtAuthenticationToken = SecurityContextHolder.getContext().authentication as JwtAuthenticationToken
+        this.keycloakService.getKeycloakUsers()
+        return ResponseEntity.ok(.filter {
+            it.username != jwtAuthenticationToken.token.claims["email"]
+        })
     }
 
     @PostMapping
