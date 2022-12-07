@@ -61,8 +61,13 @@ class MinioService(private val minioProperties: MinioProperties) {
         val selectObjectContent = minioClient.selectObjectContent(getObjectArgs)
         val text = selectObjectContent.bufferedReader().use(BufferedReader::readText)
 
-        return text;
+        return fixString(text);
     }
+
+    // TODO Please fix this, it's so bad
+    private fun fixString(assetJson: String) =
+        "{" + assetJson.replace("\" ", " ").replace("\",", ",").replace("\"\n", "\n").replace("\"\"", "\"")
+
 
     private fun getMinioClient(jwt: String): MinioClient = MinioClient.builder()
             .credentialsProvider(
