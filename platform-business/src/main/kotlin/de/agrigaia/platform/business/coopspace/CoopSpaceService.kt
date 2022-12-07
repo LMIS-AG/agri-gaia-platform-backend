@@ -28,6 +28,7 @@ class CoopSpaceService(
     private val logger = LoggerFactory.getLogger(this::class.java)
 
     fun createCoopSpace(coopSpace: CoopSpace, creator: Member) {
+        creator.role = CoopSpaceRole.OWNER;
         val owners: MutableList<String> =
             coopSpace.members.filter { member: Member -> member.role == CoopSpaceRole.ADMIN && member.username != null }
                 .map { member: Member -> member.username!! }
