@@ -13,18 +13,18 @@ class KeycloakService(
 ) {
     fun getKeycloakUsers(): List<Member> {
         return listOf(
-            Member("Alejandro Lopez", "Bosch", "alejandro.lopez2@de.bosch.com", CoopSpaceRole.VIEWER, "alopez"),
-            Member("Julian Ende", "LMIS", "julian.ende@lmis.de", CoopSpaceRole.EDITOR, "jende"),
-            Member("Enis Belli", "LMIS", "enis.belli@lmis.de", CoopSpaceRole.EDITOR, "ebelli"),
+            Member("Alejandro Lopez", "Bosch", "alejandro.lopez2@de.bosch.com", CoopSpaceRole.GUEST, "alopez"),
+            Member("Julian Ende", "LMIS", "julian.ende@lmis.de", CoopSpaceRole.USER, "jende"),
+            Member("Enis Belli", "LMIS", "enis.belli@lmis.de", CoopSpaceRole.USER, "ebelli"),
             Member(
                 "Katharina Beckwermert",
                 "LMIS",
                 "katharina.beckwermert@lmis.de",
-                CoopSpaceRole.EDITOR,
+                CoopSpaceRole.USER,
                 "kbeckwermert"
             ),
-            Member("Henning Wuebben", "LMIS", "henning.wuebben@lmis.de", CoopSpaceRole.EDITOR, "hwuebben"),
-            Member("Christoph Manß", "DFKI", "christoph.manss@dfki.de", CoopSpaceRole.EDITOR, "cmanss")
+            Member("Henning Wuebben", "LMIS", "henning.wuebben@lmis.de", CoopSpaceRole.USER, "hwuebben"),
+            Member("Christoph Manß", "DFKI", "christoph.manss@dfki.de", CoopSpaceRole.USER, "cmanss")
         )
     }
 

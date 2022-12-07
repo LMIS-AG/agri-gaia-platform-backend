@@ -24,20 +24,20 @@ class CoopSpaceService(
     private val coopSpaceRepository: CoopSpaceRepository,
     private val minioService: MinioService
 ) {
-    private val webClient: WebClient = WebClient.create();
+    private val webClient: WebClient = WebClient.create()
     private val logger = LoggerFactory.getLogger(this::class.java)
 
     fun createCoopSpace(coopSpace: CoopSpace, creator: Member) {
         val owners: MutableList<String> =
-            coopSpace.members.filter { member: Member -> member.role == CoopSpaceRole.OWNER && member.username != null }
+            coopSpace.members.filter { member: Member -> member.role == CoopSpaceRole.ADMIN && member.username != null }
                 .map { member: Member -> member.username!! }
                 .toMutableList()
         owners.add(creator.username!!)
         val editors: List<String> =
-            coopSpace.members.filter { member: Member -> member.role == CoopSpaceRole.EDITOR && member.username != null }
+            coopSpace.members.filter { member: Member -> member.role == CoopSpaceRole.USER && member.username != null }
                 .map { member: Member -> member.username!! }
         val viewers: List<String> =
-            coopSpace.members.filter { member: Member -> member.role == CoopSpaceRole.VIEWER && member.username != null }
+            coopSpace.members.filter { member: Member -> member.role == CoopSpaceRole.GUEST && member.username != null }
                 .map { member: Member -> member.username!! }
 
 
@@ -56,9 +56,9 @@ class CoopSpaceService(
                     UsersInRole("Guest", viewers)
                 )
             }
-            val delete_bucket = true;
-            val upload_policies = true;
-            val no_bucket = false;
+            val delete_bucket = true
+            val upload_policies = true
+            val no_bucket = false
         }
 
         val response = webClient.post()
@@ -103,9 +103,9 @@ class CoopSpaceService(
                     val name = coopSpace.company
                 }
             }
-            val delete_bucket = true;
-            val upload_policies = true;
-            val no_bucket = false;
+            val delete_bucket = true
+            val upload_policies = true
+            val no_bucket = false
         }
 
         val response = webClient.post()
