@@ -12,6 +12,10 @@ class KeycloakService(
     private val keycloakConnectorService: KeycloakConnectorService
 ) {
     fun getKeycloakUsers(): List<Member> {
+        val users = this.keycloakConnectorService.getUsers()
+        for (user in users){
+            println(user.firstName)
+        }
         return listOf(
             Member("Alejandro Lopez", "Bosch", "alejandro.lopez2@de.bosch.com", CoopSpaceRole.GUEST, "alopez"),
             Member("Julian Ende", "LMIS", "julian.ende@lmis.de", CoopSpaceRole.USER, "jende"),

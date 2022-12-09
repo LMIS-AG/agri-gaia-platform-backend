@@ -3,6 +3,8 @@ package de.agrigaia.platform.integration.keycloak
 import org.keycloak.admin.client.Keycloak
 import org.keycloak.admin.client.resource.RealmResource
 import org.keycloak.admin.client.resource.UserResource
+import org.keycloak.admin.client.resource.UsersResource
+import org.keycloak.representations.idm.UserRepresentation
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
@@ -34,5 +36,7 @@ class KeycloakConnectorService @Autowired constructor(private val keycloakProper
         return agrigaiaRealm.users()[id]
     }
 
-
+    fun getUsers(): MutableList<UserRepresentation> {
+        return agrigaiaRealm.users().list()
+    }
 }
