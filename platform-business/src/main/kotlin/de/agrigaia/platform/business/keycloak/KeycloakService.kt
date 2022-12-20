@@ -13,7 +13,11 @@ class KeycloakService(
 ) {
     fun getKeycloakUsers(): List<Member> {
         val users = this.keycloakConnectorService.getUsers()
-        return users.map { Member(it.firstName + it.lastName, "company", it.email, CoopSpaceRole.USER, it.username) }
+        val groups = this.keycloakConnectorService.getGroups()
+        return users.map { user ->
+            val group = groups.entries.find { it.value.contains(user.username) }?.key
+            Member(user.firstName + " " + user.lastName, group, user.email, CoopSpaceRole.USER, user.username)
+        }
     }
 
     fun findKeycloakUserByMail(mail: String): Member {

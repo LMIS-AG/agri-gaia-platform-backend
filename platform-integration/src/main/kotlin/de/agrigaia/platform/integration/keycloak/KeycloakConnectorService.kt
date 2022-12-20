@@ -39,4 +39,25 @@ class KeycloakConnectorService @Autowired constructor(private val keycloakProper
     fun getUsers(): MutableList<UserRepresentation> {
         return agrigaiaRealm.users().list()
     }
+
+    fun getGroups(): Map<String, List<String>> {
+        val groupsMap = mutableMapOf<String, List<String>>()
+
+        val groupModels = agrigaiaRealm.groups().groups()
+        groupModels.forEach { groupModel ->
+            if (groupModel.name != "AgriGaia") {  // skip the "AgriGaia" group
+                val usersGroupModel = groupModel.subGroups.find { it.name == "Users" }  // find the "Users" subgroup
+                if (usersGroupModel != null) {
+                    val groupMembers = agrigaiaRealm.groups().group(usersGroupModel.id).members()  // retrieve the members of the "Users" subgroup
+                    val userNames = groupMembers.map { member ->
+                        agrigaiaRealm.users().get(member.id).toRepresentation().username
+                    }
+                    groupsMap[groupModel.name] = userNames
+                }
+            }
+        }
+
+        return groupsMap
+    }
+
 }
