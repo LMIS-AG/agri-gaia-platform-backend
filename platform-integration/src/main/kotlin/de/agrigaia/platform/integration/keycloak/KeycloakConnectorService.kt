@@ -24,7 +24,7 @@ class KeycloakConnectorService @Autowired constructor(private val keycloakProper
 
     // TODO remove - only there for test purposes
     fun showRealm() {
-        println("Realm: " + (keycloakProperties.realm ?: "no realm defined"));
+        println("Realm: " + (keycloakProperties.realm ?: "no realm defined"))
     }
 
     fun getUserResource(id: String?): UserResource? {

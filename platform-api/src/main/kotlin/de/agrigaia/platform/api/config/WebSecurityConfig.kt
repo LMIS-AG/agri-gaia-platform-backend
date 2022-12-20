@@ -43,7 +43,7 @@ private val log = getLogger()
             .and()
             .oauth2ResourceServer()
             .jwt()
-            .jwtAuthenticationConverter(this::extractAuthorities);
+            .jwtAuthenticationConverter(this::extractAuthorities)
 
         this.log.debug("End filterChain")
 

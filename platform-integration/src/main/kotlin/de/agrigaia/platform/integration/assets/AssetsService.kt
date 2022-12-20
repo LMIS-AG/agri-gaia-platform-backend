@@ -10,7 +10,7 @@ import reactor.core.publisher.Mono
 
 @Service
 class AssetsService {
-    private val webClient: WebClient = WebClient.create();
+    private val webClient: WebClient = WebClient.create()
     private val logger = LoggerFactory.getLogger(this::class.java)
     private val connectorEndpoint = "https://connector-consumer-9192.platform.agri-gaia.com/api/v1/data"
 
@@ -35,7 +35,7 @@ class AssetsService {
                 .body(Mono.just(assetJson))
                 .retrieve()
                 .bodyToMono(String::class.java)
-                .block();
+                .block()
     }
 
     private fun sendPolicyRequest(policyJson: String) {
@@ -46,7 +46,7 @@ class AssetsService {
                 .body(Mono.just(policyJson))
                 .retrieve()
                 .bodyToMono(String::class.java)
-                .block();
+                .block()
     }
 
     private fun sendCatalogRequest(catalogJson: String) {
@@ -57,7 +57,7 @@ class AssetsService {
                 .body(Mono.just(catalogJson))
                 .retrieve()
                 .bodyToMono(String::class.java)
-                .block();
+                .block()
     }
 
     private fun sendCatalogDeleteRequest(catalogJson: String) {
@@ -67,7 +67,7 @@ class AssetsService {
             .header("X-Api-Key", "password")
             .retrieve()
             .bodyToMono(String::class.java)
-            .block();
+            .block()
     }
 
     private fun sendPolicyDeleteRequest(policyJson: String) {
@@ -77,7 +77,7 @@ class AssetsService {
             .header("X-Api-Key", "password")
             .retrieve()
             .bodyToMono(String::class.java)
-            .block();
+            .block()
     }
 
     private fun sendAssetDeleteRequest(assetJson: String) {
@@ -86,6 +86,6 @@ class AssetsService {
             .header("X-Api-Key", "password")
             .retrieve()
             .bodyToMono(String::class.java)
-            .block();
+            .block()
     }
 }
