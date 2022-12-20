@@ -16,8 +16,7 @@ class MinioService(private val minioProperties: MinioProperties) {
     fun listBuckets(jwt: String): MutableList<Bucket> {
         val minioClient = getMinioClient(jwt)
 
-        val buckets = minioClient.listBuckets()
-        return buckets
+        return minioClient.listBuckets()
     }
 
     fun getAssetsForCoopscpae(jwt: String, company: String, bucketName: String): List<Result<Item>> {
