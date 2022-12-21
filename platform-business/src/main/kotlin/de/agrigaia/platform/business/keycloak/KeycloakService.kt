@@ -25,6 +25,7 @@ class KeycloakService(
     }
 
     fun findKeycloakUserByMail(mail: String): Member {
-        return this.getKeycloakUsers().find { mail == it.email } ?: throw BusinessException("User with $mail does not exist", ErrorType.NOT_FOUND)
+        return this.getKeycloakUsers().find { mail == it.email }
+            ?: throw BusinessException("User with $mail does not exist", ErrorType.NOT_FOUND)
     }
 }
