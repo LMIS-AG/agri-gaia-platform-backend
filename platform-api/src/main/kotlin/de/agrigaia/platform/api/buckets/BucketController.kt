@@ -25,7 +25,7 @@ class BucketController @Autowired constructor(
         val jwt = jwtAuthenticationToken.token.tokenValue
         val buckets = minioService.listBuckets(jwt)
 
-        var bucketDtos: MutableList<BucketDto> = mutableListOf();
+        var bucketDtos: MutableList<BucketDto> = mutableListOf()
         if (buckets != null) {
             bucketDtos = buckets.map { bucket: Bucket -> BucketDto(bucket.name()) } as MutableList<BucketDto>
         }

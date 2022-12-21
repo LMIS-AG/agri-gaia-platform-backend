@@ -2,7 +2,6 @@ package de.agrigaia.platform.api.config
 
 import de.agrigaia.platform.common.ApplicationProperties
 import de.agrigaia.platform.common.HasLogger
-import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
@@ -11,14 +10,11 @@ import org.springframework.http.HttpMethod
 import org.springframework.security.authentication.AbstractAuthenticationToken
 import org.springframework.security.config.annotation.web.builders.HttpSecurity
 import org.springframework.security.config.http.SessionCreationPolicy
-import org.springframework.security.core.authority.SimpleGrantedAuthority
 import org.springframework.security.oauth2.jwt.Jwt
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken
 import org.springframework.security.web.SecurityFilterChain
-import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter
 import org.springframework.web.servlet.config.annotation.CorsRegistry
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer
-import java.util.*
 
 @Configuration
 open class WebSecurityConfig @Autowired constructor(private val applicationProperties: ApplicationProperties) : WebMvcConfigurer, HasLogger {
@@ -43,7 +39,7 @@ private val log = getLogger()
             .and()
             .oauth2ResourceServer()
             .jwt()
-            .jwtAuthenticationConverter(this::extractAuthorities);
+            .jwtAuthenticationConverter(this::extractAuthorities)
 
         this.log.debug("End filterChain")
 

@@ -16,8 +16,7 @@ class MinioService(private val minioProperties: MinioProperties) {
     fun listBuckets(jwt: String): MutableList<Bucket> {
         val minioClient = getMinioClient(jwt)
 
-        val buckets = minioClient.listBuckets()
-        return buckets;
+        return minioClient.listBuckets()
     }
 
     fun getAssetsForCoopscpae(jwt: String, company: String, bucketName: String): List<Result<Item>> {
@@ -43,7 +42,7 @@ class MinioService(private val minioProperties: MinioProperties) {
     }
 
     fun getFileContent(jwt: String, bucketName: String, fileName: String): String {
-        val minioClient = this.getMinioClient(jwt);
+        val minioClient = this.getMinioClient(jwt)
 
         val sqlExpression = "select * from S3Object"
         val iss = InputSerialization(null, false, null, null, FileHeaderInfo.USE, null, null, null)
@@ -61,7 +60,7 @@ class MinioService(private val minioProperties: MinioProperties) {
         val selectObjectContent = minioClient.selectObjectContent(getObjectArgs)
         val text = selectObjectContent.bufferedReader().use(BufferedReader::readText)
 
-        return fixString(text);
+        return fixString(text)
     }
 
     // TODO Please fix this, it's so bad
