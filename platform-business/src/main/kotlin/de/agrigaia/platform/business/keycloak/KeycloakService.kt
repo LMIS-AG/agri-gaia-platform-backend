@@ -14,9 +14,13 @@ class KeycloakService(
     fun getKeycloakUsers(): List<Member> {
         val users = this.keycloakConnectorService.getUsers()
         val groups = this.keycloakConnectorService.getGroups()
-        return users.map { user ->
-            val group = groups.entries.find { it.value.contains(user.username) }?.key
-            Member(user.firstName + " " + user.lastName, group, user.email, CoopSpaceRole.USER, user.username)
+        return users.mapNotNull { user ->
+            val userGroup = groups.entries.find { it.value.contains(user.username) }?.key
+            if (userGroup != null) {
+                Member(user.firstName + " " + user.lastName, userGroup, user.email, CoopSpaceRole.USER, user.username)
+            } else {
+                null
+            }
         }
     }
 

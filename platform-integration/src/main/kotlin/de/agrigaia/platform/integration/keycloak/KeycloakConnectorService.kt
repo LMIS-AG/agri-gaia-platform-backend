@@ -21,20 +21,6 @@ class KeycloakConnectorService @Autowired constructor(private val keycloakProper
 
     private var agrigaiaRealm: RealmResource = keycloak.realm(keycloakProperties.realm)
 
-    // TODO remove - only there for test purposes
-    fun showRealm() {
-        println("Realm: " + (keycloakProperties.realm ?: "no realm defined"))
-    }
-
-    fun getUserResource(id: String?): UserResource? {
-        println(agrigaiaRealm.users())
-        //println(kochRealm.users().count())
-        println(agrigaiaRealm.users()[id])
-        println(agrigaiaRealm.users().get(id).toRepresentation().username)
-        println(agrigaiaRealm.users()[id].toRepresentation().username)
-        return agrigaiaRealm.users()[id]
-    }
-
     fun getUsers(): MutableList<UserRepresentation> {
         return agrigaiaRealm.users().list()
     }
