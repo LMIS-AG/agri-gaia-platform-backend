@@ -17,7 +17,7 @@ class KeycloakService(
         return users.mapNotNull { user ->
             val userGroup = groups.entries.find { it.value.contains(user.username) }?.key
             if (userGroup != null) {
-                Member(user.firstName + " " + user.lastName, userGroup, user.email, CoopSpaceRole.USER, user.username)
+                Member("${user.firstName} ${user.lastName}", userGroup, user.email, CoopSpaceRole.USER, user.username)
             } else {
                 null
             }
