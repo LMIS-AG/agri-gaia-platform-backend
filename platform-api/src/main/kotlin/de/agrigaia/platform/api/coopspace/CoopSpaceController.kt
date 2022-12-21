@@ -27,7 +27,20 @@ class CoopSpaceController @Autowired constructor(
 
     @GetMapping
     fun getCoopSpaces(): ResponseEntity<List<CoopSpaceDto>> {
-        val mapToDtos = this.coopSpaceMapper.mapToDtos(this.coopSpaceService.findAll())
+
+        val jwtAuthenticationToken = SecurityContextHolder.getContext().authentication as JwtAuthenticationToken
+        val jwt = jwtAuthenticationToken.token.tokenValue
+
+        // Retrieve a list of buckets to which the user has access
+        val buckets = this.minioService.listBuckets(jwt)
+
+        // Filter the list of coop spaces, only returning those for which the user has access to the associated bucket
+        val coopSpaces = this.coopSpaceService.findAll().filter { coopSpace ->
+            buckets.any { bucket -> bucket.name() == "prj-${coopSpace.company!!.lowercase()}-${coopSpace.name}" }
+        }
+
+        // Map the coop spaces to DTOs and return the result
+        val mapToDtos = this.coopSpaceMapper.mapToDtos(coopSpaces)
         return ResponseEntity.ok(mapToDtos)
     }
 
@@ -76,7 +89,7 @@ class CoopSpaceController @Autowired constructor(
         val jwtAuthenticationToken = SecurityContextHolder.getContext().authentication as JwtAuthenticationToken
         val jwt = jwtAuthenticationToken.token.tokenValue
         return try {
-            val assetsForBucket = this.minioService.getAssetsForCoopscpae(jwt, company!!, bucketName)
+            val assetsForBucket = this.minioService.getAssetsForCoopspace(jwt, company!!, bucketName)
                 .map { it.get() }
                 .map {
                     AssetDto(
