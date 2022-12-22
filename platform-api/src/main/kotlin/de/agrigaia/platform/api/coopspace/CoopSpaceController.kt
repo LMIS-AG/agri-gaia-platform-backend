@@ -31,16 +31,14 @@ class CoopSpaceController @Autowired constructor(
         val jwtAuthenticationToken = SecurityContextHolder.getContext().authentication as JwtAuthenticationToken
         val jwt = jwtAuthenticationToken.token.tokenValue
 
-        // Retrieve a list of buckets to which the user has access
-        val buckets = this.minioService.listBuckets(jwt)
-
         // Filter the list of coop spaces, only returning those for which the user has access to the associated bucket
-        val coopSpaces = this.coopSpaceService.findAll().filter { coopSpace ->
-            buckets.any { bucket -> bucket.name() == "prj-${coopSpace.company!!.lowercase()}-${coopSpace.name}" }
-        }
+        val coopSpacesWithUserAccess = this.coopSpaceService.filterCoopSpacesByBucketAccess(
+            coopSpaces = this.coopSpaceService.findAll(),  // All coopSpaces.
+            buckets = this.minioService.listBuckets(jwt),  // Buckets with user access.
+        )
 
         // Map the coop spaces to DTOs and return the result
-        val mapToDtos = this.coopSpaceMapper.mapToDtos(coopSpaces)
+        val mapToDtos = this.coopSpaceMapper.mapToDtos(coopSpacesWithUserAccess)
         return ResponseEntity.ok(mapToDtos)
     }
 
@@ -52,6 +50,7 @@ class CoopSpaceController @Autowired constructor(
 
     @GetMapping("/members")
     fun getKeycloakUsers(): ResponseEntity<List<MemberDto>> {
+        // TODO: Kommentar von EBE.
         // Arbeitsstand / Versuch Keycloak anzusprechen
         // this.keycloakService.getUserResource("0e68593d-6604-4e7a-aa53-15b1af988c2d")
 
