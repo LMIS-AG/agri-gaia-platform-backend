@@ -8,6 +8,7 @@ import de.agrigaia.platform.model.coopspace.CoopSpace
 import de.agrigaia.platform.model.coopspace.CoopSpaceRole
 import de.agrigaia.platform.model.coopspace.Member
 import de.agrigaia.platform.persistence.repository.CoopSpaceRepository
+import io.minio.messages.Bucket
 import org.slf4j.LoggerFactory
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatus
@@ -26,6 +27,18 @@ class CoopSpaceService(
 ) {
     private val webClient: WebClient = WebClient.create()
     private val logger = LoggerFactory.getLogger(this::class.java)
+
+    /*
+     * Returns only those CoopSpaces where the user has access to the corresponding bucket.
+     * I.e. all they are allowed to see.
+     */
+    fun filterCoopSpacesByBucketAccess(coopSpaces: List<CoopSpace>, buckets: List<Bucket>): List<CoopSpace> {
+        return coopSpaces.filter {
+            buckets.any(fun(bucket: Bucket): Boolean {
+                return bucket.name() == "prj-${it.company?.lowercase()}-${it.name}"
+            })
+        }
+    }
 
     fun createCoopSpace(coopSpace: CoopSpace, creator: Member) {
         creator.role = CoopSpaceRole.ADMIN
