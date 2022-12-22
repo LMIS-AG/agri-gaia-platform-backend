@@ -38,8 +38,8 @@ class CoopSpaceController @Autowired constructor(
         )
 
         // Map the coop spaces to DTOs and return the result
-        val mapToDtos = this.coopSpaceMapper.mapToDtos(coopSpacesWithUserAccess)
-        return ResponseEntity.ok(mapToDtos)
+        val coopSpaceDtos = this.coopSpaceMapper.mapToDtos(coopSpacesWithUserAccess)
+        return ResponseEntity.ok(coopSpaceDtos)
     }
 
 
