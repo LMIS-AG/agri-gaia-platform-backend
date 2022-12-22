@@ -44,6 +44,7 @@ class CoopSpaceController @Autowired constructor(
         return ResponseEntity.ok(mapToDtos)
     }
 
+
     @GetMapping("{id}")
     fun getCoopSpace(@PathVariable id: Long): ResponseEntity<CoopSpaceDto> {
         return ResponseEntity.ok(this.coopSpaceMapper.map(this.coopSpaceService.findCoopSpace(id)))
@@ -67,7 +68,8 @@ class CoopSpaceController @Autowired constructor(
     @ResponseStatus(HttpStatus.CREATED)
     fun createCoopSpace(@RequestBody coopSpaceDto: CoopSpaceDto) {
         val jwtAuthenticationToken = SecurityContextHolder.getContext().authentication as JwtAuthenticationToken
-        val creator = this.keycloakService.findKeycloakUserByMail(jwtAuthenticationToken.token.claims["email"] as String)
+        val creator =
+            this.keycloakService.findKeycloakUserByMail(jwtAuthenticationToken.token.claims["email"] as String)
         val coopSpace: CoopSpace = coopSpaceDto.toEntity(this.coopSpaceMapper)
         this.coopSpaceService.createCoopSpace(coopSpace, creator)
     }
@@ -89,9 +91,8 @@ class CoopSpaceController @Autowired constructor(
         val jwtAuthenticationToken = SecurityContextHolder.getContext().authentication as JwtAuthenticationToken
         val jwt = jwtAuthenticationToken.token.tokenValue
         return try {
-            val assetsForBucket = this.minioService.getAssetsForCoopspace(jwt, company!!, bucketName)
-                .map { it.get() }
-                .map {
+            val assetsForBucket =
+                this.minioService.getAssetsForCoopspace(jwt, company!!, bucketName).map { it.get() }.map {
                     AssetDto(
                         it.etag(),
                         it.objectName(),
