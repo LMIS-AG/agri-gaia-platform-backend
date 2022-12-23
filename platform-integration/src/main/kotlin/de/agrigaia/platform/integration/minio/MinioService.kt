@@ -19,7 +19,7 @@ class MinioService(private val minioProperties: MinioProperties) {
         return minioClient.listBuckets()
     }
 
-    fun getAssetsForCoopscpae(jwt: String, company: String, bucketName: String): List<Result<Item>> {
+    fun getAssetsForCoopspace(jwt: String, company: String, bucketName: String): List<Result<Item>> {
         val minioClient = this.getMinioClient(jwt)
 
         val bucketArgs = ListObjectsArgs.builder()
