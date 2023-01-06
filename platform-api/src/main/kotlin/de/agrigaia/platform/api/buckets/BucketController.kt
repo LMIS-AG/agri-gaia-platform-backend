@@ -26,9 +26,9 @@ class BucketController @Autowired constructor(
         val buckets = minioService.listBuckets(jwt)
 
         var bucketDtos: MutableList<BucketDto> = mutableListOf()
-        if (buckets != null) {
-            bucketDtos = buckets.map { bucket: Bucket -> BucketDto(bucket.name()) } as MutableList<BucketDto>
-        }
+        bucketDtos = buckets
+            .filter { !it.name().startsWith("prj-") }
+            .map { bucket: Bucket -> BucketDto(bucket.name()) } as MutableList<BucketDto>
 
         return ResponseEntity.ok(bucketDtos)
     }
