@@ -8,10 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.ResponseEntity
 import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken
-import org.springframework.web.bind.annotation.GetMapping
-import org.springframework.web.bind.annotation.PathVariable
-import org.springframework.web.bind.annotation.RequestMapping
-import org.springframework.web.bind.annotation.RestController
+import org.springframework.web.bind.annotation.*
 
 @RestController
 @RequestMapping("/buckets")
@@ -26,9 +23,9 @@ class BucketController @Autowired constructor(
         val buckets = minioService.listBuckets(jwt)
 
         var bucketDtos: MutableList<BucketDto> = mutableListOf()
-        if (buckets != null) {
-            bucketDtos = buckets.map { bucket: Bucket -> BucketDto(bucket.name()) } as MutableList<BucketDto>
-        }
+        bucketDtos = buckets
+            .filter { !it.name().startsWith("prj-") }
+            .map { bucket: Bucket -> BucketDto(bucket.name()) } as MutableList<BucketDto>
 
         return ResponseEntity.ok(bucketDtos)
     }
