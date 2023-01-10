@@ -41,6 +41,8 @@ class CoopSpaceController @Autowired constructor(
             buckets = this.minioService.listBuckets(jwtValue),  // Buckets with user access.
         )
 
+        // TODO: check if this still performs well enough when there are a lot of coop spaces present
+
         // iterate over all accessible coop spaces and retrieve the respective user roles
         for (i in coopSpacesWithUserAccess.indices) {
             val coopSpace = coopSpacesWithUserAccess[i]
