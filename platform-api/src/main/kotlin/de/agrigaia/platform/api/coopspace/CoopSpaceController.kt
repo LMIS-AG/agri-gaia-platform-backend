@@ -28,17 +28,30 @@ class CoopSpaceController @Autowired constructor(
     @GetMapping
     fun getCoopSpaces(): ResponseEntity<List<CoopSpaceDto>> {
 
+        // Retrieve the value and username from the JWT belonging to the user that is currently logged in
         val jwtAuthenticationToken = SecurityContextHolder.getContext().authentication as JwtAuthenticationToken
-        val jwt = jwtAuthenticationToken.token.tokenValue
+
+        val jwtValue = jwtAuthenticationToken.token.tokenValue
+        val jwtClaims = jwtAuthenticationToken.token.claims
+        val username = jwtClaims["preferred_username"]
 
         // Filter the list of coop spaces, only returning those for which the user has access to the associated bucket
         val coopSpacesWithUserAccess = this.coopSpaceService.filterCoopSpacesByBucketAccess(
             coopSpaces = this.coopSpaceService.findAll(),  // All coopSpaces.
-            buckets = this.minioService.listBuckets(jwt),  // Buckets with user access.
+            buckets = this.minioService.listBuckets(jwtValue),  // Buckets with user access.
         )
 
-        // Map the coop spaces to DTOs and return the result
+        // Map the coop spaces to DTOs
         val coopSpaceDtos = this.coopSpaceMapper.mapToDtos(coopSpacesWithUserAccess)
+
+        // For each coop space that the user is allowed to see, update the respective role in the coopSpaceDto
+        for (i in coopSpaceDtos.indices) {
+            val coopSpace = coopSpacesWithUserAccess[i]
+            val myrole = coopSpaceService.getUserRoleInCoopSpace(username as String, coopSpace)
+            coopSpaceDtos[i].myrole = myrole.toString()
+        }
+
+        // Return the result
         return ResponseEntity.ok(coopSpaceDtos)
     }
 

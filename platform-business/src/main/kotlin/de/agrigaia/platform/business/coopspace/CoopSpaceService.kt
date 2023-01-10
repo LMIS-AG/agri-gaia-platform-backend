@@ -28,18 +28,6 @@ class CoopSpaceService(
     private val webClient: WebClient = WebClient.create()
     private val logger = LoggerFactory.getLogger(this::class.java)
 
-    /*
-     * Returns only those CoopSpaces where the user has access to the corresponding bucket.
-     * I.e. all they are allowed to see.
-     */
-    fun filterCoopSpacesByBucketAccess(coopSpaces: List<CoopSpace>, buckets: List<Bucket>): List<CoopSpace> {
-        return coopSpaces.filter {
-            buckets.any(fun(bucket: Bucket): Boolean {
-                return bucket.name() == "prj-${it.company?.lowercase()}-${it.name}"
-            })
-        }
-    }
-
     fun createCoopSpace(coopSpace: CoopSpace, creator: Member) {
         creator.role = CoopSpaceRole.ADMIN
         val owners: MutableList<String> =
@@ -144,5 +132,21 @@ class CoopSpaceService(
         return coopSpaceRepository
             .findById(id)
             .orElseThrow { BusinessException("CoopSpace with id $id does not exist.", ErrorType.NOT_FOUND) }
+    }
+
+    /*
+     * Returns only those CoopSpaces where the user has access to the corresponding bucket.
+     * I.e. all they are allowed to see.
+     */
+    fun filterCoopSpacesByBucketAccess(coopSpaces: List<CoopSpace>, buckets: List<Bucket>): List<CoopSpace> {
+        return coopSpaces.filter {
+            buckets.any(fun(bucket: Bucket): Boolean {
+                return bucket.name() == "prj-${it.company?.lowercase()}-${it.name}"
+            })
+        }
+    }
+
+    fun getUserRoleInCoopSpace(username: String, coopSpace: CoopSpace): CoopSpaceRole? {
+        return coopSpace.members.find { member -> member.username == username }?.role
     }
 }

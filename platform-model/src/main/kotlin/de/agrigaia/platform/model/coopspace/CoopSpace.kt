@@ -11,5 +11,6 @@ class CoopSpace(
     var company: String? = null,
     var mandant: String? = null,
     @OneToMany(cascade = [CascadeType.ALL], orphanRemoval = true)
-    var members: List<Member> = ArrayList()
+    var members: List<Member> = ArrayList(),
+    var myrole: String? = null
 ) : BaseEntity()
