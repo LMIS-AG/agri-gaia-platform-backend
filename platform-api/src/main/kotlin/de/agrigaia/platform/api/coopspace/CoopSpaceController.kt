@@ -41,15 +41,14 @@ class CoopSpaceController @Autowired constructor(
             buckets = this.minioService.listBuckets(jwtValue),  // Buckets with user access.
         )
 
+        // iterate over all accessible coop spaces and retrieve the respective user roles
+        for (i in coopSpacesWithUserAccess.indices) {
+            val coopSpace = coopSpacesWithUserAccess[i]
+            coopSpace.myrole = coopSpaceService.getUserRoleInCoopSpace(username as String, coopSpace).toString()
+        }
+
         // Map the coop spaces to DTOs
         val coopSpaceDtos = this.coopSpaceMapper.mapToDtos(coopSpacesWithUserAccess)
-
-        // For each coop space that the user is allowed to see, update the respective role in the coopSpaceDto
-        for (i in coopSpaceDtos.indices) {
-            val coopSpace = coopSpacesWithUserAccess[i]
-            val myrole = coopSpaceService.getUserRoleInCoopSpace(username as String, coopSpace)
-            coopSpaceDtos[i].myrole = myrole.toString()
-        }
 
         // Return the result
         return ResponseEntity.ok(coopSpaceDtos)
