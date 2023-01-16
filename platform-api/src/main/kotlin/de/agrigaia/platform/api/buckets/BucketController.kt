@@ -41,7 +41,7 @@ class BucketController @Autowired constructor(
         return try {
             val assetsForBucket = this.minioService.getPublishableAssetsForBucket(jwt, name)
                     .map { it.get() }
-                    .map { AssetDto(it.etag(), it.objectName().replace("assets/", ""), it.lastModified().toString(), it.lastModified().toString(), "${it.size()}MB", "label", name) }
+                    .map { AssetDto(it.etag(), it.objectName().replace("assets/", ""), it.lastModified().toString(), it.lastModified().toString(), "${it.size()}", "label", name) }
             ResponseEntity.ok(assetsForBucket)
         } catch (e: Exception) {
             ResponseEntity.noContent().build()
