@@ -20,7 +20,7 @@ class AssetsService {
         this.sendCatalogRequest(catalogJson)
     }
 
-    fun deleteAsset(assetJson: String, policyJson: String, catalogJson: String) {
+    fun unpublishAsset(assetJson: String, policyJson: String, catalogJson: String) {
         this.sendCatalogDeleteRequest(catalogJson)
         this.sendPolicyDeleteRequest(policyJson)
         this.sendAssetDeleteRequest(assetJson)
