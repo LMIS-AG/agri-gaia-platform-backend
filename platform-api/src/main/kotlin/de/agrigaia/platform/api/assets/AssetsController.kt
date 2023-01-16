@@ -4,6 +4,7 @@ package de.agrigaia.platform.api.assets
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import de.agrigaia.platform.api.BaseController
+import de.agrigaia.platform.common.HasLogger
 import de.agrigaia.platform.integration.assets.AssetsService
 import de.agrigaia.platform.integration.minio.MinioService
 import org.springframework.beans.factory.annotation.Autowired
@@ -17,7 +18,7 @@ import org.springframework.web.bind.annotation.*
 class AssetsController @Autowired constructor(
     private val assetsService: AssetsService,
     private val minioService: MinioService
-) : BaseController() {
+) : HasLogger, BaseController() {
 
     @PostMapping("{bucket}/{name}")
     @ResponseStatus(HttpStatus.CREATED)

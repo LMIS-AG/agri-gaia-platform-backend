@@ -2,6 +2,7 @@ package de.agrigaia.platform.business.coopspace
 
 import de.agrigaia.platform.business.errors.BusinessException
 import de.agrigaia.platform.business.errors.ErrorType
+import de.agrigaia.platform.common.HasLogger
 import de.agrigaia.platform.integration.coopspace.UsersInRole
 import de.agrigaia.platform.integration.minio.MinioService
 import de.agrigaia.platform.model.coopspace.CoopSpace
@@ -9,7 +10,6 @@ import de.agrigaia.platform.model.coopspace.CoopSpaceRole
 import de.agrigaia.platform.model.coopspace.Member
 import de.agrigaia.platform.persistence.repository.CoopSpaceRepository
 import io.minio.messages.Bucket
-import org.slf4j.LoggerFactory
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
@@ -24,9 +24,8 @@ class CoopSpaceService(
     private val coopSpacesProperties: CoopSpacesProperties,
     private val coopSpaceRepository: CoopSpaceRepository,
     private val minioService: MinioService
-) {
+): HasLogger {
     private val webClient: WebClient = WebClient.create()
-    private val logger = LoggerFactory.getLogger(this::class.java)
 
     /*
      * Returns only those CoopSpaces where the user has access to the corresponding bucket.
@@ -96,7 +95,7 @@ class CoopSpaceService(
     }
 
     private fun handleClientError(clientResponse: ClientResponse): Mono<out Throwable> {
-        this.logger.error("Got error during REST call: ${clientResponse.rawStatusCode()}")
+        getLogger().error("Got error during REST call: ${clientResponse.rawStatusCode()}")
         return clientResponse.createException()
     }
 
