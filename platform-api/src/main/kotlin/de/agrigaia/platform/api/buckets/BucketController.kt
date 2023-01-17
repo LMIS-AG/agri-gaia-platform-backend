@@ -25,8 +25,7 @@ class BucketController @Autowired constructor(
         val jwt = jwtAuthenticationToken.token.tokenValue
         val buckets = minioService.listBuckets(jwt)
 
-        var bucketDtos: MutableList<BucketDto> = mutableListOf()
-        bucketDtos = buckets
+        val bucketDtos: MutableList<BucketDto> = buckets
             .filter { !it.name().startsWith("prj-") }
             .map { bucket: Bucket -> BucketDto(bucket.name()) } as MutableList<BucketDto>
 
