@@ -25,8 +25,7 @@ class BucketController @Autowired constructor(
         val jwt = jwtAuthenticationToken.token.tokenValue
         val buckets = minioService.listBuckets(jwt)
 
-        var bucketDtos: MutableList<BucketDto> = mutableListOf()
-        bucketDtos = buckets
+        val bucketDtos: MutableList<BucketDto> = buckets
             .filter { !it.name().startsWith("prj-") }
             .map { bucket: Bucket -> BucketDto(bucket.name()) } as MutableList<BucketDto>
 
@@ -41,7 +40,8 @@ class BucketController @Autowired constructor(
         return try {
             val assetsForBucket = this.minioService.getPublishableAssetsForBucket(jwt, name)
                     .map { it.get() }
-                    .map { AssetDto(it.etag(), it.objectName().replace("assets/", ""), it.lastModified().toString(), it.lastModified().toString(), "${it.size()}MB", "label", name) }
+                    .map { AssetDto(it.etag(), it.objectName().replace("assets/", ""), it.lastModified().toString(), it.lastModified().toString(),
+                        it.size().toString(), "label", name) }
             ResponseEntity.ok(assetsForBucket)
         } catch (e: Exception) {
             ResponseEntity.noContent().build()
