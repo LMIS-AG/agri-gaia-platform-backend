@@ -2,7 +2,9 @@ package de.agrigaia.platform.api.assets
 
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.module.kotlin.readValue
 import de.agrigaia.platform.api.BaseController
+import de.agrigaia.platform.common.HasLogger
 import de.agrigaia.platform.integration.assets.AssetsService
 import de.agrigaia.platform.integration.minio.MinioService
 import org.springframework.beans.factory.annotation.Autowired
@@ -10,18 +12,17 @@ import org.springframework.http.HttpStatus
 import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken
 import org.springframework.web.bind.annotation.*
-import com.fasterxml.jackson.module.kotlin.readValue
 
 @RestController
 @RequestMapping("/assets")
 class AssetsController @Autowired constructor(
     private val assetsService: AssetsService,
     private val minioService: MinioService
-) : BaseController() {
+) : HasLogger, BaseController() {
 
     @PostMapping("{bucket}/{name}")
     @ResponseStatus(HttpStatus.CREATED)
-    fun publishAssets(@PathVariable bucket: String, @PathVariable name: String) {
+    fun publishAsset(@PathVariable bucket: String, @PathVariable name: String) {
         val jwtAuthenticationToken = SecurityContextHolder.getContext().authentication as JwtAuthenticationToken
         val jwt = jwtAuthenticationToken.token.tokenValue
 
@@ -36,7 +37,7 @@ class AssetsController @Autowired constructor(
 
     @DeleteMapping("{bucket}/{name}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    fun deleteAssets(@PathVariable bucket: String, @PathVariable name: String) {
+    fun unpublishAsset(@PathVariable bucket: String, @PathVariable name: String) {
         val jwtAuthenticationToken = SecurityContextHolder.getContext().authentication as JwtAuthenticationToken
         val jwt = jwtAuthenticationToken.token.tokenValue
 
@@ -52,6 +53,6 @@ class AssetsController @Autowired constructor(
         val policyId = policyMap.get("id") as String
         val contractId = catalogMap.get("id") as String
 
-        this.assetsService.deleteAsset(assetId, policyId, contractId)
+        this.assetsService.unpublishAsset(assetId, policyId, contractId)
     }
 }

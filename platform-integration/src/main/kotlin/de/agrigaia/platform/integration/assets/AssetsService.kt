@@ -1,6 +1,6 @@
 package de.agrigaia.platform.integration.assets
 
-import org.slf4j.LoggerFactory
+import de.agrigaia.platform.common.HasLogger
 import org.springframework.http.HttpMethod
 import org.springframework.http.MediaType
 import org.springframework.stereotype.Service
@@ -9,9 +9,8 @@ import org.springframework.web.reactive.function.client.body
 import reactor.core.publisher.Mono
 
 @Service
-class AssetsService {
+class AssetsService: HasLogger {
     private val webClient: WebClient = WebClient.create()
-    private val logger = LoggerFactory.getLogger(this::class.java)
     private val connectorEndpoint = "https://connector-consumer-9192.platform.agri-gaia.com/api/v1/data"
 
     fun publishAsset(assetJson: String, policyJson: String, catalogJson: String) {
@@ -20,7 +19,7 @@ class AssetsService {
         this.sendCatalogRequest(catalogJson)
     }
 
-    fun deleteAsset(assetJson: String, policyJson: String, catalogJson: String) {
+    fun unpublishAsset(assetJson: String, policyJson: String, catalogJson: String) {
         this.sendCatalogDeleteRequest(catalogJson)
         this.sendPolicyDeleteRequest(policyJson)
         this.sendAssetDeleteRequest(assetJson)
