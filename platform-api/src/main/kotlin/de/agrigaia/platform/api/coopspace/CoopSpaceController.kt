@@ -42,6 +42,20 @@ class CoopSpaceController @Autowired constructor(
         return ResponseEntity.ok(coopSpaceDtos)
     }
 
+    @GetMapping("/companies")
+    fun getValidCompanyNames(): ResponseEntity<List<String>> {
+        val jwtAuthenticationToken = SecurityContextHolder.getContext().authentication as JwtAuthenticationToken
+        val userGroups: List<String> = jwtAuthenticationToken.token.claims["usergroup"] as List<String>
+
+        val companyNames = userGroups.map { userGroup ->
+            val companyName = userGroup.split("/")
+            companyName[1]
+        }
+
+        val companyNamesFiltered = companyNames.distinct()
+
+        return ResponseEntity.ok(companyNamesFiltered)
+    }
 
     @GetMapping("{id}")
     fun getCoopSpace(@PathVariable id: Long): ResponseEntity<CoopSpaceDto> {
