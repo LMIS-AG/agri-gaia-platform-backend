@@ -4,6 +4,7 @@ import de.agrigaia.platform.api.BaseController
 import de.agrigaia.platform.api.toEntity
 import de.agrigaia.platform.business.coopspace.CoopSpaceService
 import de.agrigaia.platform.business.keycloak.KeycloakService
+import de.agrigaia.platform.common.HasLogger
 import de.agrigaia.platform.integration.minio.MinioService
 import de.agrigaia.platform.model.coopspace.CoopSpace
 import org.springframework.beans.factory.annotation.Autowired
@@ -22,8 +23,8 @@ class CoopSpaceController @Autowired constructor(
     private val coopSpaceMapper: CoopSpaceMapper,
     private val minioService: MinioService,
     private val keycloakService: KeycloakService,
-    private val memberMapper: MemberMapper
-) : BaseController() {
+    private val memberMapper: MemberMapper,
+) : HasLogger, BaseController() {
 
     @GetMapping
     fun getCoopSpaces(): ResponseEntity<List<CoopSpaceDto>> {
@@ -42,6 +43,13 @@ class CoopSpaceController @Autowired constructor(
         return ResponseEntity.ok(coopSpaceDtos)
     }
 
+    @GetMapping("/companies")
+    fun getValidCompanyNames(): ResponseEntity<List<String>> {
+        val jwtAuthenticationToken = SecurityContextHolder.getContext().authentication as JwtAuthenticationToken
+        val userGroups = jwtAuthenticationToken.token.claims["usergroup"] as List<String>
+        val companyNames = userGroups.map { it.split("/")[1] }
+        return ResponseEntity.ok(companyNames.distinct())
+    }
 
     @GetMapping("{id}")
     fun getCoopSpace(@PathVariable id: Long): ResponseEntity<CoopSpaceDto> {
