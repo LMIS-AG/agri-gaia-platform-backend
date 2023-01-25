@@ -95,7 +95,7 @@ class CoopSpaceService(
     }
 
     private fun handleClientError(clientResponse: ClientResponse): Mono<out Throwable> {
-        getLogger().error("Got error during REST call: ${clientResponse.rawStatusCode()}")
+        getLogger().error("Got error during REST call: ${clientResponse.statusCode()}")
         return clientResponse.createException()
     }
 
