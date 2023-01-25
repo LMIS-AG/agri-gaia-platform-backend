@@ -144,4 +144,10 @@ class CoopSpaceService(
             .findById(id)
             .orElseThrow { BusinessException("CoopSpace with id $id does not exist.", ErrorType.NOT_FOUND) }
     }
+
+    fun deleteMember(memberId: Number) {
+        // hier irgendetwas mit dem MemberRepository machen?!
+    }
+
+
 }
