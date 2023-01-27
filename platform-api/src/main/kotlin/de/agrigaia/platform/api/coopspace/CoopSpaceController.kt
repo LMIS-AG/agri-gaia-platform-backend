@@ -97,7 +97,8 @@ class CoopSpaceController @Autowired constructor(
         this.coopSpaceService.removeUserFromCoopSpace(
             deleteMemberRequest.username,
             deleteMemberRequest.role,
-            deleteMemberRequest.coopSpaceName
+            deleteMemberRequest.coopSpaceName,
+            deleteMemberRequest.companyName
         )
     }
 

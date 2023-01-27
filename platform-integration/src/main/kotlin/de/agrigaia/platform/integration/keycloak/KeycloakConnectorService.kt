@@ -2,7 +2,6 @@ package de.agrigaia.platform.integration.keycloak
 
 import org.keycloak.admin.client.Keycloak
 import org.keycloak.admin.client.resource.RealmResource
-import org.keycloak.representations.idm.GroupRepresentation
 import org.keycloak.representations.idm.UserRepresentation
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -45,25 +44,17 @@ class KeycloakConnectorService @Autowired constructor(private val keycloakProper
         return groupsMap
     }
 
-    fun removeUserFromGroup(username: String?, groupName: String?) {
-        val user = agrigaiaRealm.users().search(username).first()
-        val group = groupName?.let { findGroupByName(agrigaiaRealm.groups().groups(), it) }
-        if (group != null) {
-            agrigaiaRealm.users().get(user.id).leaveGroup(group.id)
-        }
-    }
+    fun removeUserFromGroup(username: String?, role: String?, coopSpaceName: String?, companyName: String?) {
+        val subGroupName = "$coopSpaceName-${role}"
 
-    private fun findGroupByName(groups: List<GroupRepresentation>, groupName: String): GroupRepresentation? {
-        for (group in groups) {
-            if (group.name == groupName) {
-                return group
-            }
-            val subGroup = findGroupByName(group.subGroups, groupName)
-            if (subGroup != null) {
-                return subGroup
-            }
+        val user = agrigaiaRealm.users().search(username).first()
+        val companyGroup = agrigaiaRealm.groups().groups().firstOrNull { it.name == companyName }
+        val projectGroup = companyGroup?.subGroups?.firstOrNull { it.name == "Projects" }
+        val targetGroup = projectGroup?.subGroups?.firstOrNull { it.name == coopSpaceName }
+        val subGroup = targetGroup?.subGroups?.firstOrNull { it.name == subGroupName }
+
+        if (subGroup != null) {
+            agrigaiaRealm.users().get(user.id).leaveGroup(subGroup.id)
         }
-        return null
     }
-    
 }
