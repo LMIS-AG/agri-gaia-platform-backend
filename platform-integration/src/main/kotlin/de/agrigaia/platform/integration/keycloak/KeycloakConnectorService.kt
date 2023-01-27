@@ -2,7 +2,7 @@ package de.agrigaia.platform.integration.keycloak
 
 import org.keycloak.admin.client.Keycloak
 import org.keycloak.admin.client.resource.RealmResource
-import org.keycloak.admin.client.resource.UserResource
+import org.keycloak.representations.idm.GroupRepresentation
 import org.keycloak.representations.idm.UserRepresentation
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -45,4 +45,25 @@ class KeycloakConnectorService @Autowired constructor(private val keycloakProper
         return groupsMap
     }
 
+    fun removeUserFromGroup(username: String?, groupName: String?) {
+        val user = agrigaiaRealm.users().search(username).first()
+        val group = groupName?.let { findGroupByName(agrigaiaRealm.groups().groups(), it) }
+        if (group != null) {
+            agrigaiaRealm.users().get(user.id).leaveGroup(group.id)
+        }
+    }
+
+    private fun findGroupByName(groups: List<GroupRepresentation>, groupName: String): GroupRepresentation? {
+        for (group in groups) {
+            if (group.name == groupName) {
+                return group
+            }
+            val subGroup = findGroupByName(group.subGroups, groupName)
+            if (subGroup != null) {
+                return subGroup
+            }
+        }
+        return null
+    }
+    
 }

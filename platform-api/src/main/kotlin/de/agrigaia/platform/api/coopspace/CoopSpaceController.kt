@@ -7,7 +7,7 @@ import de.agrigaia.platform.business.keycloak.KeycloakService
 import de.agrigaia.platform.common.HasLogger
 import de.agrigaia.platform.integration.minio.MinioService
 import de.agrigaia.platform.model.coopspace.CoopSpace
-import de.agrigaia.platform.model.coopspace.Member
+import de.agrigaia.platform.model.coopspace.DeleteMemberRequest
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
@@ -93,8 +93,12 @@ class CoopSpaceController @Autowired constructor(
 
     @PostMapping("/deleteMember")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    fun deleteMember(@RequestBody memberId: Number) {
-        coopSpaceService.deleteMember(memberId)
+    fun removeUserFromCoopSpace(@RequestBody deleteMemberRequest: DeleteMemberRequest) {
+        this.coopSpaceService.removeUserFromCoopSpace(
+            deleteMemberRequest.username,
+            deleteMemberRequest.role,
+            deleteMemberRequest.coopSpaceName
+        )
     }
 
     @GetMapping("{id}/assets")
