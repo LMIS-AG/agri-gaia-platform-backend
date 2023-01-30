@@ -45,16 +45,19 @@ class KeycloakConnectorService @Autowired constructor(private val keycloakProper
     }
 
     fun removeUserFromGroup(username: String?, role: String?, coopSpaceName: String?, companyName: String?) {
-        val subGroupName = "$coopSpaceName-${role}"
+        val coopSpaceGroupString = "$coopSpaceName-${role}"
 
         val user = agrigaiaRealm.users().search(username).first()
+
+        // navigate through the respective groups and subgroups in Keycloak
         val companyGroup = agrigaiaRealm.groups().groups().firstOrNull { it.name == companyName }
         val projectGroup = companyGroup?.subGroups?.firstOrNull { it.name == "Projects" }
-        val targetGroup = projectGroup?.subGroups?.firstOrNull { it.name == coopSpaceName }
-        val subGroup = targetGroup?.subGroups?.firstOrNull { it.name == subGroupName }
+        val coopSpaceGroup = projectGroup?.subGroups?.firstOrNull { it.name == coopSpaceName }
+        val targetGroup = coopSpaceGroup?.subGroups?.firstOrNull { it.name == coopSpaceGroupString }
 
-        if (subGroup != null) {
-            agrigaiaRealm.users().get(user.id).leaveGroup(subGroup.id)
+        // delete the user from the coop space by removing him from the respective group
+        if (targetGroup != null) {
+            agrigaiaRealm.users().get(user.id).leaveGroup(targetGroup.id)
         }
     }
 }

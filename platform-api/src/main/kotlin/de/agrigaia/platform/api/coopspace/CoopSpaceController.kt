@@ -99,6 +99,7 @@ class CoopSpaceController @Autowired constructor(
             deleteMemberRequest.role,
             deleteMemberRequest.coopSpaceName,
             deleteMemberRequest.companyName
+        // TODO: call another function that removes the user from the AG database, not just from Keycloak
         )
     }
 
