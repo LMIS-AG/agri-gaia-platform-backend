@@ -101,6 +101,9 @@ class CoopSpaceController @Autowired constructor(
             deleteMemberRequest.companyName
         // TODO: call another function that removes the user from the AG database, not just from Keycloak
         )
+        this.coopSpaceService.removeUserFromDatabase(
+            deleteMemberRequest.memberId
+        )
     }
 
     @GetMapping("{id}/assets")

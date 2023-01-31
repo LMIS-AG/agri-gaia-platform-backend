@@ -9,6 +9,7 @@ import de.agrigaia.platform.model.coopspace.CoopSpace
 import de.agrigaia.platform.model.coopspace.CoopSpaceRole
 import de.agrigaia.platform.model.coopspace.Member
 import de.agrigaia.platform.persistence.repository.CoopSpaceRepository
+import de.agrigaia.platform.persistence.repository.MemberRepository
 import de.agrigaia.platform.integration.keycloak.KeycloakConnectorService
 import io.minio.messages.Bucket
 import org.slf4j.LoggerFactory
@@ -25,6 +26,7 @@ import reactor.core.publisher.Mono
 class CoopSpaceService(
     private val coopSpacesProperties: CoopSpacesProperties,
     private val coopSpaceRepository: CoopSpaceRepository,
+    private val MemberRepository: MemberRepository,
     private val minioService: MinioService,
     private val keycloakConnectorService: KeycloakConnectorService
 ): HasLogger {
@@ -151,6 +153,11 @@ class CoopSpaceService(
 
     fun removeUserFromCoopSpace(username: String?, role: String?, coopSpaceName: String?, companyName: String?) {
         this.keycloakConnectorService.removeUserFromGroup(username, role, coopSpaceName, companyName)
+    }
+
+    fun removeUserFromDatabase(id: Long?) {
+        return MemberRepository
+            .deleteById(id)
     }
 
 
