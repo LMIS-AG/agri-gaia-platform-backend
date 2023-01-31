@@ -2,8 +2,6 @@ spring:
   datasource:
     url: jdbc:mariadb://mariadb.ag-test-platform.svc.cluster.local/sampledb
     driver-class-name: org.mariadb.jdbc.Driver
-    username: agrigaia
-    password: agrigaia
   jpa:
     hibernate:
       ddl-auto: update
