@@ -94,12 +94,12 @@ class CoopSpaceController @Autowired constructor(
     @PostMapping("/deleteMember")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     fun removeUserFromCoopSpace(@RequestBody deleteMemberRequest: DeleteMemberRequest) {
-        this.coopSpaceService.removeUserFromCoopSpace(
+        // remove user from the CoopSpace by removing him both from the respective group in Keycloak and the database
+        this.coopSpaceService.removeUserFromKeycloakGroup(
             deleteMemberRequest.username,
             deleteMemberRequest.role,
             deleteMemberRequest.coopSpaceName,
             deleteMemberRequest.companyName
-        // TODO: call another function that removes the user from the AG database, not just from Keycloak
         )
         this.coopSpaceService.removeUserFromDatabase(
             deleteMemberRequest.memberId

@@ -49,6 +49,7 @@ class KeycloakConnectorService @Autowired constructor(private val keycloakProper
 
         val user = agrigaiaRealm.users().search(username).first()
 
+        // TODO: probably can be done shorter?
         // navigate through the respective groups and subgroups in Keycloak
         val companyGroup = agrigaiaRealm.groups().groups().firstOrNull { it.name == companyName }
         val projectGroup = companyGroup?.subGroups?.firstOrNull { it.name == "Projects" }
