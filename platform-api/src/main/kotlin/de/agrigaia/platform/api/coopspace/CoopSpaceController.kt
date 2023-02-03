@@ -54,7 +54,16 @@ class CoopSpaceController @Autowired constructor(
 
     @GetMapping("{id}")
     fun getCoopSpace(@PathVariable id: Long): ResponseEntity<CoopSpaceDto> {
-        return ResponseEntity.ok(this.coopSpaceMapper.map(this.coopSpaceService.findCoopSpace(id)))
+        val jwtAuthenticationToken = SecurityContextHolder.getContext().authentication as JwtAuthenticationToken
+        val username = jwtAuthenticationToken.token.claims["preferred_username"] as String
+        val coopSpaceDto = this.coopSpaceMapper.map(this.coopSpaceService.findCoopSpace(id))
+        val coopSpace: CoopSpace = coopSpaceDto.toEntity(this.coopSpaceMapper)
+
+        if (this.coopSpaceService.hasAccessToCoopSpace(username, coopSpace)) {
+            return ResponseEntity.ok(coopSpaceDto)
+        }
+
+        return ResponseEntity(HttpStatus.UNAUTHORIZED)
     }
 
     @GetMapping("/members")

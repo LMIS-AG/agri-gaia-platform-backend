@@ -31,7 +31,6 @@ class CoopSpaceService(
     private val keycloakConnectorService: KeycloakConnectorService
 ): HasLogger {
     private val webClient: WebClient = WebClient.create()
-    private val logger = LoggerFactory.getLogger(this::class.java)
 
     /*
      * Returns only those CoopSpaces where the user has access to the corresponding bucket.
@@ -160,5 +159,12 @@ class CoopSpaceService(
             .deleteById(id)
     }
 
-
+    fun hasAccessToCoopSpace(username: String?, coopSpace: CoopSpace): Boolean {
+        for (member in coopSpace.members) {
+            if (member.username == username) {
+                return true
+            }
+        }
+        return false
+    }
 }
