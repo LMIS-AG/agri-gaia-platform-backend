@@ -9,7 +9,10 @@ import de.agrigaia.platform.model.coopspace.CoopSpace
 import de.agrigaia.platform.model.coopspace.CoopSpaceRole
 import de.agrigaia.platform.model.coopspace.Member
 import de.agrigaia.platform.persistence.repository.CoopSpaceRepository
+import de.agrigaia.platform.persistence.repository.MemberRepository
+import de.agrigaia.platform.integration.keycloak.KeycloakConnectorService
 import io.minio.messages.Bucket
+import org.slf4j.LoggerFactory
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
@@ -23,7 +26,9 @@ import reactor.core.publisher.Mono
 class CoopSpaceService(
     private val coopSpacesProperties: CoopSpacesProperties,
     private val coopSpaceRepository: CoopSpaceRepository,
-    private val minioService: MinioService
+    private val MemberRepository: MemberRepository,
+    private val minioService: MinioService,
+    private val keycloakConnectorService: KeycloakConnectorService
 ): HasLogger {
     private val webClient: WebClient = WebClient.create()
 
@@ -143,5 +148,23 @@ class CoopSpaceService(
         return coopSpaceRepository
             .findById(id)
             .orElseThrow { BusinessException("CoopSpace with id $id does not exist.", ErrorType.NOT_FOUND) }
+    }
+
+    fun removeUserFromKeycloakGroup(username: String, role: String, coopSpaceName: String, companyName: String) {
+        this.keycloakConnectorService.removeUserFromGroup(username, role, coopSpaceName, companyName)
+    }
+
+    fun removeUserFromDatabase(id: Long) {
+        return MemberRepository
+            .deleteById(id)
+    }
+
+    fun hasAccessToCoopSpace(username: String, coopSpace: CoopSpace): Boolean {
+        for (member in coopSpace.members) {
+            if (member.username == username) {
+                return true
+            }
+        }
+        return false
     }
 }

@@ -2,7 +2,6 @@ package de.agrigaia.platform.integration.keycloak
 
 import org.keycloak.admin.client.Keycloak
 import org.keycloak.admin.client.resource.RealmResource
-import org.keycloak.admin.client.resource.UserResource
 import org.keycloak.representations.idm.UserRepresentation
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -45,4 +44,21 @@ class KeycloakConnectorService @Autowired constructor(private val keycloakProper
         return groupsMap
     }
 
+    fun removeUserFromGroup(username: String?, role: String?, coopSpaceName: String?, companyName: String?) {
+        val coopSpaceGroupString = "$coopSpaceName-${role}"
+
+        val user = agrigaiaRealm.users().search(username).first()
+
+        // TODO: probably can be done shorter?
+        // navigate through the respective groups and subgroups in Keycloak
+        val companyGroup = agrigaiaRealm.groups().groups().firstOrNull { it.name == companyName }
+        val projectGroup = companyGroup?.subGroups?.firstOrNull { it.name == "Projects" }
+        val coopSpaceGroup = projectGroup?.subGroups?.firstOrNull { it.name == coopSpaceName }
+        val targetGroup = coopSpaceGroup?.subGroups?.firstOrNull { it.name == coopSpaceGroupString }
+
+        // delete the user from the coop space by removing him from the respective group
+        if (targetGroup != null) {
+            agrigaiaRealm.users().get(user.id).leaveGroup(targetGroup.id)
+        }
+    }
 }

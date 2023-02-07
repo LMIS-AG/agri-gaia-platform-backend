@@ -7,6 +7,7 @@ import de.agrigaia.platform.business.keycloak.KeycloakService
 import de.agrigaia.platform.common.HasLogger
 import de.agrigaia.platform.integration.minio.MinioService
 import de.agrigaia.platform.model.coopspace.CoopSpace
+import de.agrigaia.platform.model.coopspace.DeleteMemberRequest
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
@@ -53,7 +54,16 @@ class CoopSpaceController @Autowired constructor(
 
     @GetMapping("{id}")
     fun getCoopSpace(@PathVariable id: Long): ResponseEntity<CoopSpaceDto> {
-        return ResponseEntity.ok(this.coopSpaceMapper.map(this.coopSpaceService.findCoopSpace(id)))
+        val jwtAuthenticationToken = SecurityContextHolder.getContext().authentication as JwtAuthenticationToken
+        val username = jwtAuthenticationToken.token.claims["preferred_username"] as String
+        val coopSpaceDto = this.coopSpaceMapper.map(this.coopSpaceService.findCoopSpace(id))
+        val coopSpace: CoopSpace = coopSpaceDto.toEntity(this.coopSpaceMapper)
+
+        if (this.coopSpaceService.hasAccessToCoopSpace(username, coopSpace)) {
+            return ResponseEntity.ok(coopSpaceDto)
+        }
+
+        return ResponseEntity(HttpStatus.UNAUTHORIZED)
     }
 
     @GetMapping("/members")
@@ -88,6 +98,21 @@ class CoopSpaceController @Autowired constructor(
         val jwt = jwtAuthenticationToken.token.tokenValue
         val coopSpace: CoopSpace = coopSpaceDto.toEntity(this.coopSpaceMapper)
         this.coopSpaceService.deleteCoopSpace(jwt, coopSpace)
+    }
+
+    @PostMapping("/deleteMember")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    fun removeUserFromCoopSpace(@RequestBody deleteMemberRequest: DeleteMemberRequest) {
+        // remove user from the CoopSpace by removing him both from the respective group in Keycloak and the database
+        this.coopSpaceService.removeUserFromKeycloakGroup(
+            deleteMemberRequest.username,
+            deleteMemberRequest.role,
+            deleteMemberRequest.coopSpaceName,
+            deleteMemberRequest.companyName
+        )
+        this.coopSpaceService.removeUserFromDatabase(
+            deleteMemberRequest.memberId
+        )
     }
 
     @GetMapping("{id}/assets")
