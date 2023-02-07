@@ -150,16 +150,16 @@ class CoopSpaceService(
             .orElseThrow { BusinessException("CoopSpace with id $id does not exist.", ErrorType.NOT_FOUND) }
     }
 
-    fun removeUserFromKeycloakGroup(username: String?, role: String?, coopSpaceName: String?, companyName: String?) {
+    fun removeUserFromKeycloakGroup(username: String, role: String, coopSpaceName: String, companyName: String) {
         this.keycloakConnectorService.removeUserFromGroup(username, role, coopSpaceName, companyName)
     }
 
-    fun removeUserFromDatabase(id: Long?) {
+    fun removeUserFromDatabase(id: Long) {
         return MemberRepository
             .deleteById(id)
     }
 
-    fun hasAccessToCoopSpace(username: String?, coopSpace: CoopSpace): Boolean {
+    fun hasAccessToCoopSpace(username: String, coopSpace: CoopSpace): Boolean {
         for (member in coopSpace.members) {
             if (member.username == username) {
                 return true
