@@ -7,7 +7,7 @@ import de.agrigaia.platform.business.keycloak.KeycloakService
 import de.agrigaia.platform.common.HasLogger
 import de.agrigaia.platform.integration.minio.MinioService
 import de.agrigaia.platform.model.coopspace.CoopSpace
-import de.agrigaia.platform.model.coopspace.DeleteMemberRequest
+import de.agrigaia.platform.model.coopspace.ModifyCoopSpaceRequest
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
@@ -102,7 +102,7 @@ class CoopSpaceController @Autowired constructor(
 
     @PostMapping("/deleteMember")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    fun removeUserFromCoopSpace(@RequestBody deleteMemberRequest: DeleteMemberRequest) {
+    fun removeUserFromCoopSpace(@RequestBody deleteMemberRequest: ModifyCoopSpaceRequest) {
         // remove user from the CoopSpace by removing him both from the respective group in Keycloak and the database
         this.coopSpaceService.removeUserFromKeycloakGroup(
             deleteMemberRequest.username,
@@ -114,6 +114,24 @@ class CoopSpaceController @Autowired constructor(
             deleteMemberRequest.memberId
         )
     }
+
+    @PostMapping("/addMember")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    fun addUserToCoopSpace(@RequestBody addMemberRequest: ModifyCoopSpaceRequest) {
+        // remove user from the CoopSpace by removing him both from the respective group in Keycloak and the database
+        this.coopSpaceService.addUserToKeycloakGroup(
+            addMemberRequest.username,
+            addMemberRequest.role,
+            addMemberRequest.coopSpaceName,
+            addMemberRequest.companyName
+        )
+        val coopSpaceDto = this.coopSpaceMapper.map(this.coopSpaceService.findCoopSpace(addMemberRequest.coopSpaceId))
+        val coopSpace: CoopSpace = coopSpaceDto.toEntity(this.coopSpaceMapper)
+        this.coopSpaceService.addUserToDatabase(
+            coopSpace
+        )
+    }
+
 
     @GetMapping("{id}/assets")
     fun getAssetsForCoopSpace(@PathVariable id: Long): ResponseEntity<Any> {
