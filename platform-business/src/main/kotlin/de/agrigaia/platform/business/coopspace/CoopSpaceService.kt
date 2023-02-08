@@ -12,7 +12,6 @@ import de.agrigaia.platform.persistence.repository.CoopSpaceRepository
 import de.agrigaia.platform.persistence.repository.MemberRepository
 import de.agrigaia.platform.integration.keycloak.KeycloakConnectorService
 import io.minio.messages.Bucket
-import org.slf4j.LoggerFactory
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
@@ -159,12 +158,13 @@ class CoopSpaceService(
             .deleteById(id)
     }
 
-    fun addUserToKeycloakGroup(username: String, role: String, coopSpaceName: String, companyName: String) {
-        this.keycloakConnectorService.addUserToGroup(username, role, coopSpaceName, companyName)
+    fun addUserToKeycloakGroup(member: Member, coopSpaceName: String) {
+        this.keycloakConnectorService.addUserToGroup(member.username!!, member.role!!.toString(), coopSpaceName, member.company!!)
     }
 
-    fun addUserToDatabase(coopSpace: CoopSpace) {
+    fun addUserToDatabase(member: Member, coopSpace: CoopSpace) {
         val members = coopSpace.members.toMutableList()
+        members.add(member)
         coopSpace.members = members
 
         this.coopSpaceRepository.save(coopSpace)

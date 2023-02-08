@@ -6,6 +6,7 @@ import org.keycloak.representations.idm.GroupRepresentation
 import org.keycloak.representations.idm.UserRepresentation
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import java.util.*
 
 @Service
 class KeycloakConnectorService @Autowired constructor(private val keycloakProperties: KeycloakProperties) {
@@ -58,6 +59,9 @@ class KeycloakConnectorService @Autowired constructor(private val keycloakProper
 
     fun addUserToGroup(username: String, role: String, coopSpaceName: String, companyName: String) {
         val user = agrigaiaRealm.users().search(username).first()
+
+        var role = role.lowercase(Locale.getDefault())
+        role = role.replaceFirstChar { if (it.isLowerCase()) it.titlecase(Locale.getDefault()) else it.toString() }
 
         val targetGroup = findTargetGroup(role, coopSpaceName, companyName)
 
