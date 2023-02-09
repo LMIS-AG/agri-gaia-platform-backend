@@ -3,6 +3,8 @@ package de.agrigaia.platform.api.coopspace
 import de.agrigaia.platform.api.BaseController
 import de.agrigaia.platform.api.toEntity
 import de.agrigaia.platform.business.coopspace.CoopSpaceService
+import de.agrigaia.platform.business.errors.BusinessException
+import de.agrigaia.platform.business.errors.ErrorType
 import de.agrigaia.platform.business.keycloak.KeycloakService
 import de.agrigaia.platform.common.HasLogger
 import de.agrigaia.platform.integration.minio.MinioService
@@ -121,15 +123,13 @@ class CoopSpaceController @Autowired constructor(
     fun addUserToCoopSpace(@RequestBody addMemberRequest: AddMemberRequest) {
         val coopSpaceDto = this.coopSpaceMapper.map(this.coopSpaceService.findCoopSpace(addMemberRequest.coopSpaceId))
         val coopSpace: CoopSpace = coopSpaceDto.toEntity(this.coopSpaceMapper)
-        val coopSpaceName = coopSpace.name
+        val coopSpaceName = coopSpace.name ?: throw BusinessException("CoopSpaceName is null", ErrorType.NOT_FOUND)
 
         // remove user from the CoopSpace by removing him both from the respective group in Keycloak and the database
-        if (coopSpaceName != null) {
-            this.coopSpaceService.addUserToKeycloakGroup(
+        this.coopSpaceService.addUserToKeycloakGroup(
                 addMemberRequest.member,
                 coopSpaceName
-            )
-        }
+        )
 
         this.coopSpaceService.addUserToDatabase(
             addMemberRequest.member,

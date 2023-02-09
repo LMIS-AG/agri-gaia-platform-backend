@@ -169,13 +169,10 @@ class CoopSpaceService(
         }
     }
 
-
     fun addUserToDatabase(memberList: List<Member> = ArrayList(), coopSpace: CoopSpace) {
         val members = coopSpace.members.toMutableList()
 
-        for (member in memberList) {
-            members.add(member)
-        }
+        members.addAll(memberList)
 
         coopSpace.members = members
 
