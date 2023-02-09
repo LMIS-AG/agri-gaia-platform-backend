@@ -119,14 +119,17 @@ class CoopSpaceController @Autowired constructor(
     @PostMapping("/addMember")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     fun addUserToCoopSpace(@RequestBody addMemberRequest: AddMemberRequest) {
-        // remove user from the CoopSpace by removing him both from the respective group in Keycloak and the database
-        this.coopSpaceService.addUserToKeycloakGroup(
-            addMemberRequest.member,
-            addMemberRequest.coopSpaceName
-        )
-
         val coopSpaceDto = this.coopSpaceMapper.map(this.coopSpaceService.findCoopSpace(addMemberRequest.coopSpaceId))
         val coopSpace: CoopSpace = coopSpaceDto.toEntity(this.coopSpaceMapper)
+        val coopSpaceName = coopSpace.name
+
+        // remove user from the CoopSpace by removing him both from the respective group in Keycloak and the database
+        if (coopSpaceName != null) {
+            this.coopSpaceService.addUserToKeycloakGroup(
+                addMemberRequest.member,
+                coopSpaceName
+            )
+        }
 
         this.coopSpaceService.addUserToDatabase(
             addMemberRequest.member,

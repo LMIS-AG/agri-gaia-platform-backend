@@ -1,3 +1,3 @@
 package de.agrigaia.platform.model.coopspace
 
-data class AddMemberRequest(val coopSpaceId: Long, val coopSpaceName: String, val member: Member)
+data class AddMemberRequest(val coopSpaceId: Long, val member: List<Member> = ArrayList())

@@ -158,13 +158,25 @@ class CoopSpaceService(
             .deleteById(id)
     }
 
-    fun addUserToKeycloakGroup(member: Member, coopSpaceName: String) {
-        this.keycloakConnectorService.addUserToGroup(member.username!!, member.role!!.toString(), coopSpaceName, member.company!!)
+    fun addUserToKeycloakGroup(memberList: List<Member> = ArrayList(), coopSpaceName: String) {
+        for (member in memberList) {
+            keycloakConnectorService.addUserToGroup(
+                member.username!!,
+                member.role!!.toString(),
+                coopSpaceName,
+                member.company!!
+            )
+        }
     }
 
-    fun addUserToDatabase(member: Member, coopSpace: CoopSpace) {
+
+    fun addUserToDatabase(memberList: List<Member> = ArrayList(), coopSpace: CoopSpace) {
         val members = coopSpace.members.toMutableList()
-        members.add(member)
+
+        for (member in memberList) {
+            members.add(member)
+        }
+
         coopSpace.members = members
 
         this.coopSpaceRepository.save(coopSpace)
