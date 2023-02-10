@@ -46,9 +46,8 @@ class KeycloakConnectorService @Autowired constructor(private val keycloakProper
         return groupsMap
     }
 
-    fun removeUserFromGroup(username: String, role: String, coopSpaceName: String, companyName: String) {
+    fun removeUserFromGroup(username: String, role: String, companyName: String, coopSpaceName: String) {
         val user = agrigaiaRealm.users().search(username).first()
-
         val targetGroup = findTargetGroup(role, coopSpaceName, companyName)
 
         // delete the user from the coop space by removing him from the respective group
@@ -59,10 +58,6 @@ class KeycloakConnectorService @Autowired constructor(private val keycloakProper
 
     fun addUserToGroup(username: String, role: String, coopSpaceName: String, companyName: String) {
         val user = agrigaiaRealm.users().search(username).first()
-
-        var role = role.lowercase(Locale.getDefault())
-        role = role.replaceFirstChar { if (it.isLowerCase()) it.titlecase(Locale.getDefault()) else it.toString() }
-
         val targetGroup = findTargetGroup(role, coopSpaceName, companyName)
 
         // add the user to the coop space by adding him to the respective group
@@ -72,6 +67,8 @@ class KeycloakConnectorService @Autowired constructor(private val keycloakProper
     }
 
     private fun findTargetGroup(role: String, coopSpaceName: String, companyName: String): GroupRepresentation? {
+        var role = role.lowercase(Locale.getDefault())
+        role = role.replaceFirstChar { if (it.isLowerCase()) it.titlecase(Locale.getDefault()) else it.toString() }
         val coopSpaceGroupString = "$coopSpaceName-${role}"
 
         // TODO: probably can be done shorter?

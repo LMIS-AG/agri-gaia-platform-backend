@@ -149,8 +149,13 @@ class CoopSpaceService(
             .orElseThrow { BusinessException("CoopSpace with id $id does not exist.", ErrorType.NOT_FOUND) }
     }
 
-    fun removeUserFromKeycloakGroup(username: String, role: String, coopSpaceName: String, companyName: String) {
-        this.keycloakConnectorService.removeUserFromGroup(username, role, coopSpaceName, companyName)
+    fun removeUserFromKeycloakGroup(username: String, role: String, companyName: String, coopSpaceName: String) {
+        this.keycloakConnectorService.removeUserFromGroup(
+            username,
+            role,
+            companyName,
+            coopSpaceName,
+            )
     }
 
     fun removeUserFromDatabase(id: Long) {
@@ -158,22 +163,40 @@ class CoopSpaceService(
             .deleteById(id)
     }
 
-    fun addUserToKeycloakGroup(memberList: List<Member> = ArrayList(), coopSpaceName: String) {
+    fun addUsersToKeycloakGroup(memberList: List<Member> = ArrayList(), coopSpaceName: String) {
         for (member in memberList) {
+            addUserToKeycloakGroup(
+                member,
+                coopSpaceName,
+            )
+        }
+    }
+
+    fun addUserToKeycloakGroup(member: Member, coopSpaceName: String) {
             keycloakConnectorService.addUserToGroup(
                 member.username!!,
                 member.role!!.toString(),
                 coopSpaceName,
                 member.company!!
             )
-        }
     }
 
-    fun addUserToDatabase(memberList: List<Member> = ArrayList(), coopSpace: CoopSpace) {
+    fun addUsersToDatabase(memberList: List<Member> = ArrayList(), coopSpace: CoopSpace) {
         val members = coopSpace.members.toMutableList()
 
         members.addAll(memberList)
+        coopSpace.members = members
 
+        this.coopSpaceRepository.save(coopSpace)
+    }
+    fun changeUserRoleInDatabase(member: Member, coopSpace: CoopSpace) {
+        val members = coopSpace.members.toMutableList()
+
+        val originalMember = members.find { it.username == member.username }
+            ?: throw BusinessException("originalMember not found", ErrorType.NOT_FOUND)
+
+        members.remove(originalMember)
+        members.add(member)
         coopSpace.members = members
 
         this.coopSpaceRepository.save(coopSpace)
