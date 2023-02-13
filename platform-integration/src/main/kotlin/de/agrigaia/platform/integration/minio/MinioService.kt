@@ -1,9 +1,5 @@
 package de.agrigaia.platform.integration.minio
-
-import io.minio.ListObjectsArgs
-import io.minio.MinioClient
-import io.minio.Result
-import io.minio.SelectObjectContentArgs
+import io.minio.*
 import io.minio.credentials.Jwt
 import io.minio.credentials.WebIdentityProvider
 import io.minio.messages.*
@@ -17,6 +13,12 @@ class MinioService(private val minioProperties: MinioProperties) {
         val minioClient = getMinioClient(jwt)
 
         return minioClient.listBuckets()
+    }
+
+    fun bucketExists(jwt: String, name: String): Boolean {
+        val minioClient = getMinioClient(jwt)
+
+        return minioClient.bucketExists(BucketExistsArgs.builder().bucket(name).build())
     }
 
     fun getAssetsForCoopspace(jwt: String, company: String, bucketName: String): List<Result<Item>> {

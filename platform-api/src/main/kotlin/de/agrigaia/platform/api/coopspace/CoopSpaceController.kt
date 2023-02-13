@@ -140,5 +140,13 @@ class CoopSpaceController @Autowired constructor(
             ResponseEntity.noContent().build()
         }
     }
+
+    @GetMapping("existsbyname/{name}")
+    fun checkIfCoopSpaceAlreadyExistsByName(@PathVariable name: String): ResponseEntity<Boolean> {
+        val jwtAuthenticationToken = SecurityContextHolder.getContext().authentication as JwtAuthenticationToken
+        val jwt = jwtAuthenticationToken.token.tokenValue
+
+        return ResponseEntity.ok(this.minioService.bucketExists(jwt, name))
+    }
 }
 
