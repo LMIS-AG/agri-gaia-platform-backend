@@ -50,7 +50,7 @@ class KeycloakConnectorService @Autowired constructor(private val keycloakProper
         val user = agrigaiaRealm.users().search(username).first()
         val targetGroup = findTargetGroup(role, coopSpaceName, companyName)
 
-        // delete the user from the coop space by removing him from the respective group
+        // delete the user from the respective subgroup
         if (targetGroup != null) {
             agrigaiaRealm.users().get(user.id).leaveGroup(targetGroup.id)
         }
@@ -60,7 +60,7 @@ class KeycloakConnectorService @Autowired constructor(private val keycloakProper
         val user = agrigaiaRealm.users().search(username).first()
         val targetGroup = findTargetGroup(role, coopSpaceName, companyName)
 
-        // add the user to the coop space by adding him to the respective group
+        // add the user to the respective subgroup
         if (targetGroup != null) {
             agrigaiaRealm.users().get(user.id).joinGroup(targetGroup.id)
         }

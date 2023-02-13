@@ -107,7 +107,7 @@ class CoopSpaceController @Autowired constructor(
     @PostMapping("/deleteMember")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     fun removeUserFromCoopSpace(@RequestBody deleteMemberRequest: DeleteMemberRequest) {
-        // remove user from the CoopSpace by removing him both from the respective group in Keycloak and the database
+        // remove user from the CoopSpace by removing it both from the respective subgroup in Keycloak and the database
         this.coopSpaceService.removeUserFromKeycloakGroup(
             deleteMemberRequest.member.username!!,
             deleteMemberRequest.member.role!!.toString(),
@@ -126,7 +126,7 @@ class CoopSpaceController @Autowired constructor(
         val coopSpace: CoopSpace = coopSpaceDto.toEntity(this.coopSpaceMapper)
         val coopSpaceName = coopSpace.name ?: throw BusinessException("CoopSpaceName is null", ErrorType.NOT_FOUND)
 
-        // remove user from the CoopSpace by removing him both from the respective group in Keycloak and the database
+        // add user to the CoopSpace by adding it both to the respective subgroup in Keycloak and the database
         this.coopSpaceService.addUsersToKeycloakGroup(
                 addMemberRequest.member,
                 coopSpaceName
@@ -142,6 +142,9 @@ class CoopSpaceController @Autowired constructor(
         val coopSpaceDto = this.coopSpaceMapper.map(this.coopSpaceService.findCoopSpace(changeMemberRoleRequest.coopSpaceId))
         val coopSpace: CoopSpace = coopSpaceDto.toEntity(this.coopSpaceMapper)
         val coopSpaceName = coopSpace.name ?: throw BusinessException("CoopSpaceName is null", ErrorType.NOT_FOUND)
+
+        // change role of the user by removing it from its respective Keycloak subgroup (e.g. "...-User"), adding it to another subgroup (e.g. "...-Admin") and
+        // update his role in the database by updating the CoopSpace
 
         this.coopSpaceService.removeUserFromKeycloakGroup(
             changeMemberRoleRequest.member.username!!,
