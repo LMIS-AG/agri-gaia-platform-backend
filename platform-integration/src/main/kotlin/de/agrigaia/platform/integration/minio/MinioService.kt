@@ -15,8 +15,8 @@ class MinioService(private val minioProperties: MinioProperties) {
         return minioClient.listBuckets()
     }
 
-    fun bucketExists(jwt: String, name: String): Boolean {
-        val minioClient = getMinioClient(jwt)
+    fun bucketExists(name: String): Boolean {
+        val minioClient = this.getMinioClient()
 
         return minioClient.bucketExists(BucketExistsArgs.builder().bucket(name).build())
     }
@@ -80,4 +80,10 @@ class MinioService(private val minioProperties: MinioProperties) {
             )
             .endpoint(this.minioProperties.url)
             .build()
+
+
+    private fun getMinioClient(): MinioClient = MinioClient.builder()
+        .endpoint(this.minioProperties.url)
+        .credentials(this.minioProperties.technicalUserAccessKey, this.minioProperties.technicalUserSecretKey)
+        .build()
 }
