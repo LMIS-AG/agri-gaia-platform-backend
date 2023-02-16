@@ -1,9 +1,5 @@
 package de.agrigaia.platform.integration.minio
-
-import io.minio.ListObjectsArgs
-import io.minio.MinioClient
-import io.minio.Result
-import io.minio.SelectObjectContentArgs
+import io.minio.*
 import io.minio.credentials.Jwt
 import io.minio.credentials.WebIdentityProvider
 import io.minio.messages.*
@@ -14,13 +10,19 @@ import java.io.BufferedReader
 @Service
 class MinioService(private val minioProperties: MinioProperties) {
     fun listBuckets(jwt: String): MutableList<Bucket> {
-        val minioClient = getMinioClient(jwt)
+        val minioClient = getMinioClientForTechnicalUser(jwt)
 
         return minioClient.listBuckets()
     }
 
+    fun bucketExists(name: String): Boolean {
+        val minioClient = this.getMinioClientForTechnicalUser()
+
+        return minioClient.bucketExists(BucketExistsArgs.builder().bucket(name).build())
+    }
+
     fun getAssetsForCoopspace(jwt: String, company: String, bucketName: String): List<Result<Item>> {
-        val minioClient = this.getMinioClient(jwt)
+        val minioClient = this.getMinioClientForTechnicalUser(jwt)
 
         val bucketArgs = ListObjectsArgs.builder()
                 .bucket("prj-$company-$bucketName")
@@ -30,7 +32,7 @@ class MinioService(private val minioProperties: MinioProperties) {
     }
 
     fun getPublishableAssetsForBucket(jwt: String, bucketName: String): List<Result<Item>> {
-        val minioClient = this.getMinioClient(jwt)
+        val minioClient = this.getMinioClientForTechnicalUser(jwt)
 
         val bucketArgs = ListObjectsArgs.builder()
                 .bucket(bucketName)
@@ -42,7 +44,7 @@ class MinioService(private val minioProperties: MinioProperties) {
     }
 
     fun getFileContent(jwt: String, bucketName: String, fileName: String): String {
-        val minioClient = this.getMinioClient(jwt)
+        val minioClient = this.getMinioClientForTechnicalUser(jwt)
 
         val sqlExpression = "select * from S3Object"
         val iss = InputSerialization(null, false, null, null, FileHeaderInfo.USE, null, null, null)
@@ -68,7 +70,7 @@ class MinioService(private val minioProperties: MinioProperties) {
         "{" + assetJson.replace("\" ", " ").replace("\",", ",").replace("\"\n", "\n").replace("\"\"", "\"")
 
 
-    private fun getMinioClient(jwt: String): MinioClient = MinioClient.builder()
+    private fun getMinioClientForTechnicalUser(jwt: String): MinioClient = MinioClient.builder()
             .credentialsProvider(
                     WebIdentityProvider(
                             { Jwt(jwt, 8600) },
@@ -78,4 +80,10 @@ class MinioService(private val minioProperties: MinioProperties) {
             )
             .endpoint(this.minioProperties.url)
             .build()
+
+
+    private fun getMinioClientForTechnicalUser(): MinioClient = MinioClient.builder()
+        .endpoint(this.minioProperties.url)
+        .credentials(this.minioProperties.technicalUserAccessKey, this.minioProperties.technicalUserSecretKey)
+        .build()
 }

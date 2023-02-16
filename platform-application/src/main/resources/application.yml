@@ -33,6 +33,8 @@ agrigaia-platform:
     password: # Technical user password
   minio:
     url: https://minio-test-api.platform.agri-gaia.com #
+    technicalUserAccessKey: # minio - identity - service accounts - access key
+    technicalUserSecretKey: # minio - identity - service accounts - secret key
   coopSpaces:
     createCoopSpaceUrl: https://create-cooperation-room-eventsource.platform.agri-gaia.com #
     deleteCoopSpaceUrl: https://delete-cooperation-room-eventsource.platform.agri-gaia.com #
