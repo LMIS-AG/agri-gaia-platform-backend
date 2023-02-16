@@ -25,7 +25,7 @@ import reactor.core.publisher.Mono
 class CoopSpaceService(
     private val coopSpacesProperties: CoopSpacesProperties,
     private val coopSpaceRepository: CoopSpaceRepository,
-    private val MemberRepository: MemberRepository,
+    private val memberRepository: MemberRepository,
     private val minioService: MinioService,
     private val keycloakConnectorService: KeycloakConnectorService
 ): HasLogger {
@@ -159,7 +159,7 @@ class CoopSpaceService(
     }
 
     fun removeUserFromDatabase(id: Long) {
-        return MemberRepository
+        return memberRepository
             .deleteById(id)
     }
 
@@ -193,17 +193,15 @@ class CoopSpaceService(
         this.coopSpaceRepository.save(coopSpace)
     }
     fun changeUserRoleInDatabase(member: Member, coopSpace: CoopSpace) {
-        // change role in the database by replacing the "originalMember" with the updated "member" in the members list
-        // of the coop space
-        val members = coopSpace.members.toMutableList()
+        // change role in the database by replacing the "originalMember" of the coop space with the updated "member"
 
-        val originalMember = members.find { it.username == member.username }
+        val originalMember = coopSpace.members.find { it.username == member.username }
             ?: throw BusinessException("originalMember not found", ErrorType.NOT_FOUND)
 
-        members.replaceAll { if (it == originalMember) member else it }
-        coopSpace.members = members
+        originalMember.role = member.role
+        originalMember.id = member.id
 
-        this.coopSpaceRepository.save(coopSpace)
+        this.memberRepository.save(originalMember);
     }
 
     fun hasAccessToCoopSpace(username: String, coopSpace: CoopSpace): Boolean {
