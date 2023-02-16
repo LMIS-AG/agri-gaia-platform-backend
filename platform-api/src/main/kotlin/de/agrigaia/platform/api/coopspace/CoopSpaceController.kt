@@ -140,5 +140,10 @@ class CoopSpaceController @Autowired constructor(
             ResponseEntity.noContent().build()
         }
     }
+
+    @GetMapping("existsbyname/{name}")
+    fun checkIfCoopSpaceAlreadyExistsByName(@PathVariable name: String): ResponseEntity<Boolean> {
+        return ResponseEntity.ok(this.minioService.bucketExists(name))
+    }
 }
 
