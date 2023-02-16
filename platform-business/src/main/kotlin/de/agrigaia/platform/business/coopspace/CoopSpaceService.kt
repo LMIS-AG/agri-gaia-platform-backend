@@ -12,7 +12,6 @@ import de.agrigaia.platform.persistence.repository.CoopSpaceRepository
 import de.agrigaia.platform.persistence.repository.MemberRepository
 import de.agrigaia.platform.integration.keycloak.KeycloakConnectorService
 import io.minio.messages.Bucket
-import org.slf4j.LoggerFactory
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
@@ -150,8 +149,13 @@ class CoopSpaceService(
             .orElseThrow { BusinessException("CoopSpace with id $id does not exist.", ErrorType.NOT_FOUND) }
     }
 
-    fun removeUserFromKeycloakGroup(username: String, role: String, coopSpaceName: String, companyName: String) {
-        this.keycloakConnectorService.removeUserFromGroup(username, role, coopSpaceName, companyName)
+    fun removeUserFromKeycloakGroup(username: String, role: String, companyName: String, coopSpaceName: String) {
+        this.keycloakConnectorService.removeUserFromGroup(
+            username,
+            role,
+            companyName,
+            coopSpaceName,
+        )
     }
 
     fun removeUserFromDatabase(id: Long) {
@@ -159,7 +163,51 @@ class CoopSpaceService(
             .deleteById(id)
     }
 
+    fun addUsersToKeycloakGroup(memberList: List<Member> = ArrayList(), coopSpaceName: String) {
+        // add a list of users or a list containing a single user to a Keycloak subgroup by calling the "addUserToKeycloakGroup"
+        // as often as necessary
+        for (member in memberList) {
+            addUserToKeycloakGroup(
+                member,
+                coopSpaceName,
+            )
+        }
+    }
+
+    fun addUserToKeycloakGroup(member: Member, coopSpaceName: String) {
+        // add a single user to a Keycloak subgroup, this function gets called directly when changing the role of a user
+            keycloakConnectorService.addUserToGroup(
+                member.username!!,
+                member.role!!.toString(),
+                coopSpaceName,
+                member.company!!
+            )
+    }
+
+    fun addUsersToDatabase(memberList: List<Member> = ArrayList(), coopSpace: CoopSpace) {
+        val members = coopSpace.members.toMutableList()
+
+        members.addAll(memberList)
+        coopSpace.members = members
+
+        this.coopSpaceRepository.save(coopSpace)
+    }
+    fun changeUserRoleInDatabase(member: Member, coopSpace: CoopSpace) {
+        // change role in the database by replacing the "originalMember" with the updated "member" in the members list
+        // of the coop space
+        val members = coopSpace.members.toMutableList()
+
+        val originalMember = members.find { it.username == member.username }
+            ?: throw BusinessException("originalMember not found", ErrorType.NOT_FOUND)
+
+        members.replaceAll { if (it == originalMember) member else it }
+        coopSpace.members = members
+
+        this.coopSpaceRepository.save(coopSpace)
+    }
+
     fun hasAccessToCoopSpace(username: String, coopSpace: CoopSpace): Boolean {
+        // check whether a user has access to a certain coopspace by searching through its member list
         for (member in coopSpace.members) {
             if (member.username == username) {
                 return true

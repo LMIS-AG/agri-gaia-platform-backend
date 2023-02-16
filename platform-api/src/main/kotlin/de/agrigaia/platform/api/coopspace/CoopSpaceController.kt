@@ -3,9 +3,13 @@ package de.agrigaia.platform.api.coopspace
 import de.agrigaia.platform.api.BaseController
 import de.agrigaia.platform.api.toEntity
 import de.agrigaia.platform.business.coopspace.CoopSpaceService
+import de.agrigaia.platform.business.errors.BusinessException
+import de.agrigaia.platform.business.errors.ErrorType
 import de.agrigaia.platform.business.keycloak.KeycloakService
 import de.agrigaia.platform.common.HasLogger
 import de.agrigaia.platform.integration.minio.MinioService
+import de.agrigaia.platform.model.coopspace.AddMemberRequest
+import de.agrigaia.platform.model.coopspace.ChangeMemberRoleRequest
 import de.agrigaia.platform.model.coopspace.CoopSpace
 import de.agrigaia.platform.model.coopspace.DeleteMemberRequest
 import org.springframework.beans.factory.annotation.Autowired
@@ -103,16 +107,60 @@ class CoopSpaceController @Autowired constructor(
     @PostMapping("/deleteMember")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     fun removeUserFromCoopSpace(@RequestBody deleteMemberRequest: DeleteMemberRequest) {
-        // remove user from the CoopSpace by removing him both from the respective group in Keycloak and the database
+        // remove user from the CoopSpace by removing it both from the respective subgroup in Keycloak and the database
         this.coopSpaceService.removeUserFromKeycloakGroup(
-            deleteMemberRequest.username,
-            deleteMemberRequest.role,
-            deleteMemberRequest.coopSpaceName,
-            deleteMemberRequest.companyName
+            deleteMemberRequest.member.username!!,
+            deleteMemberRequest.member.role!!.toString(),
+            deleteMemberRequest.member.company!!,
+            deleteMemberRequest.coopSpaceName
         )
         this.coopSpaceService.removeUserFromDatabase(
-            deleteMemberRequest.memberId
+            deleteMemberRequest.member.id
         )
+    }
+
+    @PostMapping("/addMember")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    fun addUserToCoopSpace(@RequestBody addMemberRequest: AddMemberRequest) {
+        val coopSpaceDto = this.coopSpaceMapper.map(this.coopSpaceService.findCoopSpace(addMemberRequest.coopSpaceId))
+        val coopSpace: CoopSpace = coopSpaceDto.toEntity(this.coopSpaceMapper)
+        val coopSpaceName = coopSpace.name ?: throw BusinessException("CoopSpaceName is null", ErrorType.NOT_FOUND)
+
+        // add user to the CoopSpace by adding it both to the respective subgroup in Keycloak and the database
+        this.coopSpaceService.addUsersToKeycloakGroup(
+                addMemberRequest.member,
+                coopSpaceName
+        )
+        this.coopSpaceService.addUsersToDatabase(
+            addMemberRequest.member,
+            coopSpace
+        )
+    }
+    @PostMapping("/changeMemberRole")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    fun changeMemberRoleInCoopSpace(@RequestBody changeMemberRoleRequest: ChangeMemberRoleRequest) {
+        val coopSpaceDto = this.coopSpaceMapper.map(this.coopSpaceService.findCoopSpace(changeMemberRoleRequest.coopSpaceId))
+        val coopSpace: CoopSpace = coopSpaceDto.toEntity(this.coopSpaceMapper)
+        val coopSpaceName = coopSpace.name ?: throw BusinessException("CoopSpaceName is null", ErrorType.NOT_FOUND)
+
+        // change role of the user by removing it from its respective Keycloak subgroup (e.g. "...-User"), adding it to another subgroup (e.g. "...-Admin") and
+        // update his role in the database by updating the CoopSpace
+
+        this.coopSpaceService.removeUserFromKeycloakGroup(
+            changeMemberRoleRequest.member.username!!,
+            changeMemberRoleRequest.originalRole,
+            changeMemberRoleRequest.member.company!!,
+            coopSpaceName,
+        )
+        this.coopSpaceService.addUserToKeycloakGroup(
+            changeMemberRoleRequest.member,
+            coopSpaceName
+        )
+        this.coopSpaceService.changeUserRoleInDatabase(
+            changeMemberRoleRequest.member,
+            coopSpace
+        )
+
     }
 
     @GetMapping("{id}/assets")
