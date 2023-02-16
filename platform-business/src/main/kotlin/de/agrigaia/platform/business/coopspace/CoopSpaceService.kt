@@ -155,7 +155,7 @@ class CoopSpaceService(
             role,
             companyName,
             coopSpaceName,
-            )
+        )
     }
 
     fun removeUserFromDatabase(id: Long) {
