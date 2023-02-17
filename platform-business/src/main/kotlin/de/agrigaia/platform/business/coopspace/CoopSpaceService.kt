@@ -31,7 +31,7 @@ class CoopSpaceService(
 ): HasLogger {
     private val webClient: WebClient = WebClient.create()
 
-    /*
+    /**
      * Returns only those CoopSpaces where the user has access to the corresponding bucket.
      * I.e. all they are allowed to see.
      */
@@ -163,9 +163,11 @@ class CoopSpaceService(
             .deleteById(id)
     }
 
+    /**
+     * add a list of users or a list containing a single user to a Keycloak subgroup by calling the "addUserToKeycloakGroup"
+     * as often as necessary
+     */
     fun addUsersToKeycloakGroup(memberList: List<Member> = ArrayList(), coopSpaceName: String) {
-        // add a list of users or a list containing a single user to a Keycloak subgroup by calling the "addUserToKeycloakGroup"
-        // as often as necessary
         for (member in memberList) {
             addUserToKeycloakGroup(
                 member,
@@ -174,8 +176,10 @@ class CoopSpaceService(
         }
     }
 
+    /**
+     * add a single user to a Keycloak subgroup, this function gets called directly when changing the role of a user
+     */
     fun addUserToKeycloakGroup(member: Member, coopSpaceName: String) {
-        // add a single user to a Keycloak subgroup, this function gets called directly when changing the role of a user
             keycloakConnectorService.addUserToGroup(
                 member.username!!,
                 member.role!!.toString(),
@@ -192,9 +196,11 @@ class CoopSpaceService(
 
         this.coopSpaceRepository.save(coopSpace)
     }
-    fun changeUserRoleInDatabase(member: Member, coopSpace: CoopSpace) {
-        // change role in the database by replacing the "originalMember" of the coop space with the updated "member"
 
+    /**
+     * change role in the database
+     */
+    fun changeUserRoleInDatabase(member: Member, coopSpace: CoopSpace) {
         val originalMember = coopSpace.members.find { it.username == member.username }
             ?: throw BusinessException("originalMember not found", ErrorType.NOT_FOUND)
 
