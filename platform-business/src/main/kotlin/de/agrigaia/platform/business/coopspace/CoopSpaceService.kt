@@ -210,8 +210,10 @@ class CoopSpaceService(
         this.memberRepository.save(originalMember);
     }
 
+    /**
+     * check whether a user has access to a certain coopspace by searching through its member list
+     */
     fun hasAccessToCoopSpace(username: String, coopSpace: CoopSpace): Boolean {
-        // check whether a user has access to a certain coopspace by searching through its member list
         for (member in coopSpace.members) {
             if (member.username == username) {
                 return true
