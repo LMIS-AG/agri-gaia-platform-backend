@@ -56,7 +56,7 @@ class CoopSpaceServiceTest {
         every { d.name } returns "projectname"
         val dummyCoopSpaces = listOf(c, d)
 
-        var expected = listOf(d)
+        val expected = listOf(d)
         actual = coopSpaceService.filterCoopSpacesByBucketAccess(dummyCoopSpaces, dummyBuckets)
 
         assertEquals(expected, actual, "Should remove coopSpaces the user has no access to.")
@@ -150,7 +150,7 @@ class CoopSpaceServiceTest {
         val matchingUserName = "Some Holy User Name"
 
         // Throw BusinessException(ErrorType.NOT_FOUND) if Member with matching `username` is not in CoopSpace.
-        val `member lessCoopSpace` = CoopSpace(members = listOf())
+        val memberlessCoopspace = CoopSpace(members = listOf())
         val passedMember = Member(
             username = matchingUserName,
             role = CoopSpaceRole.USER,
@@ -160,7 +160,7 @@ class CoopSpaceServiceTest {
             assertThrows<BusinessException>("Should throw `BusinessException` if no matching user is found.") {
                 coopSpaceService.changeUserRoleInDatabase(
                     passedMember,
-                    `member lessCoopSpace`
+                    memberlessCoopspace
                 )
             }
         assertEquals(
