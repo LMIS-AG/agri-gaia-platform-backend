@@ -12,6 +12,7 @@ import org.springframework.http.HttpStatus
 import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken
 import org.springframework.web.bind.annotation.*
+import org.springframework.web.multipart.MultipartFile
 
 @RestController
 @RequestMapping("/assets")
@@ -31,6 +32,16 @@ class AssetsController @Autowired constructor(
         val catalogJson = this.minioService.getFileContent(jwt, bucket, "config/${name}/catalog.json")
 
         this.assetsService.publishAsset(assetJson, policyJson, catalogJson)
+    }
+
+    // TODO maybe it is more intuitive if '/{bucket}' is for uploading and 'publish/{bucket}/{name}' is for publishing
+    @PostMapping("upload/{bucket}")
+    @ResponseStatus(HttpStatus.CREATED)
+    fun uploadAsset(@PathVariable bucket: String, @RequestBody files: Array<MultipartFile>) {
+        val jwtAuthenticationToken = SecurityContextHolder.getContext().authentication as JwtAuthenticationToken
+        val jwt = jwtAuthenticationToken.token.tokenValue
+
+        this.minioService.uploadAssets(jwt, bucket, files)
     }
 
     //TODO maybe refactor duplicated code
