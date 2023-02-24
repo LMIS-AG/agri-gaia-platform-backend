@@ -7,7 +7,6 @@ import org.springframework.stereotype.Service
 import org.springframework.web.multipart.MultipartFile
 import java.io.BufferedReader
 import java.io.ByteArrayInputStream
-import java.time.ZonedDateTime
 
 
 @Service
@@ -71,9 +70,13 @@ class MinioService(private val minioProperties: MinioProperties) {
     fun uploadAssets(jwt: String, bucketName: String, files: Array<MultipartFile>) {
         val minioClient = this.getMinioClient(jwt)
 
-        val snowballObjects: ArrayList<SnowballObject> = ArrayList()
-        for (file in files){
-            snowballObjects.add(SnowballObject("assets/"+file.originalFilename, ByteArrayInputStream(file.bytes), file.size, ZonedDateTime.now() ))
+        val snowballObjects: List<SnowballObject> = files.map { file ->
+            SnowballObject(
+                "assets/" + file.originalFilename,
+                ByteArrayInputStream(file.bytes),
+                file.size,
+                null,
+            )
         }
 
         minioClient.uploadSnowballObjects(UploadSnowballObjectsArgs.builder().bucket(bucketName).objects(snowballObjects).build())
