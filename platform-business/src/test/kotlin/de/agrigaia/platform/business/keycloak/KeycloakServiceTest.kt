@@ -8,7 +8,6 @@ import io.mockk.mockk
 import org.junit.jupiter.api.Test
 import org.keycloak.representations.idm.UserRepresentation
 import kotlin.test.assertEquals
-import kotlin.test.assertTrue
 
 class KeycloakServiceTest {
 
@@ -66,12 +65,4 @@ class KeycloakServiceTest {
             assertEquals(expected[i].username, actual[i].username, "Incorrect username.")
         }
     }
-
-    @Test
-    fun `Test findKeycloakUserByMail`() {
-        val keycloakConnectorService: KeycloakConnectorService = mockk()
-        val keycloakService = KeycloakService(keycloakConnectorService)
-        assertTrue(true, "Oh no, true is false :(")
-    }
-
 }
