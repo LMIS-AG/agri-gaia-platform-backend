@@ -4,13 +4,15 @@ import io.minio.credentials.Jwt
 import io.minio.credentials.WebIdentityProvider
 import io.minio.messages.*
 import org.springframework.stereotype.Service
+import org.springframework.web.multipart.MultipartFile
 import java.io.BufferedReader
+import java.io.ByteArrayInputStream
 
 
 @Service
 class MinioService(private val minioProperties: MinioProperties) {
     fun listBuckets(jwt: String): MutableList<Bucket> {
-        val minioClient = getMinioClientForTechnicalUser(jwt)
+        val minioClient = getMinioClient(jwt)
 
         return minioClient.listBuckets()
     }
@@ -22,7 +24,7 @@ class MinioService(private val minioProperties: MinioProperties) {
     }
 
     fun getAssetsForCoopspace(jwt: String, company: String, bucketName: String): List<Result<Item>> {
-        val minioClient = this.getMinioClientForTechnicalUser(jwt)
+        val minioClient = this.getMinioClient(jwt)
 
         val bucketArgs = ListObjectsArgs.builder()
                 .bucket("prj-$company-$bucketName")
@@ -32,7 +34,7 @@ class MinioService(private val minioProperties: MinioProperties) {
     }
 
     fun getPublishableAssetsForBucket(jwt: String, bucketName: String): List<Result<Item>> {
-        val minioClient = this.getMinioClientForTechnicalUser(jwt)
+        val minioClient = this.getMinioClient(jwt)
 
         val bucketArgs = ListObjectsArgs.builder()
                 .bucket(bucketName)
@@ -44,7 +46,7 @@ class MinioService(private val minioProperties: MinioProperties) {
     }
 
     fun getFileContent(jwt: String, bucketName: String, fileName: String): String {
-        val minioClient = this.getMinioClientForTechnicalUser(jwt)
+        val minioClient = this.getMinioClient(jwt)
 
         val sqlExpression = "select * from S3Object"
         val iss = InputSerialization(null, false, null, null, FileHeaderInfo.USE, null, null, null)
@@ -65,12 +67,27 @@ class MinioService(private val minioProperties: MinioProperties) {
         return fixString(text)
     }
 
+    fun uploadAssets(jwt: String, bucketName: String, files: Array<MultipartFile>) {
+        val minioClient = this.getMinioClient(jwt)
+
+        val snowballObjects: List<SnowballObject> = files.map { file ->
+            SnowballObject(
+                "assets/" + file.originalFilename,
+                ByteArrayInputStream(file.bytes),
+                file.size,
+                null,
+            )
+        }
+
+        minioClient.uploadSnowballObjects(UploadSnowballObjectsArgs.builder().bucket(bucketName).objects(snowballObjects).build())
+    }
+
     // TODO Please fix this, it's so bad
     private fun fixString(assetJson: String) =
         "{" + assetJson.replace("\" ", " ").replace("\",", ",").replace("\"\n", "\n").replace("\"\"", "\"")
 
 
-    private fun getMinioClientForTechnicalUser(jwt: String): MinioClient = MinioClient.builder()
+    private fun getMinioClient(jwt: String): MinioClient = MinioClient.builder()
             .credentialsProvider(
                     WebIdentityProvider(
                             { Jwt(jwt, 8600) },

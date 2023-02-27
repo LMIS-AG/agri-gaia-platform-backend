@@ -12,6 +12,10 @@ spring:
         jwt:
           issuer-uri: https://account.platform.agri-gaia.com/realms/agri-gaia-platform
 #          jwk-set-uri: https://account.platform.agri-gaia.com/auth/realms/agri-gaia/protocol/openid-connect/certs
+  servlet:
+    multipart:
+      max-file-size: -1 # This property sets the maximum size of an individual file that can be uploaded in a multipart request. If a file is larger than this size, the upload will fail with a MaxUploadSizeExceededException. Setting this property to -1 removes the file size limit.
+      max-request-size: -1 #  This property sets the maximum size of the entire multipart request, which includes all files and other form data. If the request is larger than this size, the upload will fail with a MaxUploadSizeExceededException. Setting this property to -1 removes the request size limit.
 
 #logging:
 #  level:

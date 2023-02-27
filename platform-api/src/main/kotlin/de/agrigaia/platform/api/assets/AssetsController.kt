@@ -12,6 +12,7 @@ import org.springframework.http.HttpStatus
 import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken
 import org.springframework.web.bind.annotation.*
+import org.springframework.web.multipart.MultipartFile
 
 @RestController
 @RequestMapping("/assets")
@@ -20,7 +21,16 @@ class AssetsController @Autowired constructor(
     private val minioService: MinioService
 ) : HasLogger, BaseController() {
 
-    @PostMapping("{bucket}/{name}")
+    @PostMapping("upload/{bucket}")
+    @ResponseStatus(HttpStatus.OK)
+    fun uploadAsset(@PathVariable bucket: String, @RequestBody files: Array<MultipartFile>) {
+        val jwtAuthenticationToken = SecurityContextHolder.getContext().authentication as JwtAuthenticationToken
+        val jwt = jwtAuthenticationToken.token.tokenValue
+
+        this.minioService.uploadAssets(jwt, bucket, files)
+    }
+
+    @PostMapping("publish/{bucket}/{name}")
     @ResponseStatus(HttpStatus.CREATED)
     fun publishAsset(@PathVariable bucket: String, @PathVariable name: String) {
         val jwtAuthenticationToken = SecurityContextHolder.getContext().authentication as JwtAuthenticationToken
@@ -33,9 +43,7 @@ class AssetsController @Autowired constructor(
         this.assetsService.publishAsset(assetJson, policyJson, catalogJson)
     }
 
-    //TODO maybe refactor duplicated code
-
-    @DeleteMapping("{bucket}/{name}")
+    @DeleteMapping("publish/{bucket}/{name}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     fun unpublishAsset(@PathVariable bucket: String, @PathVariable name: String) {
         val jwtAuthenticationToken = SecurityContextHolder.getContext().authentication as JwtAuthenticationToken
