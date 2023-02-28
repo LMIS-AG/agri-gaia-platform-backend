@@ -175,10 +175,10 @@ class CoopSpaceController @Autowired constructor(
                 this.minioService.getAssetsForCoopspace(jwt, company!!, bucketName).map { it.get() }.map {
                     AssetDto(
                         it.etag(),
-                        it.objectName(),
+                        it.objectName().replace("assets/", ""),
                         it.lastModified().toString(),
                         it.lastModified().toString(),
-                        "${it.size()}MB",
+                        it.size().toString(),
                         "label",
                         bucketName
                     )
