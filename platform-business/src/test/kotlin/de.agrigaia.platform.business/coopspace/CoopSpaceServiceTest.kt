@@ -19,21 +19,22 @@ import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
 class CoopSpaceServiceTest {
+
+    private val coopSpacesProperties: CoopSpacesProperties = mockk()
+    private val coopSpaceRepository: CoopSpaceRepository = mockk()
+    private val memberRepository: MemberRepository = mockk()
+    private val minioService: MinioService = mockk()
+    private val keycloakConnectorService: KeycloakConnectorService = mockk()
+    private val coopSpaceService = CoopSpaceService(
+        coopSpacesProperties = coopSpacesProperties,
+        coopSpaceRepository = coopSpaceRepository,
+        memberRepository = memberRepository,
+        minioService = minioService,
+        keycloakConnectorService = keycloakConnectorService,
+    )
+
     @Test
     fun `Test filterCoopSpacesByBucketAccess`() {
-        val coopSpacesProperties: CoopSpacesProperties = mockk()
-        val coopSpaceRepository: CoopSpaceRepository = mockk()
-        val memberRepository: MemberRepository = mockk()
-        val minioService: MinioService = mockk()
-        val keycloakConnectorService: KeycloakConnectorService = mockk()
-        val coopSpaceService = CoopSpaceService(
-            coopSpacesProperties = coopSpacesProperties,
-            coopSpaceRepository = coopSpaceRepository,
-            memberRepository = memberRepository,
-            minioService = minioService,
-            keycloakConnectorService = keycloakConnectorService,
-        )
-
         // Should return empty list if either input list is empty.
         var actual = coopSpaceService.filterCoopSpacesByBucketAccess(listOf(), listOf())
         assertEquals(listOf<CoopSpace>(), actual, "Should return an empty list when given empty lists.")
@@ -64,18 +65,6 @@ class CoopSpaceServiceTest {
 
     @Test
     fun `Test findCoopSpace`() {
-        val coopSpacesProperties: CoopSpacesProperties = mockk()
-        val coopSpaceRepository: CoopSpaceRepository = mockk()
-        val memberRepository: MemberRepository = mockk()
-        val minioService: MinioService = mockk()
-        val keycloakConnectorService: KeycloakConnectorService = mockk()
-        val coopSpaceService = CoopSpaceService(
-            coopSpacesProperties = coopSpacesProperties,
-            coopSpaceRepository = coopSpaceRepository,
-            memberRepository = memberRepository,
-            minioService = minioService,
-            keycloakConnectorService = keycloakConnectorService,
-        )
         val dummyId: Long = 42
         val dummyCoopSpace = CoopSpace("someName", "someCompany", "someMandant", listOf())
         every { coopSpaceRepository.findById(dummyId) } returns Optional.of(dummyCoopSpace)
@@ -86,47 +75,18 @@ class CoopSpaceServiceTest {
 
     @Test
     fun `Test removeUserFromDatabase`() {
-        val coopSpacesProperties: CoopSpacesProperties = mockk()
-        val coopSpaceRepository: CoopSpaceRepository = mockk()
-        val memberRepository: MemberRepository = mockk()
-        val minioService: MinioService = mockk()
-        val keycloakConnectorService: KeycloakConnectorService = mockk()
-        val coopSpaceService = CoopSpaceService(
-            coopSpacesProperties = coopSpacesProperties,
-            coopSpaceRepository = coopSpaceRepository,
-            memberRepository = memberRepository,
-            minioService = minioService,
-            keycloakConnectorService = keycloakConnectorService,
-        )
-
         val dummyId: Long = 42
         every { memberRepository.deleteById(dummyId) } just runs
-
         coopSpaceService.removeUserFromDatabase(dummyId)
         verify { memberRepository.deleteById(match { it == dummyId }) }
     }
 
     @Test
     fun `Test addUsersToDatabase`() {
-        val coopSpacesProperties: CoopSpacesProperties = mockk()
-        val coopSpaceRepository: CoopSpaceRepository = mockk()
-        val memberRepository: MemberRepository = mockk()
-        val minioService: MinioService = mockk()
-        val keycloakConnectorService: KeycloakConnectorService = mockk()
-        val coopSpaceService = CoopSpaceService(
-            coopSpacesProperties = coopSpacesProperties,
-            coopSpaceRepository = coopSpaceRepository,
-            memberRepository = memberRepository,
-            minioService = minioService,
-            keycloakConnectorService = keycloakConnectorService,
-        )
         val dummyMember = Member()
         val dummyCoopSpace = CoopSpace()
-
         every { coopSpaceRepository.save(any()) } returns dummyCoopSpace
-
         coopSpaceService.addUsersToDatabase(listOf(dummyMember), dummyCoopSpace)
-
         assertEquals(listOf(dummyMember), dummyCoopSpace.members, "Should add member to CoopSpace's members list.")
         // TODO: How do I pass an error message to `verify`?
         verify { coopSpaceRepository.save(dummyCoopSpace) }// { "Should save CoopSpace to coopSpaceRepository."}
@@ -134,18 +94,6 @@ class CoopSpaceServiceTest {
 
     @Test
     fun `Test changeUserRoleInDatabase`() {
-        val coopSpacesProperties: CoopSpacesProperties = mockk()
-        val coopSpaceRepository: CoopSpaceRepository = mockk()
-        val memberRepository: MemberRepository = mockk()
-        val minioService: MinioService = mockk()
-        val keycloakConnectorService: KeycloakConnectorService = mockk()
-        val coopSpaceService = CoopSpaceService(
-            coopSpacesProperties = coopSpacesProperties,
-            coopSpaceRepository = coopSpaceRepository,
-            memberRepository = memberRepository,
-            minioService = minioService,
-            keycloakConnectorService = keycloakConnectorService,
-        )
         every { memberRepository.save(any()) } returns Member()
         val matchingUserName = "Some Holy User Name"
 
@@ -205,19 +153,6 @@ class CoopSpaceServiceTest {
 
     @Test
     fun `Test hasAccessToCoopSpace`() {
-        val coopSpacesProperties: CoopSpacesProperties = mockk()
-        val coopSpaceRepository: CoopSpaceRepository = mockk()
-        val memberRepository: MemberRepository = mockk()
-        val minioService: MinioService = mockk()
-        val keycloakConnectorService: KeycloakConnectorService = mockk()
-        val coopSpaceService = CoopSpaceService(
-            coopSpacesProperties = coopSpacesProperties,
-            coopSpaceRepository = coopSpaceRepository,
-            memberRepository = memberRepository,
-            minioService = minioService,
-            keycloakConnectorService = keycloakConnectorService,
-        )
-
         val c: CoopSpace = mockk()
         every { c.members } returns listOf()
         assertFalse(coopSpaceService.hasAccessToCoopSpace("", c), "Should return false when given empty username.")
