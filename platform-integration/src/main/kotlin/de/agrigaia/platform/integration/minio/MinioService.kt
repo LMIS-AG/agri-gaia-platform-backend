@@ -82,6 +82,12 @@ class MinioService(private val minioProperties: MinioProperties) {
         minioClient.uploadSnowballObjects(UploadSnowballObjectsArgs.builder().bucket(bucketName).objects(snowballObjects).build())
     }
 
+    fun deleteAsset(jwt: String, bucket: String, fileName: String) {
+        val minioClient = this.getMinioClient(jwt)
+
+        minioClient.removeObject(RemoveObjectArgs.builder().bucket(bucket).`object`("assets/" + fileName).build())
+    }
+
     // TODO Please fix this, it's so bad
     private fun fixString(assetJson: String) =
         "{" + assetJson.replace("\" ", " ").replace("\",", ",").replace("\"\n", "\n").replace("\"\"", "\"")
