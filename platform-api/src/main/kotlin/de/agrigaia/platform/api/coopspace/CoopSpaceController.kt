@@ -18,6 +18,7 @@ import org.springframework.http.ResponseEntity
 import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken
 import org.springframework.web.bind.annotation.*
+import org.springframework.web.multipart.MultipartFile
 
 
 // TODO Parse JWT and look for roles to see if the user has the rights for the coopspaces and buckets (local db and minio)
@@ -161,6 +162,15 @@ class CoopSpaceController @Autowired constructor(
             coopSpace
         )
 
+    }
+
+    @PostMapping("upload/{bucket}")
+    @ResponseStatus(HttpStatus.OK)
+    fun uploadAsset(@PathVariable bucket: String, @RequestBody files: Array<MultipartFile>) {
+        val jwtAuthenticationToken = SecurityContextHolder.getContext().authentication as JwtAuthenticationToken
+        val jwt = jwtAuthenticationToken.token.tokenValue
+
+        this.minioService.uploadAssets(jwt, bucket, files)
     }
 
     @GetMapping("{id}/assets")
