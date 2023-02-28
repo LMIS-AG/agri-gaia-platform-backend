@@ -30,7 +30,7 @@ class AssetsController @Autowired constructor(
         this.minioService.uploadAssets(jwt, bucket, files)
     }
 
-    @DeleteMapping("upload/{bucket}/{name}")
+    @DeleteMapping("delete/{bucket}/{name}")
     @ResponseStatus(HttpStatus.OK)
     fun deleteAsset(@PathVariable bucket: String, @PathVariable name: String) {
         val jwtAuthenticationToken = SecurityContextHolder.getContext().authentication as JwtAuthenticationToken
@@ -52,7 +52,7 @@ class AssetsController @Autowired constructor(
         this.assetsService.publishAsset(assetJson, policyJson, catalogJson)
     }
 
-    @DeleteMapping("publish/{bucket}/{name}")
+    @DeleteMapping("unpublish/{bucket}/{name}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     fun unpublishAsset(@PathVariable bucket: String, @PathVariable name: String) {
         val jwtAuthenticationToken = SecurityContextHolder.getContext().authentication as JwtAuthenticationToken
