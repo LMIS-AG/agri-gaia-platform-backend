@@ -4,13 +4,13 @@ import de.agrigaia.platform.business.errors.BusinessException
 import de.agrigaia.platform.business.errors.ErrorType
 import de.agrigaia.platform.common.HasLogger
 import de.agrigaia.platform.integration.coopspace.UsersInRole
+import de.agrigaia.platform.integration.keycloak.KeycloakConnectorService
 import de.agrigaia.platform.integration.minio.MinioService
 import de.agrigaia.platform.model.coopspace.CoopSpace
 import de.agrigaia.platform.model.coopspace.CoopSpaceRole
 import de.agrigaia.platform.model.coopspace.Member
 import de.agrigaia.platform.persistence.repository.CoopSpaceRepository
 import de.agrigaia.platform.persistence.repository.MemberRepository
-import de.agrigaia.platform.integration.keycloak.KeycloakConnectorService
 import io.minio.messages.Bucket
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatus
@@ -214,11 +214,6 @@ class CoopSpaceService(
      * check whether a user has access to a certain coopspace by searching through its member list
      */
     fun hasAccessToCoopSpace(username: String, coopSpace: CoopSpace): Boolean {
-        for (member in coopSpace.members) {
-            if (member.username == username) {
-                return true
-            }
-        }
-        return false
+        return coopSpace.members.any { m: Member -> m.username == username }
     }
 }
