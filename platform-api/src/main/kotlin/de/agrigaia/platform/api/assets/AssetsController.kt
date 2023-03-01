@@ -21,6 +21,15 @@ class AssetsController @Autowired constructor(
     private val minioService: MinioService
 ) : HasLogger, BaseController() {
 
+    @DeleteMapping("delete/{bucket}/{name}")
+    @ResponseStatus(HttpStatus.OK)
+    fun deleteAsset(@PathVariable bucket: String, @PathVariable name: String) {
+        val jwtAuthenticationToken = SecurityContextHolder.getContext().authentication as JwtAuthenticationToken
+        val jwt = jwtAuthenticationToken.token.tokenValue
+
+        this.minioService.deleteAsset(jwt, bucket, name)
+    }
+
     @PostMapping("publish/{bucket}/{name}")
     @ResponseStatus(HttpStatus.CREATED)
     fun publishAsset(@PathVariable bucket: String, @PathVariable name: String) {
