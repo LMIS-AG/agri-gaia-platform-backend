@@ -18,6 +18,7 @@ import org.springframework.http.ResponseEntity
 import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken
 import org.springframework.web.bind.annotation.*
+import org.springframework.web.multipart.MultipartFile
 
 
 // TODO Parse JWT and look for roles to see if the user has the rights for the coopspaces and buckets (local db and minio)
@@ -175,10 +176,10 @@ class CoopSpaceController @Autowired constructor(
                 this.minioService.getAssetsForCoopspace(jwt, company!!, bucketName).map { it.get() }.map {
                     AssetDto(
                         it.etag(),
-                        it.objectName(),
+                        it.objectName().replace("assets/", ""),
                         it.lastModified().toString(),
                         it.lastModified().toString(),
-                        "${it.size()}MB",
+                        it.size().toString(),
                         "label",
                         bucketName
                     )

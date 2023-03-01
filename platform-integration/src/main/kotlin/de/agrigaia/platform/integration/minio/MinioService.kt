@@ -28,6 +28,8 @@ class MinioService(private val minioProperties: MinioProperties) {
 
         val bucketArgs = ListObjectsArgs.builder()
                 .bucket("prj-$company-$bucketName")
+                .recursive(true)
+                .prefix("assets/")
                 .build()
 
         return minioClient.listObjects(bucketArgs).toList()
