@@ -164,15 +164,6 @@ class CoopSpaceController @Autowired constructor(
 
     }
 
-    @PostMapping("upload/{bucket}")
-    @ResponseStatus(HttpStatus.OK)
-    fun uploadAsset(@PathVariable bucket: String, @RequestBody files: Array<MultipartFile>) {
-        val jwtAuthenticationToken = SecurityContextHolder.getContext().authentication as JwtAuthenticationToken
-        val jwt = jwtAuthenticationToken.token.tokenValue
-
-        this.minioService.uploadAssets(jwt, bucket, files)
-    }
-
     @GetMapping("{id}/assets")
     fun getAssetsForCoopSpace(@PathVariable id: Long): ResponseEntity<Any> {
         val coopSpace = this.coopSpaceService.findCoopSpace(id)

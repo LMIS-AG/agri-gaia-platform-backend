@@ -5,13 +5,12 @@ import de.agrigaia.platform.api.coopspace.AssetDto
 import de.agrigaia.platform.integration.minio.MinioService
 import io.minio.messages.Bucket
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken
-import org.springframework.web.bind.annotation.GetMapping
-import org.springframework.web.bind.annotation.PathVariable
-import org.springframework.web.bind.annotation.RequestMapping
-import org.springframework.web.bind.annotation.RestController
+import org.springframework.web.bind.annotation.*
+import org.springframework.web.multipart.MultipartFile
 
 @RestController
 @RequestMapping("/buckets")
@@ -46,6 +45,15 @@ class BucketController @Autowired constructor(
         } catch (e: Exception) {
             ResponseEntity.noContent().build()
         }
+    }
+
+    @PostMapping("upload/{bucket}")
+    @ResponseStatus(HttpStatus.OK)
+    fun uploadAsset(@PathVariable bucket: String, @RequestBody files: Array<MultipartFile>) {
+        val jwtAuthenticationToken = SecurityContextHolder.getContext().authentication as JwtAuthenticationToken
+        val jwt = jwtAuthenticationToken.token.tokenValue
+
+        this.minioService.uploadAssets(jwt, bucket, files)
     }
 
 }

@@ -21,15 +21,6 @@ class AssetsController @Autowired constructor(
     private val minioService: MinioService
 ) : HasLogger, BaseController() {
 
-    @PostMapping("upload/{bucket}")
-    @ResponseStatus(HttpStatus.OK)
-    fun uploadAsset(@PathVariable bucket: String, @RequestBody files: Array<MultipartFile>) {
-        val jwtAuthenticationToken = SecurityContextHolder.getContext().authentication as JwtAuthenticationToken
-        val jwt = jwtAuthenticationToken.token.tokenValue
-
-        this.minioService.uploadAssets(jwt, bucket, files)
-    }
-
     @PostMapping("publish/{bucket}/{name}")
     @ResponseStatus(HttpStatus.CREATED)
     fun publishAsset(@PathVariable bucket: String, @PathVariable name: String) {
