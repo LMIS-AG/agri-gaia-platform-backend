@@ -5,19 +5,18 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import de.agrigaia.platform.api.BaseController
 import de.agrigaia.platform.common.HasLogger
-import de.agrigaia.platform.integration.assets.AssetsService
+import de.agrigaia.platform.integration.edc.EdcService
 import de.agrigaia.platform.integration.minio.MinioService
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.HttpStatus
 import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken
 import org.springframework.web.bind.annotation.*
-import org.springframework.web.multipart.MultipartFile
 
 @RestController
 @RequestMapping("/assets")
 class AssetsController @Autowired constructor(
-    private val assetsService: AssetsService,
+    private val edcService: EdcService,
     private val minioService: MinioService
 ) : HasLogger, BaseController() {
 
@@ -31,7 +30,7 @@ class AssetsController @Autowired constructor(
         val policyJson = this.minioService.getFileContent(jwt, bucket, "config/${name}/policy.json")
         val catalogJson = this.minioService.getFileContent(jwt, bucket, "config/${name}/catalog.json")
 
-        this.assetsService.publishAsset(assetJson, policyJson, catalogJson)
+        this.edcService.publishAsset(assetJson, policyJson, catalogJson)
     }
 
     @DeleteMapping("unpublish/{bucket}/{name}")
@@ -52,6 +51,6 @@ class AssetsController @Autowired constructor(
         val policyId = policyMap.get("id") as String
         val contractId = catalogMap.get("id") as String
 
-        this.assetsService.unpublishAsset(assetId, policyId, contractId)
+        this.edcService.unpublishAsset(assetId, policyId, contractId)
     }
 }

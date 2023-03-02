@@ -1,4 +1,4 @@
-package de.agrigaia.platform.integration.assets
+package de.agrigaia.platform.integration.edc
 
 import de.agrigaia.platform.common.HasLogger
 import org.springframework.http.HttpMethod
@@ -9,7 +9,7 @@ import org.springframework.web.reactive.function.client.body
 import reactor.core.publisher.Mono
 
 @Service
-class AssetsService: HasLogger {
+class EdcService: HasLogger {
     private val webClient: WebClient = WebClient.create()
     private val connectorEndpoint = "https://connector-consumer-9192.platform.agri-gaia.com/api/v1/data"
 
@@ -24,7 +24,6 @@ class AssetsService: HasLogger {
         this.sendPolicyDeleteRequest(policyJson)
         this.sendAssetDeleteRequest(assetJson)
     }
-
 
     private fun sendAssetRequest(assetJson: String) {
         val response = this.webClient.post()
