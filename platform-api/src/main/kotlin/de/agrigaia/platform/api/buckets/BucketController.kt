@@ -31,16 +31,16 @@ class BucketController @Autowired constructor(
         return ResponseEntity.ok(bucketDtos)
     }
 
-    @GetMapping("{name}/assets")
-    fun getBucketAssets(@PathVariable name: String): ResponseEntity<List<AssetDto>> {
+    @GetMapping("{bucket}/assets")
+    fun getBucketAssets(@PathVariable bucket: String): ResponseEntity<List<AssetDto>> {
         val jwtAuthenticationToken = SecurityContextHolder.getContext().authentication as JwtAuthenticationToken
         val jwt = jwtAuthenticationToken.token.tokenValue
 
         return try {
-            val assetsForBucket = this.minioService.getPublishableAssetsForBucket(jwt, name)
+            val assetsForBucket = this.minioService.getPublishableAssetsForBucket(jwt, bucket)
                     .map { it.get() }
                     .map { AssetDto(it.etag(), it.objectName().replace("assets/", ""), it.lastModified().toString(), it.lastModified().toString(),
-                        it.size().toString(), "label", name) }
+                        it.size().toString(), "label", bucket) }
             ResponseEntity.ok(assetsForBucket)
         } catch (e: Exception) {
             ResponseEntity.noContent().build()
@@ -54,6 +54,15 @@ class BucketController @Autowired constructor(
         val jwt = jwtAuthenticationToken.token.tokenValue
 
         this.minioService.uploadAssets(jwt, bucket, files)
+    }
+
+    @DeleteMapping("delete/{bucket}/{name}")
+    @ResponseStatus(HttpStatus.OK)
+    fun deleteAsset(@PathVariable bucket: String, @PathVariable name: String) {
+        val jwtAuthenticationToken = SecurityContextHolder.getContext().authentication as JwtAuthenticationToken
+        val jwt = jwtAuthenticationToken.token.tokenValue
+
+        this.minioService.deleteAsset(jwt, bucket, name)
     }
 
 }
