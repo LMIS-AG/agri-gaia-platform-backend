@@ -22,7 +22,12 @@ class AssetsController @Autowired constructor(
 
     @PostMapping("publish/{bucket}/{name}")
     @ResponseStatus(HttpStatus.CREATED)
-    fun publishAsset(@PathVariable bucket: String, @PathVariable name: String) {
+    fun publishAsset(
+        @PathVariable bucket: String,
+        @PathVariable name: String,
+        @RequestBody assetJsonParams: AssetJsonDto,
+    ) {
+        getLogger().warn(assetJsonParams.toString())
         val jwtAuthenticationToken = SecurityContextHolder.getContext().authentication as JwtAuthenticationToken
         val jwt = jwtAuthenticationToken.token.tokenValue
 
