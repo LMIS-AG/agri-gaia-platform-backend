@@ -1,4 +1,4 @@
-package de.agrigaia.platform.api.assets
+package de.agrigaia.platform.api.edc
 
 import de.agrigaia.platform.api.BaseDto
 

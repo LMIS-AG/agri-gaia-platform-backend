@@ -1,4 +1,4 @@
-package de.agrigaia.platform.api.assets
+package de.agrigaia.platform.api.edc
 
 
 import com.fasterxml.jackson.databind.ObjectMapper
@@ -18,7 +18,7 @@ import org.springframework.web.bind.annotation.*
 
 @RestController
 @RequestMapping("/assets")
-class AssetsController @Autowired constructor(
+class EdcController @Autowired constructor(
     private val edcService: EdcService,
     private val agrovocService: AgrovocService,
     private val minioService: MinioService
