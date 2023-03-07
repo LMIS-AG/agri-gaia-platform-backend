@@ -143,7 +143,7 @@ class MinioService(
         val response: String = request
             .retrieve()
             .onStatus(HttpStatus::is4xxClientError, ::handleClientError)
-            .onStatus(HttpStatus::is5xxServerError) { handleServerError(it) }
+            .onStatus(HttpStatus::is5xxServerError, ::handleServerError)
             .bodyToMono(String::class.java)
             .block() ?: throw Exception("Response from Minio was null.")
 
