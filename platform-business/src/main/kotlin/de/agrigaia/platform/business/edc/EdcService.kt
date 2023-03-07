@@ -1,10 +1,10 @@
 package de.agrigaia.platform.business.edc
 
-import de.agrigaia.platform.integration.agrovoc.AgrovocService
+import de.agrigaia.platform.integration.agrovoc.AgrovocConnectorService
 import org.springframework.stereotype.Service
 
 @Service
-class EdcService(private val agrovocService: AgrovocService) {
+class EdcService(private val agrovocConnectorService: AgrovocConnectorService) {
     fun createAssetJson(
         assetPropName: String,
         assetPropId: String,
@@ -27,7 +27,7 @@ class EdcService(private val agrovocService: AgrovocService) {
               "asset:prop:contenttype": "$assetPropContentType",
               "asset:prop:version": "$assetPropVersion",
               "asset:prop:id": "$assetPropId",
-              "theme": "${agrovocKeywords?.map { w: String -> this.agrovocService.getConceptUriFromKeyword(w) }}",
+              "theme": "${agrovocKeywords?.map { w: String -> this.agrovocConnectorService.getConceptUriFromKeyword(w) }}",
               "spatial": "$geonamesUri",
               "temporal": "$dateRange"
             },

@@ -12,7 +12,7 @@ import org.springframework.web.reactive.function.client.WebClient
 import reactor.core.publisher.Mono
 
 @Service
-class AgrovocService : HasLogger {
+class AgrovocConnectorService : HasLogger {
     private val webClient: WebClient = WebClient.create()
     private val agrovocEndpoint: String = "https://fuseki.platform.agri-gaia.com/ds"
 
