@@ -57,6 +57,7 @@ class CoopSpaceService(
                 .map { member: Member -> member.username!! }
 
 
+        // TODO: Abominations be gone!!
         val body = object {
             val mandant = object {
                 val username = coopSpace.mandant
