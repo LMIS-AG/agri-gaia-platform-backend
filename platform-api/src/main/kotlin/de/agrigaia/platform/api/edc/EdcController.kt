@@ -4,23 +4,23 @@ package de.agrigaia.platform.api.edc
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import de.agrigaia.platform.api.BaseController
+import de.agrigaia.platform.business.edc.EdcService
 import de.agrigaia.platform.business.errors.BusinessException
 import de.agrigaia.platform.business.errors.ErrorType
 import de.agrigaia.platform.common.HasLogger
+import de.agrigaia.platform.integration.edc.EdcConnectorService
 import de.agrigaia.platform.integration.minio.MinioService
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.HttpStatus
 import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken
 import org.springframework.web.bind.annotation.*
-import de.agrigaia.platform.business.edc.EdcService as BusinessEdcService
-import de.agrigaia.platform.integration.edc.EdcService as IntegrationEdcService
 
 @RestController
 @RequestMapping("/assets")
 class EdcController @Autowired constructor(
-    private val businessEdcService: BusinessEdcService,
-    private val integrationEdcService: IntegrationEdcService,
+    private val businessEdcService: EdcService,
+    private val edcConnectorService: EdcConnectorService,
     private val minioService: MinioService
 ) : HasLogger, BaseController() {
 
@@ -52,7 +52,7 @@ class EdcController @Autowired constructor(
         val policyJson = businessEdcService.createPolicyJson(name)
         val catalogJson = businessEdcService.createCatalogJson(assetPropId)
 
-        this.integrationEdcService.publishAsset(assetJson, policyJson, catalogJson)
+        this.edcConnectorService.publishAsset(assetJson, policyJson, catalogJson)
     }
 
 
@@ -74,6 +74,6 @@ class EdcController @Autowired constructor(
         val policyId = policyMap.get("id") as String
         val contractId = catalogMap.get("id") as String
 
-        this.integrationEdcService.unpublishAsset(assetId, policyId, contractId)
+        this.edcConnectorService.unpublishAsset(assetId, policyId, contractId)
     }
 }
