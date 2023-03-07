@@ -1,9 +1,11 @@
 package de.agrigaia.platform.integration.minio
-import de.agrigaia.platform.model.buckets.STSRequest
+
+import de.agrigaia.platform.model.buckets.STSDto
 import io.minio.*
 import io.minio.credentials.Jwt
 import io.minio.credentials.WebIdentityProvider
 import io.minio.messages.*
+import org.apache.logging.log4j.LogManager.getLogger
 import org.springframework.stereotype.Service
 import org.springframework.web.multipart.MultipartFile
 import java.io.BufferedReader
@@ -19,8 +21,9 @@ import reactor.core.publisher.Mono
 
 
 @Service
-class MinioService(private val minioProperties: MinioProperties,
-                   ) {
+class MinioService(
+    private val minioProperties: MinioProperties,
+) {
     fun listBuckets(jwt: String): MutableList<Bucket> {
         val minioClient = getMinioClient(jwt)
 
@@ -123,7 +126,7 @@ class MinioService(private val minioProperties: MinioProperties,
         .credentials(this.minioProperties.technicalUserAccessKey, this.minioProperties.technicalUserSecretKey)
         .build()
 
-    fun makeSTSRequest(jwt: String): STSRequest {
+    fun makeSTSRequest(jwt: String): STSDto {
         val body = LinkedMultiValueMap<String, String>()
         body.add("WebIdentityToken", jwt)
         body.add("Action", "AssumeRoleWithWebIdentity")
@@ -139,7 +142,7 @@ class MinioService(private val minioProperties: MinioProperties,
 
         val response: String = request
             .retrieve()
-            .onStatus(HttpStatus::is4xxClientError) { handleClientError(it) }
+            .onStatus(HttpStatus::is4xxClientError, ::handleClientError)
             .onStatus(HttpStatus::is5xxServerError) { handleServerError(it) }
             .bodyToMono(String::class.java)
             .block() ?: throw Exception("Response from Minio was null.")
@@ -150,13 +153,13 @@ class MinioService(private val minioProperties: MinioProperties,
         val sessionToken = parsedResponse.getElementsByTag("sessiontoken")[0].childNode(0).toString().removePrefix("\n")
 
         // Create an STSResponse object and return it
-        return STSRequest(accessKey, secretKey, sessionToken)
+        return STSDto(accessKey, secretKey, sessionToken)
     }
 
-    private fun handleClientError(response: ClientResponse): Mono<Throwable> {
-        return response.bodyToMono(String::class.java).flatMap {
-            Mono.error(Exception("Minio client error: $it"))
-        }
+    private fun handleClientError(response: ClientResponse): Mono<out Throwable> {
+        return response.bodyToMono(String::class.java)
+            .doOnNext { getLogger().error("${response.statusCode()}: $it") }
+            .then(response.createException())
     }
 
     private fun handleServerError(response: ClientResponse): Mono<Throwable> {

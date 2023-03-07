@@ -3,7 +3,7 @@ package de.agrigaia.platform.api.buckets
 import de.agrigaia.platform.api.BaseController
 import de.agrigaia.platform.api.coopspace.AssetDto
 import de.agrigaia.platform.integration.minio.MinioService
-import de.agrigaia.platform.model.buckets.STSRequest
+import de.agrigaia.platform.model.buckets.STSDto
 import io.minio.messages.Bucket
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.HttpStatus
@@ -66,8 +66,8 @@ class BucketController @Autowired constructor(
         this.minioService.deleteAsset(jwt, bucket, name)
     }
 
-    @GetMapping("/stsrequest")
-    fun getKeysandToken(): STSRequest {
+    @GetMapping("/sts")
+    fun getKeysAndToken(): STSDto {
         val jwtAuthenticationToken = SecurityContextHolder.getContext().authentication as JwtAuthenticationToken
         val jwt = jwtAuthenticationToken.token.tokenValue
 
