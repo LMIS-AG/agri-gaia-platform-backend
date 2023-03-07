@@ -9,7 +9,7 @@ import org.springframework.web.reactive.function.client.body
 import reactor.core.publisher.Mono
 
 @Service
-class EdcConnectorService: HasLogger {
+class EdcConnectorService : HasLogger {
     private val webClient: WebClient = WebClient.create()
     private val connectorEndpoint = "https://connector-consumer-9192.platform.agri-gaia.com/api/v1/data"
 
@@ -26,40 +26,40 @@ class EdcConnectorService: HasLogger {
     }
 
     private fun sendAssetRequest(assetJson: String) {
-        val response = this.webClient.post()
-                .uri("$connectorEndpoint/assets")
-                .contentType(MediaType.APPLICATION_JSON)
-                .header("X-Api-Key", "password")
-                .body(Mono.just(assetJson))
-                .retrieve()
-                .bodyToMono(String::class.java)
-                .block()
+        this.webClient.post()
+            .uri("$connectorEndpoint/assets")
+            .contentType(MediaType.APPLICATION_JSON)
+            .header("X-Api-Key", "password")
+            .body(Mono.just(assetJson))
+            .retrieve()
+            .bodyToMono(String::class.java)
+            .block()
     }
 
     private fun sendPolicyRequest(policyJson: String) {
-        val response = this.webClient.post()
-                .uri("$connectorEndpoint/policydefinitions")
-                .contentType(MediaType.APPLICATION_JSON)
-                .header("X-Api-Key", "password")
-                .body(Mono.just(policyJson))
-                .retrieve()
-                .bodyToMono(String::class.java)
-                .block()
+        this.webClient.post()
+            .uri("$connectorEndpoint/policydefinitions")
+            .contentType(MediaType.APPLICATION_JSON)
+            .header("X-Api-Key", "password")
+            .body(Mono.just(policyJson))
+            .retrieve()
+            .bodyToMono(String::class.java)
+            .block()
     }
 
     private fun sendCatalogRequest(catalogJson: String) {
-        val response = this.webClient.post()
-                .uri("$connectorEndpoint/contractdefinitions")
-                .contentType(MediaType.APPLICATION_JSON)
-                .header("X-Api-Key", "password")
-                .body(Mono.just(catalogJson))
-                .retrieve()
-                .bodyToMono(String::class.java)
-                .block()
+        this.webClient.post()
+            .uri("$connectorEndpoint/contractdefinitions")
+            .contentType(MediaType.APPLICATION_JSON)
+            .header("X-Api-Key", "password")
+            .body(Mono.just(catalogJson))
+            .retrieve()
+            .bodyToMono(String::class.java)
+            .block()
     }
 
     private fun sendCatalogDeleteRequest(catalogJson: String) {
-        val response = this.webClient.method(HttpMethod.DELETE)
+        this.webClient.method(HttpMethod.DELETE)
             .uri("$connectorEndpoint/contractdefinitions/$catalogJson")
             .contentType(MediaType.APPLICATION_JSON)
             .header("X-Api-Key", "password")
@@ -69,7 +69,7 @@ class EdcConnectorService: HasLogger {
     }
 
     private fun sendPolicyDeleteRequest(policyJson: String) {
-        val response = this.webClient.method(HttpMethod.DELETE)
+        this.webClient.method(HttpMethod.DELETE)
             .uri("$connectorEndpoint/policydefinitions/$policyJson")
             .contentType(MediaType.APPLICATION_JSON)
             .header("X-Api-Key", "password")
@@ -79,7 +79,7 @@ class EdcConnectorService: HasLogger {
     }
 
     private fun sendAssetDeleteRequest(assetJson: String) {
-        val response = this.webClient.method(HttpMethod.DELETE)
+        this.webClient.method(HttpMethod.DELETE)
             .uri("$connectorEndpoint/assets/$assetJson")
             .header("X-Api-Key", "password")
             .retrieve()
