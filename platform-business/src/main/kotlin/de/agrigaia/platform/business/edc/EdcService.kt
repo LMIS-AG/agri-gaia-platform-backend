@@ -27,7 +27,7 @@ class EdcService(private val agrovocConnectorService: AgrovocConnectorService) {
               "asset:prop:contenttype": "${assetPropContentType?:""}",
               "asset:prop:version": "${assetPropVersion?:""}",
               "asset:prop:id": "$assetPropId",
-              "theme": "${agrovocKeywords?.map { w: String -> this.agrovocConnectorService.getConceptUriFromKeyword(w) }}",
+              "theme": "${agrovocKeywords?.map { w: String -> "\"${this.agrovocConnectorService.getConceptUriFromKeyword(w)}\"" }}",
               "spatial": "${geonamesUri?:""}",
               "temporal": "${dateRange?:""}"
             },
