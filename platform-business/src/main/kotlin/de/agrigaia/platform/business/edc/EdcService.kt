@@ -23,13 +23,13 @@ class EdcService(private val agrovocConnectorService: AgrovocConnectorService) {
             "properties": {
               "asset:prop:name": "$assetPropName",
               "asset:prop:byteSize": null,
-              "asset:prop:description": "$assetPropDescription",
-              "asset:prop:contenttype": "$assetPropContentType",
-              "asset:prop:version": "$assetPropVersion",
+              "asset:prop:description": "${assetPropDescription?:""}",
+              "asset:prop:contenttype": "${assetPropContentType?:""}",
+              "asset:prop:version": "${assetPropVersion?:""}",
               "asset:prop:id": "$assetPropId",
               "theme": "${agrovocKeywords?.map { w: String -> this.agrovocConnectorService.getConceptUriFromKeyword(w) }}",
-              "spatial": "$geonamesUri",
-              "temporal": "$dateRange"
+              "spatial": "${geonamesUri?:""}",
+              "temporal": "${dateRange?:""}"
             },
             "id": "$assetPropId"
           },
@@ -39,7 +39,7 @@ class EdcService(private val agrovocConnectorService: AgrovocConnectorService) {
               "region": "us-east-1",
               "bucketName": "$bucketName",
               "assetName": "$assetName",
-              "keyName": "$dataAddressKeyName"
+              "keyName": "${dataAddressKeyName?:""}"
             }
           }
         }"""
