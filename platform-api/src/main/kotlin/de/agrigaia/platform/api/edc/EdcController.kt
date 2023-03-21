@@ -54,9 +54,9 @@ class EdcController @Autowired constructor(
         val policyUUID = UUID.randomUUID().toString()
         val catalogUUID = UUID.randomUUID().toString()
         val policyJson = businessEdcService.createPolicyJson(name, policyUUID)
-        val catalogJson = businessEdcService.createCatalogJson(assetPropId, policyUUID, catalogUUID)
+        val contractDefinitionJson = businessEdcService.createContractDefinitionJson(assetPropId, policyUUID, catalogUUID)
 
-        this.edcConnectorService.publishAsset(assetJson, policyJson, catalogJson)
+        this.edcConnectorService.publishAsset(assetJson, policyJson, contractDefinitionJson)
     }
 
 
@@ -68,15 +68,15 @@ class EdcController @Autowired constructor(
 
         val assetJson = this.minioService.getFileContent(jwt, bucket, "config/${name}/asset.json")
         val policyJson = this.minioService.getFileContent(jwt, bucket, "config/${name}/policy.json")
-        val catalogJson = this.minioService.getFileContent(jwt, bucket, "config/${name}/catalog.json")
+        val contractDefinitionJson = this.minioService.getFileContent(jwt, bucket, "config/${name}/catalog.json")
 
         val assetMap = ObjectMapper().readValue<MutableMap<String, MutableMap<String, Any>>>(assetJson)
         val policyMap = ObjectMapper().readValue<MutableMap<String, Any>>(policyJson)
-        val catalogMap = ObjectMapper().readValue<MutableMap<String, Any>>(catalogJson)
+        val contractDefinitionMap = ObjectMapper().readValue<MutableMap<String, Any>>(contractDefinitionJson)
 
         val assetId = assetMap.get("asset")!!.get("id") as String
         val policyId = policyMap.get("id") as String
-        val contractId = catalogMap.get("id") as String
+        val contractId = contractDefinitionMap.get("id") as String
 
         this.edcConnectorService.unpublishAsset(assetId, policyId, contractId)
     }

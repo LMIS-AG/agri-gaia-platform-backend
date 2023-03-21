@@ -77,8 +77,7 @@ class EdcService(private val agrovocConnectorService: AgrovocConnectorService) {
   }
 }
     """
-
-    fun createCatalogJson(assetId: String, policyUUID: String, catalogUUID: String): String = """{
+    fun createContractDefinitionJson(assetId: String, policyUUID: String, catalogUUID: String): String = """{
   "accessPolicyId": "$policyUUID",
   "contractPolicyId": "$policyUUID",
   "id": "$catalogUUID",
