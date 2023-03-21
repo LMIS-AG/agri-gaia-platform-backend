@@ -15,6 +15,7 @@ import org.springframework.http.HttpStatus
 import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken
 import org.springframework.web.bind.annotation.*
+import java.util.*
 
 @RestController
 @RequestMapping("/assets")
@@ -49,8 +50,11 @@ class EdcController @Autowired constructor(
             assetJsonDto.dateRange,
             assetJsonDto.dataAddressKeyName
         )
-        val policyJson = businessEdcService.createPolicyJson(name)
-        val catalogJson = businessEdcService.createCatalogJson(assetPropId)
+
+        val policyUUID = UUID.randomUUID().toString()
+        val catalogUUID = UUID.randomUUID().toString()
+        val policyJson = businessEdcService.createPolicyJson(name, policyUUID)
+        val catalogJson = businessEdcService.createCatalogJson(assetPropId, policyUUID, catalogUUID)
 
         this.edcConnectorService.publishAsset(assetJson, policyJson, catalogJson)
     }

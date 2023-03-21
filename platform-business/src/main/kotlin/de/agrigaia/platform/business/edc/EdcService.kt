@@ -27,7 +27,7 @@ class EdcService(private val agrovocConnectorService: AgrovocConnectorService) {
               "asset:prop:contenttype": "${assetPropContentType?:""}",
               "asset:prop:version": "${assetPropVersion?:""}",
               "asset:prop:id": "$assetPropId",
-              "theme": "${agrovocKeywords?.map { w: String -> "\"${this.agrovocConnectorService.getConceptUriFromKeyword(w)}\"" }}",
+              "theme": ${agrovocKeywords?.map { w -> "\"${this.agrovocConnectorService.getConceptUriFromKeyword(w)}\""}},
               "spatial": "${geonamesUri?:""}",
               "temporal": "${dateRange?:""}"
             },
@@ -44,9 +44,9 @@ class EdcService(private val agrovocConnectorService: AgrovocConnectorService) {
           }
         }"""
 
-    fun createPolicyJson(target: String): String = """{
+    fun createPolicyJson(target: String, policyUUID: String): String = """{
   "uid": "use-eu",
-  "id": "3a75736e-001d-4364-8bd4-9888490edb59",
+  "id": "$policyUUID",
   "policy": {
     "permissions": [
       {
@@ -78,10 +78,10 @@ class EdcService(private val agrovocConnectorService: AgrovocConnectorService) {
 }
     """
 
-    fun createCatalogJson(assetId: String): String = """{
-  "accessPolicyId": "3a75736e-001d-4364-8bd4-9888490edb59",
-  "contractPolicyId": "3a75736e-001d-4364-8bd4-9888490edb59",
-  "id": "3a75736e-001d-4364-8bd4-9888490edb58",
+    fun createCatalogJson(assetId: String, policyUUID: String, catalogUUID: String): String = """{
+  "accessPolicyId": "$policyUUID",
+  "contractPolicyId": "$policyUUID",
+  "id": "$catalogUUID",
   "criteria": [
     {
       "operandLeft": "asset:prop:id",
