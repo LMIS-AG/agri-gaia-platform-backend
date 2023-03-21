@@ -133,7 +133,7 @@ class MinioService(
         body.add("Version", "2011-06-15")
         body.add("DurationSeconds", "21600")
 
-        val webClient = WebClient.builder().baseUrl("https://minio-test-api.platform.agri-gaia.com").build()
+        val webClient = WebClient.builder().baseUrl(this.minioProperties.url).build()
 
         val request = webClient.post()
             .uri("/")

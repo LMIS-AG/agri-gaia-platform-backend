@@ -67,11 +67,13 @@ class BucketController @Autowired constructor(
     }
 
     @GetMapping("/sts")
-    fun getKeysAndToken(): STSDto {
+    fun getKeysAndToken(): ResponseEntity<STSDto> {
         val jwtAuthenticationToken = SecurityContextHolder.getContext().authentication as JwtAuthenticationToken
         val jwt = jwtAuthenticationToken.token.tokenValue
 
-        return this.minioService.makeSTSRequest(jwt)
+        val stsDto = this.minioService.makeSTSRequest(jwt)
+
+        return ResponseEntity.ok(stsDto)
     }
 
 }
