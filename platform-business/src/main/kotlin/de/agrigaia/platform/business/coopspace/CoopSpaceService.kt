@@ -3,7 +3,6 @@ package de.agrigaia.platform.business.coopspace
 import de.agrigaia.platform.business.errors.BusinessException
 import de.agrigaia.platform.business.errors.ErrorType
 import de.agrigaia.platform.common.HasLogger
-import de.agrigaia.platform.integration.coopspace.UsersInRole
 import de.agrigaia.platform.integration.keycloak.KeycloakConnectorService
 import de.agrigaia.platform.integration.minio.MinioService
 import de.agrigaia.platform.model.coopspace.CoopSpace
@@ -58,6 +57,7 @@ class CoopSpaceService(
                 .map { member: Member -> member.username!! }
 
 
+        // TODO: Abominations be gone!!
         val body = object {
             val mandant = object {
                 val username = coopSpace.mandant

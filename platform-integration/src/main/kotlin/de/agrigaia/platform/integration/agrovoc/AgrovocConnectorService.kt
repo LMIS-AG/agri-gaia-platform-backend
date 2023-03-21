@@ -12,11 +12,16 @@ import org.springframework.web.reactive.function.client.WebClient
 import reactor.core.publisher.Mono
 
 @Service
-class AgrovocService : HasLogger {
+class AgrovocConnectorService : HasLogger {
     private val webClient: WebClient = WebClient.create()
     private val agrovocEndpoint: String = "https://fuseki.platform.agri-gaia.com/ds"
 
-    fun getLabelUriFromKeyword(keyword: String): String {
+    fun getConceptUriFromKeyword(keyword: String): String {
+        val labelUri = getLabelUriFromKeyword(keyword.lowercase())
+        return getConceptUriFromLabelUri(labelUri)
+    }
+
+    private fun getLabelUriFromKeyword(keyword: String): String {
         // NOTE: LIMIT is a safety measure to avoid accidentally fetching petabytes of data.
         // The query should only ever return one row.
         val query: String = """
@@ -30,7 +35,7 @@ class AgrovocService : HasLogger {
         return sendAgrovocRequest(query)
     }
 
-    fun getConceptUriFromLabelUri(labelUri: String): String {
+    private fun getConceptUriFromLabelUri(labelUri: String): String {
         // NOTE: LIMIT is a safety measure to avoid accidentally fetching petabytes of data.
         // The query should only ever return one row.
         val query: String = """
