@@ -18,7 +18,6 @@ import org.springframework.http.ResponseEntity
 import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken
 import org.springframework.web.bind.annotation.*
-import org.springframework.web.multipart.MultipartFile
 
 
 // TODO Parse JWT and look for roles to see if the user has the rights for the coopspaces and buckets (local db and minio)
@@ -61,14 +60,13 @@ class CoopSpaceController @Autowired constructor(
     fun getCoopSpace(@PathVariable id: Long): ResponseEntity<CoopSpaceDto> {
         val jwtAuthenticationToken = SecurityContextHolder.getContext().authentication as JwtAuthenticationToken
         val username = jwtAuthenticationToken.token.claims["preferred_username"] as String
-        val coopSpaceDto = this.coopSpaceMapper.map(this.coopSpaceService.findCoopSpace(id))
-        val coopSpace: CoopSpace = coopSpaceDto.toEntity(this.coopSpaceMapper)
+        val coopSpace: CoopSpace = this.coopSpaceService.findCoopSpace(id)
+        val coopSpaceDto = this.coopSpaceMapper.map(coopSpace)
 
-        if (this.coopSpaceService.hasAccessToCoopSpace(username, coopSpace)) {
-            return ResponseEntity.ok(coopSpaceDto)
+        if (!this.coopSpaceService.hasAccessToCoopSpace(username, coopSpace)) {
+            return ResponseEntity(HttpStatus.UNAUTHORIZED)
         }
-
-        return ResponseEntity(HttpStatus.UNAUTHORIZED)
+        return ResponseEntity.ok(coopSpaceDto)
     }
 
     @GetMapping("/members")
