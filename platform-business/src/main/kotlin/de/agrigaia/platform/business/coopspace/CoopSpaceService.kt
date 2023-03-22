@@ -42,7 +42,7 @@ class CoopSpaceService(
         }
     }
 
-    fun createCoopSpace(coopSpace: CoopSpace, creator: Member) {
+    fun createCoopSpace(coopSpace: CoopSpace, creator: Member): CoopSpace {
         creator.role = CoopSpaceRole.ADMIN
         val owners: MutableList<String> =
             coopSpace.members.filter { member: Member -> member.role == CoopSpaceRole.ADMIN && member.username != null }
@@ -94,8 +94,7 @@ class CoopSpaceService(
         members.add(creator)
         coopSpace.members = members
 
-        this.coopSpaceRepository.save(coopSpace)
-
+        return this.coopSpaceRepository.save(coopSpace)
     }
 
     private fun handleClientError(clientResponse: ClientResponse): Mono<out Throwable> {
