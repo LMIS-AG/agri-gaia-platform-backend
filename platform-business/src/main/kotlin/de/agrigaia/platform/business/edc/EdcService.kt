@@ -1,10 +1,11 @@
 package de.agrigaia.platform.business.edc
 
 import de.agrigaia.platform.integration.agrovoc.AgrovocConnectorService
+import de.agrigaia.platform.integration.fuseki.FusekiConnectorService
 import org.springframework.stereotype.Service
 
 @Service
-class EdcService(private val agrovocConnectorService: AgrovocConnectorService) {
+class EdcService(private val fusekiConnectorService: FusekiConnectorService) {
     fun createAssetJson(
         assetPropName: String,
         assetPropId: String,
@@ -14,7 +15,8 @@ class EdcService(private val agrovocConnectorService: AgrovocConnectorService) {
         assetPropContentType: String?,
         assetPropVersion: String?,
         agrovocKeywords: List<String>?,
-        geonamesUri: String?,
+        latitude: String?,
+        longitude: String?,
         dateRange: String?,
         dataAddressKeyName: String?,
     ) = """
@@ -27,8 +29,8 @@ class EdcService(private val agrovocConnectorService: AgrovocConnectorService) {
               "asset:prop:contenttype": "${assetPropContentType?:""}",
               "asset:prop:version": "${assetPropVersion?:""}",
               "asset:prop:id": "$assetPropId",
-              "theme": ${agrovocKeywords?.map { w -> "\"${this.agrovocConnectorService.getConceptUriFromKeyword(w)}\""}},
-              "spatial": "${geonamesUri?:""}",
+              "theme": ${agrovocKeywords?.map { w -> "\"${this.fusekiConnectorService.getConceptUriFromKeyword(w)}\""}},
+              "spatial": "\"${this.fusekiConnectorService.getUriFromCoordinates(longitude!!, latitude!!)}\""
               "temporal": "${dateRange?:""}"
             },
             "id": "$assetPropId"
