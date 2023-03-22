@@ -12,12 +12,10 @@ import org.springframework.web.reactive.function.BodyInserters
 import org.springframework.web.reactive.function.client.WebClient
 
 @Service
-class FusekiConnectorService : HasLogger {
-
+class FusekiConnectorService (
+    private val fusekiProperties: FusekiProperties
+    ) : HasLogger {
     private val webClient: WebClient = WebClient.create()
-    private val agrovocEndpoint: String = "https://fuseki.platform.agri-gaia.com/ds"
-    private val geonamesEndpoint: String = "https://fuseki.platform.agri-gaia.com/geonames"
-
     fun getConceptUriFromKeyword(keyword: String): String {
         val labelUri = getLabelUriFromKeyword(keyword.lowercase())
         return getConceptUriFromLabelUri(labelUri)
@@ -34,7 +32,7 @@ class FusekiConnectorService : HasLogger {
                 Filter(LCASE(STR(?obj))=LCASE('${keyword}'))
             } LIMIT 10
        """.trimIndent()
-        return sendRequest(query, agrovocEndpoint)
+        return sendRequest(query, fusekiProperties.agrovocURL)
     }
 
     private fun getConceptUriFromLabelUri(labelUri: String): String {
@@ -50,7 +48,7 @@ class FusekiConnectorService : HasLogger {
              }
            } LIMIT 10
        """.trimIndent()
-        return sendRequest(query, agrovocEndpoint)
+        return sendRequest(query, fusekiProperties.agrovocURL)
     }
 
     fun getUriFromCoordinates(latitude: String, longitude: String): String {
@@ -64,11 +62,11 @@ class FusekiConnectorService : HasLogger {
                 ?sub geo:long '${longitude}' .
             } LIMIT 10
        """.trimIndent()
-        return sendRequest(query, geonamesEndpoint)
+        return sendRequest(query, fusekiProperties.geonamesURL)
     }
 
 
-    private fun sendRequest(query: String, endpoint: String): String {
+    private fun sendRequest(query: String, endpoint: String?): String {
         val body = LinkedMultiValueMap<String, String>()
         body.add("query", query)
 
