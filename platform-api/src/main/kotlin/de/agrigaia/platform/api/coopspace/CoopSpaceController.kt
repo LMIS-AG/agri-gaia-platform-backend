@@ -18,7 +18,6 @@ import org.springframework.http.ResponseEntity
 import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken
 import org.springframework.web.bind.annotation.*
-import org.springframework.web.multipart.MultipartFile
 
 
 // TODO Parse JWT and look for roles to see if the user has the rights for the coopspaces and buckets (local db and minio)
@@ -61,14 +60,25 @@ class CoopSpaceController @Autowired constructor(
     fun getCoopSpace(@PathVariable id: Long): ResponseEntity<CoopSpaceDto> {
         val jwtAuthenticationToken = SecurityContextHolder.getContext().authentication as JwtAuthenticationToken
         val username = jwtAuthenticationToken.token.claims["preferred_username"] as String
-        val coopSpaceDto = this.coopSpaceMapper.map(this.coopSpaceService.findCoopSpace(id))
-        val coopSpace: CoopSpace = coopSpaceDto.toEntity(this.coopSpaceMapper)
+        val coopSpace: CoopSpace = this.coopSpaceService.findCoopSpace(id)
+        val coopSpaceDto = this.coopSpaceMapper.map(coopSpace)
 
-        if (this.coopSpaceService.hasAccessToCoopSpace(username, coopSpace)) {
-            return ResponseEntity.ok(coopSpaceDto)
+        if (!this.coopSpaceService.hasAccessToCoopSpace(username, coopSpace)) {
+            return ResponseEntity(HttpStatus.UNAUTHORIZED)
         }
+        return ResponseEntity.ok(coopSpaceDto)
+    }
 
-        return ResponseEntity(HttpStatus.UNAUTHORIZED)
+    @GetMapping("{id}/members")
+    fun getMembersOfCoopSpace(@PathVariable id: Long): ResponseEntity<List<MemberDto>> {
+        val jwtAuthenticationToken = SecurityContextHolder.getContext().authentication as JwtAuthenticationToken
+        val username = jwtAuthenticationToken.token.claims["preferred_username"] as String
+        val coopSpace: CoopSpace = this.coopSpaceService.findCoopSpace(id)
+
+        if (!this.coopSpaceService.hasAccessToCoopSpace(username, coopSpace)) {
+            return ResponseEntity(HttpStatus.UNAUTHORIZED)
+        }
+        return ResponseEntity.ok(this.memberMapper.mapToDtos(coopSpace.members))
     }
 
     @GetMapping("/members")
@@ -88,12 +98,14 @@ class CoopSpaceController @Autowired constructor(
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    fun createCoopSpace(@RequestBody coopSpaceDto: CoopSpaceDto) {
+    fun createCoopSpace(@RequestBody coopSpaceDto: CoopSpaceDto): ResponseEntity<CoopSpaceDto> {
         val jwtAuthenticationToken = SecurityContextHolder.getContext().authentication as JwtAuthenticationToken
         val creator =
             this.keycloakService.findKeycloakUserByMail(jwtAuthenticationToken.token.claims["email"] as String)
         val coopSpace: CoopSpace = coopSpaceDto.toEntity(this.coopSpaceMapper)
-        this.coopSpaceService.createCoopSpace(coopSpace, creator)
+        val createdCoopSpace : CoopSpace = this.coopSpaceService.createCoopSpace(coopSpace, creator)
+        val createdCoopSpaceDto = this.coopSpaceMapper.map(createdCoopSpace)
+        return ResponseEntity.ok(createdCoopSpaceDto)
     }
 
     @PostMapping("delete")
