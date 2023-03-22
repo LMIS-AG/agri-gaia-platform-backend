@@ -30,7 +30,7 @@ class EdcService(private val fusekiConnectorService: FusekiConnectorService) {
               "asset:prop:version": "${assetPropVersion?:""}",
               "asset:prop:id": "$assetPropId",
               "theme": ${agrovocKeywords?.map { w -> "\"${this.fusekiConnectorService.getConceptUriFromKeyword(w)}\""}},
-              "spatial": "\"${this.fusekiConnectorService.getUriFromCoordinates(longitude!!, latitude!!)}\""
+              "spatial": "${this.fusekiConnectorService.getUriFromCoordinates(latitude!!, longitude!!)}",
               "temporal": "${dateRange?:""}"
             },
             "id": "$assetPropId"

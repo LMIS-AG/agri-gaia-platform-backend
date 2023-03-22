@@ -6,10 +6,12 @@ import reactor.core.publisher.Mono
 import de.agrigaia.platform.common.HasLogger
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
+import org.springframework.stereotype.Service
 import org.springframework.util.LinkedMultiValueMap
 import org.springframework.web.reactive.function.BodyInserters
 import org.springframework.web.reactive.function.client.WebClient
 
+@Service
 class FusekiConnectorService : HasLogger {
 
     private val webClient: WebClient = WebClient.create()
