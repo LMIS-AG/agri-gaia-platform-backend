@@ -1,6 +1,5 @@
 package de.agrigaia.platform.business.edc
 
-import de.agrigaia.platform.integration.agrovoc.AgrovocConnectorService
 import de.agrigaia.platform.integration.fuseki.FusekiConnectorService
 import org.springframework.stereotype.Service
 
