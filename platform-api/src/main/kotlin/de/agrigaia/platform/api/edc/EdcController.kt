@@ -24,7 +24,6 @@ import java.util.*
 class EdcController @Autowired constructor(
     private val businessEdcService: EdcService,
     private val edcConnectorService: EdcConnectorService,
-    private val minioService: MinioService,
     private val assetRepository: AssetRepository,
 ) : HasLogger, BaseController() {
 
@@ -72,7 +71,6 @@ class EdcController @Autowired constructor(
         assetRepository.save(publishedAsset)
     }
 
-
     @DeleteMapping("unpublish/{bucket}/{name}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     fun unpublishAsset(@PathVariable bucket: String, @PathVariable name: String) {
@@ -84,5 +82,6 @@ class EdcController @Autowired constructor(
         val contractId = asset?.contractId
 
         this.edcConnectorService.unpublishAsset(assetId!!, policyId!!, contractId!!)
+        assetRepository.delete(asset)
     }
 }

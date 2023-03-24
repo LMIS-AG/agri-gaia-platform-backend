@@ -10,4 +10,5 @@ data class AssetDto(
     val size: String,
     val labeling: String,
     val bucket: String,
+    val isPublished: Boolean
 ) : BaseDto()
