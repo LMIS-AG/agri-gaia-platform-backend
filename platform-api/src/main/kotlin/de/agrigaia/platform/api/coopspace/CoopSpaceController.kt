@@ -187,7 +187,6 @@ class CoopSpaceController @Autowired constructor(
             val assetsForBucket =
                 this.minioService.getAssetsForCoopspace(jwt, company!!, bucketName).map { it.get() }.map {
                     AssetDto(
-                        it.objectName(),
                         it.objectName().replace("assets/", ""),
                         it.lastModified().toString(),
                         it.lastModified().toString(),
