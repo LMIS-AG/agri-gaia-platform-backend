@@ -9,5 +9,5 @@ data class AssetDto(
     val uploadDate: String,
     val size: String,
     val labeling: String,
-    val coopSpace: String,
+    val bucket: String,
 ) : BaseDto()

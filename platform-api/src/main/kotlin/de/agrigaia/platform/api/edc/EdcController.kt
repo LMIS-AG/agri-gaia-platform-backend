@@ -10,6 +10,8 @@ import de.agrigaia.platform.business.errors.ErrorType
 import de.agrigaia.platform.common.HasLogger
 import de.agrigaia.platform.integration.edc.EdcConnectorService
 import de.agrigaia.platform.integration.minio.MinioService
+import de.agrigaia.platform.model.edc.Asset
+import de.agrigaia.platform.persistence.repository.AssetRepository
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.HttpStatus
 import org.springframework.security.core.context.SecurityContextHolder
@@ -22,7 +24,8 @@ import java.util.*
 class EdcController @Autowired constructor(
     private val businessEdcService: EdcService,
     private val edcConnectorService: EdcConnectorService,
-    private val minioService: MinioService
+    private val minioService: MinioService,
+    private val assetRepository: AssetRepository,
 ) : HasLogger, BaseController() {
 
     @PostMapping("publish/{bucket}/{name}")
@@ -31,6 +34,7 @@ class EdcController @Autowired constructor(
         @PathVariable bucket: String,
         @PathVariable name: String,
         @RequestBody assetJsonDto: AssetJsonDto,
+        publishedAsset: Asset,
     ) {
         val assetPropName: String =
             assetJsonDto.assetPropName ?: throw BusinessException("No asset name in AssetJsonDto.", ErrorType.NOT_FOUND)
@@ -52,32 +56,33 @@ class EdcController @Autowired constructor(
         )
 
         val policyUUID = UUID.randomUUID().toString()
-        val catalogUUID = UUID.randomUUID().toString()
+        val contractUUID = UUID.randomUUID().toString()
+
         val policyJson = businessEdcService.createPolicyJson(name, policyUUID)
-        val contractDefinitionJson = businessEdcService.createContractDefinitionJson(assetPropId, policyUUID, catalogUUID)
+        val contractDefinitionJson = businessEdcService.createContractDefinitionJson(assetPropId, policyUUID, contractUUID)
 
         this.edcConnectorService.publishAsset(assetJson, policyJson, contractDefinitionJson)
+
+        publishedAsset.bucket = bucket
+        publishedAsset.name = name
+        publishedAsset.assetId = assetPropId
+        publishedAsset.policyId = policyUUID
+        publishedAsset.contractId = contractUUID
+
+        assetRepository.save(publishedAsset)
     }
 
 
     @DeleteMapping("unpublish/{bucket}/{name}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     fun unpublishAsset(@PathVariable bucket: String, @PathVariable name: String) {
-        val jwtAuthenticationToken = SecurityContextHolder.getContext().authentication as JwtAuthenticationToken
-        val jwt = jwtAuthenticationToken.token.tokenValue
 
-        val assetJson = this.minioService.getFileContent(jwt, bucket, "config/${name}/asset.json")
-        val policyJson = this.minioService.getFileContent(jwt, bucket, "config/${name}/policy.json")
-        val contractDefinitionJson = this.minioService.getFileContent(jwt, bucket, "config/${name}/catalog.json")
+        val asset = assetRepository.findByBucketAndName(bucket, name)
 
-        val assetMap = ObjectMapper().readValue<MutableMap<String, MutableMap<String, Any>>>(assetJson)
-        val policyMap = ObjectMapper().readValue<MutableMap<String, Any>>(policyJson)
-        val contractDefinitionMap = ObjectMapper().readValue<MutableMap<String, Any>>(contractDefinitionJson)
+        val assetId = asset?.assetId
+        val policyId = asset?.policyId
+        val contractId = asset?.contractId
 
-        val assetId = assetMap.get("asset")!!.get("id") as String
-        val policyId = policyMap.get("id") as String
-        val contractId = contractDefinitionMap.get("id") as String
-
-        this.edcConnectorService.unpublishAsset(assetId, policyId, contractId)
+        this.edcConnectorService.unpublishAsset(assetId!!, policyId!!, contractId!!)
     }
 }
