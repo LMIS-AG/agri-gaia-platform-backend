@@ -12,6 +12,7 @@ import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken
 import org.springframework.web.bind.annotation.*
 import org.springframework.web.multipart.MultipartFile
+import javax.servlet.http.HttpServletResponse
 
 @RestController
 @RequestMapping("/buckets")
@@ -59,11 +60,11 @@ class BucketController @Autowired constructor(
 
     @PostMapping("download/{bucket}/{name}")
     @ResponseStatus(HttpStatus.OK)
-    fun downloadAsset(@PathVariable bucket: String, @PathVariable name: String) {
+    fun downloadAsset(@PathVariable bucket: String, @PathVariable name: String, response: HttpServletResponse) {
         val jwtAuthenticationToken = SecurityContextHolder.getContext().authentication as JwtAuthenticationToken
         val jwt = jwtAuthenticationToken.token.tokenValue
 
-        this.minioService.downloadAsset(jwt, bucket, name)
+        this.minioService.downloadAsset(jwt, bucket, name, response)
     }
 
     @DeleteMapping("delete/{bucket}/{name}")

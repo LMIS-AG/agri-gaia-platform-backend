@@ -16,9 +16,8 @@ import org.springframework.web.reactive.function.BodyInserters
 import org.springframework.web.reactive.function.client.ClientResponse
 import org.springframework.web.reactive.function.client.WebClient
 import reactor.core.publisher.Mono
-import java.io.BufferedReader
-import java.io.ByteArrayInputStream
-
+import java.io.*
+import javax.servlet.http.HttpServletResponse
 
 @Service
 class MinioService(
@@ -99,16 +98,25 @@ class MinioService(
         )
     }
 
-    fun downloadAsset(jwt: String, bucketName: String, fileName: String) {
+    fun downloadAsset(jwt: String, bucketName: String, fileName: String, response: HttpServletResponse) {
         val minioClient = this.getMinioClient(jwt)
 
-        minioClient.downloadObject(
-            DownloadObjectArgs.builder()
-                .bucket(bucketName)
-                .`object`("assets/$fileName")
-                .filename("C:/Users/JEN-PC/Desktop/$fileName")
-                .build()
-        )
+        val builder = GetObjectArgs.builder()
+            .bucket(bucketName)
+            .`object`("assets/$fileName")
+
+        val stream = minioClient.getObject(builder.build())
+        val inputStream = BufferedInputStream(stream)
+
+        response.contentType = "application/octet-stream"
+        response.setHeader("Content-Disposition", "attachment; filename=$fileName")
+
+        val outputStream = response.outputStream
+        inputStream.use { input ->
+            outputStream.use { output ->
+                input.copyTo(output)
+            }
+        }
     }
 
     fun deleteAsset(jwt: String, bucket: String, fileName: String) {
