@@ -57,6 +57,15 @@ class BucketController @Autowired constructor(
         this.minioService.uploadAssets(jwt, bucket, files)
     }
 
+    @PostMapping("download/{bucket}/{name}")
+    @ResponseStatus(HttpStatus.OK)
+    fun downloadAsset(@PathVariable bucket: String, @PathVariable name: String) {
+        val jwtAuthenticationToken = SecurityContextHolder.getContext().authentication as JwtAuthenticationToken
+        val jwt = jwtAuthenticationToken.token.tokenValue
+
+        this.minioService.downloadAsset(jwt, bucket, name)
+    }
+
     @DeleteMapping("delete/{bucket}/{name}")
     @ResponseStatus(HttpStatus.OK)
     fun deleteAsset(@PathVariable bucket: String, @PathVariable name: String) {

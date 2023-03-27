@@ -6,18 +6,18 @@ import io.minio.credentials.Jwt
 import io.minio.credentials.WebIdentityProvider
 import io.minio.messages.*
 import org.apache.logging.log4j.LogManager.getLogger
-import org.springframework.stereotype.Service
-import org.springframework.web.multipart.MultipartFile
-import java.io.BufferedReader
-import java.io.ByteArrayInputStream
 import org.jsoup.Jsoup
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
+import org.springframework.stereotype.Service
 import org.springframework.util.LinkedMultiValueMap
+import org.springframework.web.multipart.MultipartFile
 import org.springframework.web.reactive.function.BodyInserters
 import org.springframework.web.reactive.function.client.ClientResponse
 import org.springframework.web.reactive.function.client.WebClient
 import reactor.core.publisher.Mono
+import java.io.BufferedReader
+import java.io.ByteArrayInputStream
 
 
 @Service
@@ -99,10 +99,22 @@ class MinioService(
         )
     }
 
+    fun downloadAsset(jwt: String, bucketName: String, fileName: String) {
+        val minioClient = this.getMinioClient(jwt)
+
+        minioClient.downloadObject(
+            DownloadObjectArgs.builder()
+                .bucket(bucketName)
+                .`object`("assets/$fileName")
+                .filename("C:/Users/JEN-PC/Desktop/$fileName")
+                .build()
+        )
+    }
+
     fun deleteAsset(jwt: String, bucket: String, fileName: String) {
         val minioClient = this.getMinioClient(jwt)
 
-        minioClient.removeObject(RemoveObjectArgs.builder().bucket(bucket).`object`("assets/" + fileName).build())
+        minioClient.removeObject(RemoveObjectArgs.builder().bucket(bucket).`object`("assets/$fileName").build())
     }
 
     // TODO Please fix this, it's so bad
