@@ -1,21 +1,15 @@
 package de.agrigaia.platform.api.edc
 
-
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.module.kotlin.readValue
 import de.agrigaia.platform.api.BaseController
 import de.agrigaia.platform.business.edc.EdcService
 import de.agrigaia.platform.business.errors.BusinessException
 import de.agrigaia.platform.business.errors.ErrorType
 import de.agrigaia.platform.common.HasLogger
 import de.agrigaia.platform.integration.edc.EdcConnectorService
-import de.agrigaia.platform.integration.minio.MinioService
 import de.agrigaia.platform.model.edc.Asset
 import de.agrigaia.platform.persistence.repository.AssetRepository
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.HttpStatus
-import org.springframework.security.core.context.SecurityContextHolder
-import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken
 import org.springframework.web.bind.annotation.*
 import java.util.*
 
@@ -33,7 +27,6 @@ class EdcController @Autowired constructor(
         @PathVariable bucket: String,
         @PathVariable name: String,
         @RequestBody assetJsonDto: AssetJsonDto,
-        publishedAsset: Asset,
     ) {
         val assetPropName: String =
             assetJsonDto.assetPropName ?: throw BusinessException("No asset name in AssetJsonDto.", ErrorType.NOT_FOUND)
@@ -61,6 +54,8 @@ class EdcController @Autowired constructor(
         val contractDefinitionJson = businessEdcService.createContractDefinitionJson(assetPropId, policyUUID, contractUUID)
 
         this.edcConnectorService.publishAsset(assetJson, policyJson, contractDefinitionJson)
+
+        val publishedAsset = Asset()
 
         publishedAsset.bucket = bucket
         publishedAsset.name = name
