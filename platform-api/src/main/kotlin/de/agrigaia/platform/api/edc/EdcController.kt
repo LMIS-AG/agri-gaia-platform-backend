@@ -42,7 +42,8 @@ class EdcController @Autowired constructor(
             assetJsonDto.assetPropContentType,
             assetJsonDto.assetPropVersion,
             assetJsonDto.agrovocKeywords,
-            assetJsonDto.geonamesUri,
+            assetJsonDto.latitude,
+            assetJsonDto.longitude,
             assetJsonDto.dateRange,
             assetJsonDto.dataAddressKeyName
         )
