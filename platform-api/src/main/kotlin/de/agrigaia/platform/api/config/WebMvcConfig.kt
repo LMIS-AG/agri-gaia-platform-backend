@@ -1,5 +1,6 @@
 package de.agrigaia.platform.api.config
 
+import com.nimbusds.jose.shaded.json.JSONArray
 import de.agrigaia.platform.common.ApplicationProperties
 import de.agrigaia.platform.common.HasLogger
 import org.springframework.beans.factory.annotation.Autowired
@@ -10,6 +11,7 @@ import org.springframework.http.HttpMethod
 import org.springframework.security.authentication.AbstractAuthenticationToken
 import org.springframework.security.config.annotation.web.builders.HttpSecurity
 import org.springframework.security.config.http.SessionCreationPolicy
+import org.springframework.security.core.authority.SimpleGrantedAuthority
 import org.springframework.security.oauth2.jwt.Jwt
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken
 import org.springframework.security.web.SecurityFilterChain
@@ -17,9 +19,15 @@ import org.springframework.web.servlet.config.annotation.CorsRegistry
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer
 
 @Configuration
-open class WebSecurityConfig @Autowired constructor(private val applicationProperties: ApplicationProperties) : WebMvcConfigurer, HasLogger {
+//@EnableMethodSecurity
+open class WebMvcConfig @Autowired constructor(private val applicationProperties: ApplicationProperties) :
+    WebMvcConfigurer, HasLogger {
 
-private val log = getLogger()
+    private val log = getLogger()
+
+    /*
+    Called once on application startup.
+     */
     @Bean
     open fun filterChain(http: HttpSecurity): SecurityFilterChain {
 
@@ -60,20 +68,21 @@ private val log = getLogger()
 
     /**
      * Extracts the groups from the JWT. Hierarchical subgroups are currently seperated by an underscore
+     * Called with every incoming http request.
      */
     open fun extractAuthorities(jwt: Jwt): AbstractAuthenticationToken {
+        this.log.debug("Calling extractAuthorities()")
+        val usergroups = jwt.getClaim<JSONArray>("usergroup")
+        val authorities = usergroups
+            .map { it.toString() }
+            .filter { it.contains("Projects") }
+            .map { it.substringAfterLast("/") }
+            .map { role -> SimpleGrantedAuthority(role) }
 
-        this.log.debug("Trying to extract authorities")
-
-        /*val groups: List<String> = jwt.getClaim("groups")
-        val authorities = groups
-            .map { role: String -> "GROUP_" + role.removeRange(0,1).replace("/", "_").uppercase(Locale.getDefault()) }
-            .map { role: String? -> SimpleGrantedAuthority(role) }
-            .toList()*/
-        this.log.debug("DONE extracting authorities; authorities = hardcoded null")
-        val authorities = null // TODO adjust when keycloak roles and groups are configured
-
-        //this.log.debug("DONE extracting authorities")
+        this.log.debug("Authorities:")
+        for (authority in authorities) {
+            this.log.debug(authority.toString())
+        }
 
         return JwtAuthenticationToken(jwt, authorities)
     }
