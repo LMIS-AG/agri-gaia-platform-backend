@@ -35,16 +35,16 @@ class BucketController @Autowired constructor(
         return ResponseEntity.ok(bucketDtos)
     }
 
-    @GetMapping("{bucket}/assets")
-    fun getBucketAssets(@PathVariable bucket: String): ResponseEntity<List<AssetDto>> {
+    @GetMapping("{bucket}/{folder}")
+    fun getBucketAssets(@PathVariable bucket: String, @PathVariable folder: String): ResponseEntity<List<AssetDto>> {
         val jwtAuthenticationToken = SecurityContextHolder.getContext().authentication as JwtAuthenticationToken
         val jwt = jwtAuthenticationToken.token.tokenValue
 
         return try {
-            val assetsForBucket = this.minioService.getPublishableAssetsForBucket(jwt, bucket)
+            val assetsForBucket = this.minioService.getPublishableAssetsForBucket(jwt, bucket, folder)
                 .map { it.get() }
                 .map { asset ->
-                    AssetDto(asset.objectName().replace("assets/", ""), asset.lastModified().toString(), asset.lastModified().toString(),
+                    AssetDto(asset.objectName().replace(folder, ""), asset.lastModified().toString(), asset.lastModified().toString(),
                         asset.size().toString(), "label", bucket, isPublished(bucket, asset.objectName().replace("assets/", "")))
                 }
             ResponseEntity.ok(assetsForBucket)

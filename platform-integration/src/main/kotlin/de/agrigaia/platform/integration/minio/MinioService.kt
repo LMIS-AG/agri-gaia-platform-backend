@@ -48,13 +48,13 @@ class MinioService(
         return minioClient.listObjects(bucketArgs).toList()
     }
 
-    fun getPublishableAssetsForBucket(jwt: String, bucketName: String): List<Result<Item>> {
+    fun getPublishableAssetsForBucket(jwt: String, bucketName: String, folder: String): List<Result<Item>> {
         val minioClient = this.getMinioClient(jwt)
 
         val bucketArgs = ListObjectsArgs.builder()
             .bucket(bucketName)
             .recursive(true)
-            .prefix("assets/")
+            .prefix("/$folder")
             .build()
 
         return minioClient.listObjects(bucketArgs).toList()
