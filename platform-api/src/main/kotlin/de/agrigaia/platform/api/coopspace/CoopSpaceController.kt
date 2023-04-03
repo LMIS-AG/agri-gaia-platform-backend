@@ -15,6 +15,7 @@ import de.agrigaia.platform.model.coopspace.DeleteMemberRequest
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
+import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken
 import org.springframework.web.bind.annotation.*
@@ -23,7 +24,7 @@ import org.springframework.web.bind.annotation.*
 // TODO Parse JWT and look for roles to see if the user has the rights for the coopspaces and buckets (local db and minio)
 @RestController
 @RequestMapping("/coopspaces")
-class CoopSpaceController @Autowired constructor(
+open class CoopSpaceController @Autowired constructor(
     private val coopSpaceService: CoopSpaceService,
     private val coopSpaceMapper: CoopSpaceMapper,
     private val minioService: MinioService,
@@ -31,8 +32,11 @@ class CoopSpaceController @Autowired constructor(
     private val memberMapper: MemberMapper,
 ) : HasLogger, BaseController() {
 
+//    @Secured("securitycheck-Admin")
+//    @PreAuthorize("hasRole('securitycheck-Admin')")
     @GetMapping
     fun getCoopSpaces(): ResponseEntity<List<CoopSpaceDto>> {
+//        this.getLogger().error(authentication.authorities.toString())
 
         val jwtAuthenticationToken = SecurityContextHolder.getContext().authentication as JwtAuthenticationToken
         val jwt = jwtAuthenticationToken.token.tokenValue
@@ -103,7 +107,7 @@ class CoopSpaceController @Autowired constructor(
         val creator =
             this.keycloakService.findKeycloakUserByMail(jwtAuthenticationToken.token.claims["email"] as String)
         val coopSpace: CoopSpace = coopSpaceDto.toEntity(this.coopSpaceMapper)
-        val createdCoopSpace : CoopSpace = this.coopSpaceService.createCoopSpace(coopSpace, creator)
+        val createdCoopSpace: CoopSpace = this.coopSpaceService.createCoopSpace(coopSpace, creator)
         val createdCoopSpaceDto = this.coopSpaceMapper.map(createdCoopSpace)
         return ResponseEntity.ok(createdCoopSpaceDto)
     }
@@ -141,18 +145,21 @@ class CoopSpaceController @Autowired constructor(
 
         // add user to the CoopSpace by adding it both to the respective subgroup in Keycloak and the database
         this.coopSpaceService.addUsersToKeycloakGroup(
-                addMemberRequest.member,
-                coopSpaceName
+            addMemberRequest.member,
+            coopSpaceName
         )
         this.coopSpaceService.addUsersToDatabase(
             addMemberRequest.member,
             coopSpace
         )
     }
+
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/changeMemberRole")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     fun changeMemberRoleInCoopSpace(@RequestBody changeMemberRoleRequest: ChangeMemberRoleRequest) {
-        val coopSpaceDto = this.coopSpaceMapper.map(this.coopSpaceService.findCoopSpace(changeMemberRoleRequest.coopSpaceId))
+        val coopSpaceDto =
+            this.coopSpaceMapper.map(this.coopSpaceService.findCoopSpace(changeMemberRoleRequest.coopSpaceId))
         val coopSpace: CoopSpace = coopSpaceDto.toEntity(this.coopSpaceMapper)
         val coopSpaceName = coopSpace.name ?: throw BusinessException("CoopSpaceName is null", ErrorType.NOT_FOUND)
 
