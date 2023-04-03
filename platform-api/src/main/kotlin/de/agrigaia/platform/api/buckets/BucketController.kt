@@ -35,16 +35,17 @@ class BucketController @Autowired constructor(
         return ResponseEntity.ok(bucketDtos)
     }
 
-    @GetMapping("{bucket}/{folder}")
-    fun getBucketAssets(@PathVariable bucket: String, @PathVariable folder: String): ResponseEntity<List<AssetDto>> {
+    @GetMapping("{bucket}/{base64encodedFolderName}")
+    fun getBucketAssets(@PathVariable bucket: String, @PathVariable base64encodedFolderName: String): ResponseEntity<List<AssetDto>> {
         val jwtAuthenticationToken = SecurityContextHolder.getContext().authentication as JwtAuthenticationToken
         val jwt = jwtAuthenticationToken.token.tokenValue
+        val folder = String(Base64.getDecoder().decode(base64encodedFolderName))
 
         return try {
             val assetsForBucket = this.minioService.getPublishableAssetsForBucket(jwt, bucket, folder)
                 .map { it.get() }
                 .map { asset ->
-                    AssetDto(asset.objectName().replace(folder, ""), asset.lastModified().toString(), asset.lastModified().toString(),
+                    AssetDto(asset.objectName(), asset.lastModified().toString(), asset.lastModified().toString(),
                         asset.size().toString(), "label", bucket, isPublished(bucket, asset.objectName().replace("assets/", "")))
                 }
             ResponseEntity.ok(assetsForBucket)
@@ -66,13 +67,13 @@ class BucketController @Autowired constructor(
         this.minioService.uploadAssets(jwt, bucket, files)
     }
 
-    @DeleteMapping("delete/{bucket}/{base64EncodedName}")
+    @DeleteMapping("delete/{bucket}/{base64EncodedFileName}")
     @ResponseStatus(HttpStatus.OK)
-    fun deleteAsset(@PathVariable bucket: String, @PathVariable base64EncodedName: String) {
+    fun deleteAsset(@PathVariable bucket: String, @PathVariable base64EncodedFileName: String) {
         val jwtAuthenticationToken = SecurityContextHolder.getContext().authentication as JwtAuthenticationToken
         val jwt = jwtAuthenticationToken.token.tokenValue
 
-        val name = String(Base64.getDecoder().decode(base64EncodedName))
+        val name = String(Base64.getDecoder().decode(base64EncodedFileName))
 
         this.minioService.deleteAsset(jwt, bucket, name)
     }

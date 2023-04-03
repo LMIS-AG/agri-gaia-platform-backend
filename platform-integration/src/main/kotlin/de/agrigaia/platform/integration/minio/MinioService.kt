@@ -102,7 +102,7 @@ class MinioService(
     fun deleteAsset(jwt: String, bucket: String, fileName: String) {
         val minioClient = this.getMinioClient(jwt)
 
-        minioClient.removeObject(RemoveObjectArgs.builder().bucket(bucket).`object`("assets/" + fileName).build())
+        minioClient.removeObject(RemoveObjectArgs.builder().bucket(bucket).`object`(fileName).build())
     }
 
     // TODO Please fix this, it's so bad
