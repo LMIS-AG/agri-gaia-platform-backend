@@ -58,13 +58,15 @@ class BucketController @Autowired constructor(
         return assetRepository.findByBucketAndName(bucket, name) != null
     }
 
-    @PostMapping("upload/{bucket}")
+    @PostMapping("upload/{bucket}/{base64encodedFolderName}")
     @ResponseStatus(HttpStatus.OK)
-    fun uploadAsset(@PathVariable bucket: String, @RequestBody files: Array<MultipartFile>) {
+    fun uploadAsset(@PathVariable bucket: String, @PathVariable base64encodedFolderName: String, @RequestBody files: Array<MultipartFile>) {
         val jwtAuthenticationToken = SecurityContextHolder.getContext().authentication as JwtAuthenticationToken
         val jwt = jwtAuthenticationToken.token.tokenValue
 
-        this.minioService.uploadAssets(jwt, bucket, files)
+        val currentRootDecoded = String(Base64.getDecoder().decode(base64encodedFolderName))
+
+        this.minioService.uploadAssets(jwt, bucket, currentRootDecoded, files)
     }
 
     @DeleteMapping("delete/{bucket}/{base64EncodedFileName}")

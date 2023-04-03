@@ -82,12 +82,12 @@ class MinioService(
         return fixString(text)
     }
 
-    fun uploadAssets(jwt: String, bucketName: String, files: Array<MultipartFile>) {
+    fun uploadAssets(jwt: String, bucketName: String, currentRoot: String, files: Array<MultipartFile>) {
         val minioClient = this.getMinioClient(jwt)
 
         val snowballObjects: List<SnowballObject> = files.map { file ->
             SnowballObject(
-                "assets/" + file.originalFilename,
+                currentRoot + file.originalFilename,
                 ByteArrayInputStream(file.bytes),
                 file.size,
                 null,
