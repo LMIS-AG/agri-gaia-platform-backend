@@ -36,7 +36,7 @@ class EdcServiceTest {
               "asset:prop:contenttype": "someAssetPropContentType",
               "asset:prop:version": "someAssetPropVersion",
               "asset:prop:id": "someId",
-              "theme": "["someAgrovocUri", "someAgrovocUri"]",
+              "theme": ["someAgrovocUri", "someAgrovocUri"],
               "spatial": "someGeoNamesUri",
               "temporal": "someDateRange"
             },
