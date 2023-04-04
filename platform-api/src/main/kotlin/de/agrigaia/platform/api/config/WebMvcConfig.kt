@@ -1,6 +1,5 @@
 package de.agrigaia.platform.api.config
 
-import com.nimbusds.jose.shaded.json.JSONArray
 import de.agrigaia.platform.common.ApplicationProperties
 import de.agrigaia.platform.common.HasLogger
 import org.springframework.beans.factory.annotation.Autowired
@@ -9,6 +8,7 @@ import org.springframework.context.annotation.Configuration
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpMethod
 import org.springframework.security.authentication.AbstractAuthenticationToken
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity
 import org.springframework.security.config.annotation.web.builders.HttpSecurity
 import org.springframework.security.config.http.SessionCreationPolicy
 import org.springframework.security.core.authority.SimpleGrantedAuthority
@@ -19,11 +19,9 @@ import org.springframework.web.servlet.config.annotation.CorsRegistry
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer
 
 @Configuration
-//@EnableMethodSecurity
+@EnableMethodSecurity
 open class WebMvcConfig @Autowired constructor(private val applicationProperties: ApplicationProperties) :
     WebMvcConfigurer, HasLogger {
-
-    private val log = getLogger()
 
     /*
     Called once on application startup.
@@ -31,7 +29,7 @@ open class WebMvcConfig @Autowired constructor(private val applicationProperties
     @Bean
     open fun filterChain(http: HttpSecurity): SecurityFilterChain {
 
-        this.log.debug("Start filterChain")
+        this.getLogger().debug("Start filterChain")
 
         http.csrf().disable()
             .cors()
@@ -49,7 +47,7 @@ open class WebMvcConfig @Autowired constructor(private val applicationProperties
             .jwt()
             .jwtAuthenticationConverter(this::extractAuthorities)
 
-        this.log.debug("End filterChain")
+        this.getLogger().debug("End filterChain")
 
         return http.build()
     }
@@ -67,22 +65,20 @@ open class WebMvcConfig @Autowired constructor(private val applicationProperties
     }
 
     /**
-     * Extracts the groups from the JWT. Hierarchical subgroups are currently seperated by an underscore
+     * Extracts the KC groups from the JWT.
      * Called with every incoming http request.
      */
     open fun extractAuthorities(jwt: Jwt): AbstractAuthenticationToken {
-        this.log.debug("Calling extractAuthorities()")
-        val usergroups = jwt.getClaim<JSONArray>("usergroup")
+        val usergroups = jwt.getClaim<List<String>>("usergroup")
         val authorities = usergroups
-            .map { it.toString() }
             .filter { it.contains("Projects") }
             .map { it.substringAfterLast("/") }
             .map { role -> SimpleGrantedAuthority(role) }
 
-        this.log.debug("Authorities:")
-        for (authority in authorities) {
-            this.log.debug(authority.toString())
-        }
+//        this.getLogger().debug("Authorities:")
+//        for (authority in authorities) {
+//            this.getLogger().debug(authority.toString())
+//        }
 
         return JwtAuthenticationToken(jwt, authorities)
     }
