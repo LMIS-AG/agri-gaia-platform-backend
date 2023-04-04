@@ -193,14 +193,13 @@ open class CoopSpaceController @Autowired constructor(
             val assetsForBucket =
                 this.minioService.getAssetsForCoopspace(jwt, company!!, bucketName).map { it.get() }.map {
                     AssetDto(
-                        it.etag(),
                         it.objectName().replace("assets/", ""),
                         it.lastModified().toString(),
                         it.lastModified().toString(),
                         it.size().toString(),
                         "label",
-                        bucketName
-                    )
+                        bucketName,
+                    isPublished = false)
                 }
             ResponseEntity.ok(assetsForBucket)
         } catch (e: Exception) {

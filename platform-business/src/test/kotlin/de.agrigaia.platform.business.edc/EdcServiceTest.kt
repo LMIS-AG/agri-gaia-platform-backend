@@ -1,6 +1,6 @@
 package de.agrigaia.platform.business.edc
 
-import de.agrigaia.platform.integration.agrovoc.AgrovocConnectorService
+import de.agrigaia.platform.integration.fuseki.FusekiConnectorService
 import io.mockk.every
 import io.mockk.mockk
 import org.junit.jupiter.api.Test
@@ -10,8 +10,8 @@ class EdcServiceTest {
 
     @Test
     fun `Test createAssetJson`() {
-        val agrovocConnectorService: AgrovocConnectorService = mockk()
-        val edcService = EdcService(agrovocConnectorService)
+        val agrovocConnectorService: FusekiConnectorService = mockk()
+        val edcService = EdcService(FusekiConnectorService())
         every { agrovocConnectorService.getConceptUriFromKeyword(any()) } returns "someAgrovocUri"
 
         val assetPropName = "someName"
@@ -22,7 +22,8 @@ class EdcServiceTest {
         val assetPropContentType = "someAssetPropContentType"
         val assetPropVersion = "someAssetPropVersion"
         val agrovocKeywords: List<String> = listOf("a", "b")
-        val geonamesUri = "someGeoNamesUri"
+        val latitude = "someLatitude"
+        val longitude = "someLongitude"
         val dateRange = "someDateRange"
         val dataAddressKeyName = "someDataAddressKeyName"
 
@@ -61,7 +62,8 @@ class EdcServiceTest {
             assetPropContentType,
             assetPropVersion,
             agrovocKeywords,
-            geonamesUri,
+            latitude,
+            longitude,
             dateRange,
             dataAddressKeyName,
         )

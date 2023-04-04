@@ -4,6 +4,7 @@ import de.agrigaia.platform.api.BaseController
 import de.agrigaia.platform.api.coopspace.AssetDto
 import de.agrigaia.platform.integration.minio.MinioService
 import de.agrigaia.platform.model.buckets.STSDto
+import de.agrigaia.platform.persistence.repository.AssetRepository
 import io.minio.messages.Bucket
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.HttpStatus
@@ -16,7 +17,8 @@ import org.springframework.web.multipart.MultipartFile
 @RestController
 @RequestMapping("/buckets")
 class BucketController @Autowired constructor(
-        private val minioService: MinioService
+        private val minioService: MinioService,
+        private val assetRepository: AssetRepository,
 ) : BaseController() {
 
     @GetMapping
@@ -39,13 +41,19 @@ class BucketController @Autowired constructor(
 
         return try {
             val assetsForBucket = this.minioService.getPublishableAssetsForBucket(jwt, bucket)
-                    .map { it.get() }
-                    .map { AssetDto(it.etag(), it.objectName().replace("assets/", ""), it.lastModified().toString(), it.lastModified().toString(),
-                        it.size().toString(), "label", bucket) }
+                .map { it.get() }
+                .map { asset ->
+                    AssetDto(asset.objectName().replace("assets/", ""), asset.lastModified().toString(), asset.lastModified().toString(),
+                        asset.size().toString(), "label", bucket, isPublished(bucket, asset.objectName().replace("assets/", "")))
+                }
             ResponseEntity.ok(assetsForBucket)
         } catch (e: Exception) {
             ResponseEntity.noContent().build()
         }
+    }
+
+    private fun isPublished(bucket: String, name: String): Boolean {
+        return assetRepository.findByBucketAndName(bucket, name) != null
     }
 
     @PostMapping("upload/{bucket}")
