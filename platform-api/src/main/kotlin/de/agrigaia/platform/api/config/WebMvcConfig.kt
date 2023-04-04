@@ -69,17 +69,21 @@ open class WebMvcConfig @Autowired constructor(private val applicationProperties
      * Called with every incoming http request.
      */
     open fun extractAuthorities(jwt: Jwt): AbstractAuthenticationToken {
-        val usergroups = jwt.getClaim<List<String>>("usergroup")
-        val authorities = usergroups
+        val userGroups = jwt.getClaim<List<String>>("usergroup")
+        val companyAuthorities  = userGroups.map { it.split("/")[1] }.map { role -> SimpleGrantedAuthority("$role-company") }.distinct()
+
+        val coopSpaceAuthorities = userGroups
             .filter { it.contains("Projects") }
             .map { it.substringAfterLast("/") }
             .map { role -> SimpleGrantedAuthority(role) }
 
-//        this.getLogger().debug("Authorities:")
-//        for (authority in authorities) {
-//            this.getLogger().debug(authority.toString())
-//        }
+        this.getLogger().debug("User Groups:")
+        for (usergroup in userGroups) {
+            this.getLogger().debug(usergroup)
+        }
+        this.getLogger().debug("Company Authorities: {}", companyAuthorities)
+        this.getLogger().debug("Coopspace Authorities: {}", coopSpaceAuthorities)
 
-        return JwtAuthenticationToken(jwt, authorities)
+        return JwtAuthenticationToken(jwt, companyAuthorities + coopSpaceAuthorities)
     }
 }
