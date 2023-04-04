@@ -112,10 +112,7 @@ class MinioService(
         response.setHeader("Content-Disposition", "attachment; filename=$fileName")
 
         val outputStream = response.outputStream
-        inputStream.use { input ->
-            outputStream.use { output ->
-                input.copyTo(output)
-            }
+            inputStream.use { input -> outputStream.use { output -> input.copyTo(output) } }
         }
     }
 
