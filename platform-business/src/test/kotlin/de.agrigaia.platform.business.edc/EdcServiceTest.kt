@@ -10,9 +10,9 @@ class EdcServiceTest {
 
     @Test
     fun `Test createAssetJson`() {
-        val agrovocConnectorService: FusekiConnectorService = mockk()
-        val edcService = EdcService(FusekiConnectorService())
-        every { agrovocConnectorService.getConceptUriFromKeyword(any()) } returns "someAgrovocUri"
+        val fusekiConnectorService: FusekiConnectorService = mockk()
+        val edcService = EdcService(fusekiConnectorService)
+        every { fusekiConnectorService.getConceptUriFromKeyword(any()) } returns "someAgrovocUri"
 
         val assetPropName = "someName"
         val assetPropId = "someId"
