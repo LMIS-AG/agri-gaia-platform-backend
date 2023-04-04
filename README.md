@@ -7,7 +7,7 @@ written in kotlin.
 
 To build and run the application you need to have the following software installed:
 
-* JDK 11
+* JDK 17
 * Maven
 * Docker to run a database container or alternatively an installed database (MariaDB recommended).
 

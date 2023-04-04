@@ -2,7 +2,6 @@ package de.agrigaia.platform.integration.agrovoc
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import de.agrigaia.platform.common.HasLogger
-import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
 import org.springframework.stereotype.Service
 import org.springframework.util.LinkedMultiValueMap
@@ -62,8 +61,8 @@ class AgrovocConnectorService : HasLogger {
 
         val response: String = request
             .retrieve()
-            .onStatus(HttpStatus::is4xxClientError, ::handleClientError)
-            .onStatus(HttpStatus::is5xxServerError, ::handleServerError)
+            .onStatus({ it.is4xxClientError }, ::handleClientError)
+            .onStatus({ it.is5xxServerError }, ::handleServerError)
             .bodyToMono(String::class.java)
             .block() ?: throw Exception("Response from Agrovoc was null.")
 

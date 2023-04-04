@@ -35,7 +35,7 @@ open class WebMvcConfig @Autowired constructor(private val applicationProperties
             .cors()
             .and()
 
-            .authorizeRequests()
+            .authorizeHttpRequests()
             .anyRequest().authenticated()
             .and()
 
@@ -55,10 +55,10 @@ open class WebMvcConfig @Autowired constructor(private val applicationProperties
     override fun addCorsMappings(registry: CorsRegistry) {
         registry.addMapping("/**")
             .allowedMethods(
-                HttpMethod.GET.name,
-                HttpMethod.POST.name,
-                HttpMethod.DELETE.name,
-                HttpMethod.PUT.name
+                HttpMethod.GET.name(),
+                HttpMethod.POST.name(),
+                HttpMethod.DELETE.name(),
+                HttpMethod.PUT.name()
             )
             .allowedOrigins(*this.applicationProperties.allowedOrigins)
             .exposedHeaders(HttpHeaders.LOCATION)

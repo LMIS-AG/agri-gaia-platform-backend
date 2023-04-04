@@ -12,7 +12,6 @@ import de.agrigaia.platform.persistence.repository.CoopSpaceRepository
 import de.agrigaia.platform.persistence.repository.MemberRepository
 import io.minio.messages.Bucket
 import org.springframework.http.HttpHeaders
-import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
 import org.springframework.stereotype.Service
 import org.springframework.web.reactive.function.client.ClientResponse
@@ -84,8 +83,8 @@ class CoopSpaceService(
             .accept(MediaType.TEXT_PLAIN)
             .body(Mono.just(body))
             .retrieve()
-            .onStatus(HttpStatus::is4xxClientError, ::handleClientError)
-            .onStatus(HttpStatus::is5xxServerError, ::handleClientError)
+            .onStatus({ it.is4xxClientError }, ::handleClientError)
+            .onStatus({ it.is5xxServerError }, ::handleClientError)
             .bodyToMono(String::class.java)
             .block()
         // FIXME Properly handle errors
@@ -130,8 +129,8 @@ class CoopSpaceService(
             .accept(MediaType.TEXT_PLAIN)
             .body(Mono.just(body))
             .retrieve()
-            .onStatus(HttpStatus::is4xxClientError, ::handleClientError)
-            .onStatus(HttpStatus::is5xxServerError, ::handleClientError)
+            .onStatus({ it.is4xxClientError }, ::handleClientError)
+            .onStatus({ it.is5xxServerError }, ::handleClientError)
             .bodyToMono(String::class.java)
             .block()
         // FIXME Properly handle errors

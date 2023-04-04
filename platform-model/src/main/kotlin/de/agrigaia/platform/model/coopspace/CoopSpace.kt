@@ -1,10 +1,10 @@
 package de.agrigaia.platform.model.coopspace
 
 import de.agrigaia.platform.model.BaseEntity
-import javax.persistence.CascadeType
-import javax.persistence.Entity
-import javax.persistence.JoinColumn
-import javax.persistence.OneToMany
+import jakarta.persistence.CascadeType
+import jakarta.persistence.Entity
+import jakarta.persistence.JoinColumn
+import jakarta.persistence.OneToMany
 
 @Entity
 class CoopSpace(
