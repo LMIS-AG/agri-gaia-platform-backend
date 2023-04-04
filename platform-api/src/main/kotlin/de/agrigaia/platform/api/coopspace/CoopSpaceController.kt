@@ -40,6 +40,7 @@ open class CoopSpaceController @Autowired constructor(
         val jwtAuthenticationToken = SecurityContextHolder.getContext().authentication as JwtAuthenticationToken
         val jwt = jwtAuthenticationToken.token.tokenValue
 
+        // TODO: This can probably be done much easier using authorities.
         // Filter the list of coop spaces, only returning those for which the user has access to the associated bucket
         val coopSpacesWithUserAccess = this.coopSpaceService.filterCoopSpacesByBucketAccess(
             coopSpaces = this.coopSpaceService.findAll(),  // All coopSpaces.
@@ -52,11 +53,12 @@ open class CoopSpaceController @Autowired constructor(
     }
 
     @GetMapping("/companies")
-    open fun getValidCompanyNames(): ResponseEntity<List<String>> {
-        val jwtAuthenticationToken = SecurityContextHolder.getContext().authentication as JwtAuthenticationToken
-        val userGroups = jwtAuthenticationToken.token.claims["usergroup"] as List<String>
-        val companyNames = userGroups.map { it.split("/")[1] }
-        return ResponseEntity.ok(companyNames.distinct())
+    open fun getValidCompanyNames(authentication: Authentication): ResponseEntity<List<String>> {
+        val validCompanyNames: List<String> = authentication.authorities
+            .map { it.authority }
+            .filter { it.contains("-company") }
+            .map { it.removeSuffix("-company")}.distinct()
+        return ResponseEntity.ok(validCompanyNames)
     }
 
     @GetMapping("{id}")
@@ -123,7 +125,10 @@ open class CoopSpaceController @Autowired constructor(
     @PreAuthorize("hasAuthority(#deleteMemberRequest.coopSpaceName + '-Admin')")
     @PostMapping("/deleteMember")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    open fun removeUserFromCoopSpace(@RequestBody deleteMemberRequest: DeleteMemberRequest, authentication: Authentication) {
+    open fun removeUserFromCoopSpace(
+        @RequestBody deleteMemberRequest: DeleteMemberRequest,
+        authentication: Authentication
+    ) {
         // remove user from the CoopSpace by removing it both from the respective subgroup in Keycloak and the database
         this.coopSpaceService.removeUserFromKeycloakGroup(
             deleteMemberRequest.member.username!!,
@@ -199,7 +204,8 @@ open class CoopSpaceController @Autowired constructor(
                         it.size().toString(),
                         "label",
                         bucketName,
-                    isPublished = false)
+                        isPublished = false
+                    )
                 }
             ResponseEntity.ok(assetsForBucket)
         } catch (e: Exception) {
