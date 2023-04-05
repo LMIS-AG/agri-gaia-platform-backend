@@ -9,7 +9,6 @@ import de.agrigaia.platform.model.coopspace.CoopSpaceRole
 import de.agrigaia.platform.model.coopspace.Member
 import de.agrigaia.platform.persistence.repository.CoopSpaceRepository
 import de.agrigaia.platform.persistence.repository.MemberRepository
-import io.minio.messages.Bucket
 import io.mockk.*
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
@@ -32,36 +31,6 @@ class CoopSpaceServiceTest {
         minioService = minioService,
         keycloakConnectorService = keycloakConnectorService,
     )
-
-    @Test
-    fun `Test filterCoopSpacesByBucketAccess`() {
-        // Should return empty list if either input list is empty.
-        var actual = coopSpaceService.filterCoopSpacesByBucketAccess(listOf(), listOf())
-        assertEquals(listOf<CoopSpace>(), actual, "Should return an empty list when given empty lists.")
-        actual = coopSpaceService.filterCoopSpacesByBucketAccess(listOf(), listOf(Bucket()))
-        assertEquals(listOf<CoopSpace>(), actual, "Should return an empty list when given no coop spaces.")
-        actual = coopSpaceService.filterCoopSpacesByBucketAccess(listOf(CoopSpace()), listOf())
-        assertEquals(listOf<CoopSpace>(), actual, "Should return an empty list when given no buckets.")
-
-        val a: Bucket = mockk()
-        val b: Bucket = mockk()
-        every { a.name() } returns "prj-lmis-inaccessibleprojectname"
-        every { b.name() } returns "prj-lmis-projectname"
-        val dummyBuckets = listOf(a, b)
-
-        val c: CoopSpace = mockk()
-        val d: CoopSpace = mockk()
-        every { c.company } returns "lmis"
-        every { c.name } returns "blub"
-        every { d.company } returns "lmis"
-        every { d.name } returns "projectname"
-        val dummyCoopSpaces = listOf(c, d)
-
-        val expected = listOf(d)
-        actual = coopSpaceService.filterCoopSpacesByBucketAccess(dummyCoopSpaces, dummyBuckets)
-
-        assertEquals(expected, actual, "Should remove coopSpaces the user has no access to.")
-    }
 
     @Test
     fun `Test findCoopSpace`() {
