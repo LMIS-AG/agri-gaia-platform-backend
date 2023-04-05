@@ -120,7 +120,7 @@ open class CoopSpaceController @Autowired constructor(
         this.coopSpaceService.removeUserFromDatabase(id)
     }
 
-    // TODO
+    // TODO can't access coopspace name here.
     @PostMapping("/addMember")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     open fun addUserToCoopSpace(@RequestBody addMemberRequest: AddMemberRequest) {
@@ -139,7 +139,7 @@ open class CoopSpaceController @Autowired constructor(
         )
     }
 
-    // TODO
+    // TODO can't access coopspace name here.
     @PostMapping("/changeMemberRole")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     open fun changeMemberRoleInCoopSpace(@RequestBody changeMemberRoleRequest: ChangeMemberRoleRequest) {
@@ -161,7 +161,7 @@ open class CoopSpaceController @Autowired constructor(
         )
         this.coopSpaceService.changeUserRoleInDatabase(
             changeMemberRoleRequest.member,
-            coopSpace
+            coopSpace,
         )
 
     }
