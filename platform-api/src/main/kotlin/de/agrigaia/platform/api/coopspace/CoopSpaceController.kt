@@ -82,16 +82,14 @@ open class CoopSpaceController @Autowired constructor(
         return ResponseEntity.ok(memberDtos)
     }
 
-    // TODO
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     open fun createCoopSpace(@RequestBody coopSpaceDto: CoopSpaceDto): ResponseEntity<CoopSpaceDto> {
         val jwtAuthenticationToken = SecurityContextHolder.getContext().authentication as JwtAuthenticationToken
-        val creator =
-            this.keycloakService.findKeycloakUserByMail(jwtAuthenticationToken.token.claims["email"] as String)
+        val creator = this.keycloakService.findKeycloakUserByMail(jwtAuthenticationToken.token.getClaimAsString("email"))
         val coopSpace: CoopSpace = coopSpaceDto.toEntity(this.coopSpaceMapper)
         val createdCoopSpace: CoopSpace = this.coopSpaceService.createCoopSpace(coopSpace, creator)
-        val createdCoopSpaceDto = this.coopSpaceMapper.map(createdCoopSpace)
+        val createdCoopSpaceDto: CoopSpaceDto = this.coopSpaceMapper.map(createdCoopSpace)
         return ResponseEntity.ok(createdCoopSpaceDto)
     }
 
