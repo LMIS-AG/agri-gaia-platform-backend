@@ -73,18 +73,11 @@ open class CoopSpaceController @Autowired constructor(
         return ResponseEntity.ok(this.memberMapper.mapToDtos(coopSpace.members))
     }
 
-    // TODO
     @GetMapping("/members")
     open fun getKeycloakUsers(): ResponseEntity<List<MemberDto>> {
-        // TODO: Kommentar von EBE.
-        // Arbeitsstand / Versuch Keycloak anzusprechen
-        // this.keycloakService.getUserResource("0e68593d-6604-4e7a-aa53-15b1af988c2d")
-
         val jwtAuthenticationToken = SecurityContextHolder.getContext().authentication as JwtAuthenticationToken
-        val members = this.keycloakService.getKeycloakUsers().filter {
-            it.username != jwtAuthenticationToken.token.claims["preferred_username"]
-        }
-
+        val loggedInUserName: String = jwtAuthenticationToken.token.getClaimAsString("preferred_username")
+        val members = this.keycloakService.getKeycloakUsers().filter { it.username != loggedInUserName }
         val memberDtos = this.memberMapper.mapToDtos(members)
         return ResponseEntity.ok(memberDtos)
     }
