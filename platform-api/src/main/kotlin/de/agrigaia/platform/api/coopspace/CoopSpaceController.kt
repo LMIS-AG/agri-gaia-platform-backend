@@ -15,6 +15,7 @@ import de.agrigaia.platform.model.coopspace.DeleteMemberRequest
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
+import org.springframework.security.access.prepost.PostAuthorize
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.security.core.Authentication
 import org.springframework.security.core.context.SecurityContextHolder
@@ -45,24 +46,21 @@ open class CoopSpaceController @Autowired constructor(
     open fun getValidCompanyNames(authentication: Authentication): ResponseEntity<List<String>> {
         val validCompanyNames: List<String> = authentication.authorities
             .map { it.authority }
-            .filter { it.contains("-company") }
-            .map { it.removeSuffix("-company")}.distinct()
+            .filter { it.contains("company-") }
+            .map { it.removePrefix("company-")}.distinct()
         return ResponseEntity.ok(validCompanyNames)
     }
 
+    // Bisschen haesslich, ich weiss.
+    @PostAuthorize("hasAnyAuthority('coopspace-'+returnObject.body.name+'-Guest', 'coopspace-'+returnObject.body.name+'-User', 'coopspace-'+returnObject.body.name+'-Admin')")
     @GetMapping("{id}")
     open fun getCoopSpace(@PathVariable id: Long): ResponseEntity<CoopSpaceDto> {
-        val jwtAuthenticationToken = SecurityContextHolder.getContext().authentication as JwtAuthenticationToken
-        val username = jwtAuthenticationToken.token.claims["preferred_username"] as String
         val coopSpace: CoopSpace = this.coopSpaceService.findCoopSpace(id)
-        val coopSpaceDto = this.coopSpaceMapper.map(coopSpace)
-
-        if (!this.coopSpaceService.hasAccessToCoopSpace(username, coopSpace)) {
-            return ResponseEntity(HttpStatus.UNAUTHORIZED)
-        }
+        val coopSpaceDto: CoopSpaceDto = this.coopSpaceMapper.map(coopSpace)
         return ResponseEntity.ok(coopSpaceDto)
     }
 
+    // TODO
     @GetMapping("{id}/members")
     open fun getMembersOfCoopSpace(@PathVariable id: Long): ResponseEntity<List<MemberDto>> {
         val jwtAuthenticationToken = SecurityContextHolder.getContext().authentication as JwtAuthenticationToken
@@ -75,6 +73,7 @@ open class CoopSpaceController @Autowired constructor(
         return ResponseEntity.ok(this.memberMapper.mapToDtos(coopSpace.members))
     }
 
+    // TODO
     @GetMapping("/members")
     open fun getKeycloakUsers(): ResponseEntity<List<MemberDto>> {
         // TODO: Kommentar von EBE.
@@ -90,6 +89,7 @@ open class CoopSpaceController @Autowired constructor(
         return ResponseEntity.ok(memberDtos)
     }
 
+    // TODO
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     open fun createCoopSpace(@RequestBody coopSpaceDto: CoopSpaceDto): ResponseEntity<CoopSpaceDto> {
@@ -102,6 +102,7 @@ open class CoopSpaceController @Autowired constructor(
         return ResponseEntity.ok(createdCoopSpaceDto)
     }
 
+    // TODO
     @PostMapping("delete")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     open fun deleteCoopSpace(@RequestBody coopSpaceDto: CoopSpaceDto) {
@@ -111,6 +112,7 @@ open class CoopSpaceController @Autowired constructor(
         this.coopSpaceService.deleteCoopSpace(jwt, coopSpace)
     }
 
+    // TODO
     @PreAuthorize("hasAuthority(#deleteMemberRequest.coopSpaceName + '-Admin')")
     @PostMapping("/deleteMember")
     @ResponseStatus(HttpStatus.NO_CONTENT)
@@ -130,6 +132,7 @@ open class CoopSpaceController @Autowired constructor(
         )
     }
 
+    // TODO
     @PostMapping("/addMember")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     open fun addUserToCoopSpace(@RequestBody addMemberRequest: AddMemberRequest) {
@@ -148,6 +151,7 @@ open class CoopSpaceController @Autowired constructor(
         )
     }
 
+    // TODO
     @PostMapping("/changeMemberRole")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     open fun changeMemberRoleInCoopSpace(@RequestBody changeMemberRoleRequest: ChangeMemberRoleRequest) {
@@ -176,6 +180,7 @@ open class CoopSpaceController @Autowired constructor(
 
     }
 
+    // TODO
     @GetMapping("{id}/assets")
     open fun getAssetsForCoopSpace(@PathVariable id: Long): ResponseEntity<Any> {
         val coopSpace = this.coopSpaceService.findCoopSpace(id)
@@ -202,6 +207,7 @@ open class CoopSpaceController @Autowired constructor(
         }
     }
 
+    // TODO
     @GetMapping("existsbyname/{name}")
     open fun checkIfCoopSpaceAlreadyExistsByName(@PathVariable name: String): ResponseEntity<Boolean> {
         return ResponseEntity.ok(this.minioService.bucketExists(name))
