@@ -113,7 +113,6 @@ class MinioService(
 
         val outputStream = response.outputStream
             inputStream.use { input -> outputStream.use { output -> input.copyTo(output) } }
-        }
     }
 
     fun deleteAsset(jwt: String, bucket: String, fileName: String) {
