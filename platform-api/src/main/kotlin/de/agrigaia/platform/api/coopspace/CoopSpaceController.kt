@@ -134,30 +134,24 @@ open class CoopSpaceController @Autowired constructor(
         )
     }
 
+    /*
+    Change member role in coopspace by removing/adding to keycloak groups and updating the database.
+     */
     // TODO can't access coopspace name here.
     @PostMapping("/changeMemberRole")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     open fun changeMemberRoleInCoopSpace(@RequestBody changeMemberRoleRequest: ChangeMemberRoleRequest) {
-        val coopSpace: CoopSpace = this.coopSpaceService.findCoopSpace(changeMemberRoleRequest.coopSpaceId)
+        val member = changeMemberRoleRequest.member ?: throw BusinessException("Member was null", ErrorType.NOT_FOUND)
+        val username = member.username ?: throw BusinessException("Username was null", ErrorType.NOT_FOUND)
+        val originalRole = changeMemberRoleRequest.originalRole ?: throw BusinessException("OriginalRole was null", ErrorType.NOT_FOUND)
+        val company = member.company ?: throw BusinessException("Company was null", ErrorType.NOT_FOUND)
+        val id = changeMemberRoleRequest.coopSpaceId ?: throw BusinessException("CoopspaceId was null", ErrorType.NOT_FOUND)
+        val coopSpace: CoopSpace = this.coopSpaceService.findCoopSpace(id)
         val coopSpaceName = coopSpace.name ?: throw BusinessException("CoopSpaceName is null", ErrorType.NOT_FOUND)
 
-        // change role of the user by removing it from its respective Keycloak subgroup (e.g. "...-User"), adding it to another subgroup (e.g. "...-Admin") and
-        // update his role in the database by updating the CoopSpace
-
-        this.coopSpaceService.removeUserFromKeycloakGroup(
-            changeMemberRoleRequest.member.username!!,
-            changeMemberRoleRequest.originalRole,
-            changeMemberRoleRequest.member.company!!,
-            coopSpaceName,
-        )
-        this.coopSpaceService.addUserToKeycloakGroup(
-            changeMemberRoleRequest.member,
-            coopSpaceName
-        )
-        this.coopSpaceService.changeUserRoleInDatabase(
-            changeMemberRoleRequest.member,
-            coopSpace,
-        )
+        this.coopSpaceService.removeUserFromKeycloakGroup(username, originalRole, company, coopSpaceName)
+        this.coopSpaceService.addUserToKeycloakGroup(member, coopSpaceName)
+        this.coopSpaceService.changeUserRoleInDatabase(member, coopSpace)
 
     }
 
