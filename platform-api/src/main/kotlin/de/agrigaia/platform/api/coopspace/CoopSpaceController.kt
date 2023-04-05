@@ -8,10 +8,7 @@ import de.agrigaia.platform.business.errors.ErrorType
 import de.agrigaia.platform.business.keycloak.KeycloakService
 import de.agrigaia.platform.common.HasLogger
 import de.agrigaia.platform.integration.minio.MinioService
-import de.agrigaia.platform.model.coopspace.AddMemberRequest
-import de.agrigaia.platform.model.coopspace.ChangeMemberRoleRequest
-import de.agrigaia.platform.model.coopspace.CoopSpace
-import de.agrigaia.platform.model.coopspace.DeleteMemberRequest
+import de.agrigaia.platform.model.coopspace.*
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
@@ -60,7 +57,7 @@ open class CoopSpaceController @Autowired constructor(
         return ResponseEntity.ok(coopSpaceDto)
     }
 
-    // TODO
+    // TODO can't access coopspace name here.
     @GetMapping("{id}/members")
     open fun getMembersOfCoopSpace(@PathVariable id: Long): ResponseEntity<List<MemberDto>> {
         val jwtAuthenticationToken = SecurityContextHolder.getContext().authentication as JwtAuthenticationToken
@@ -103,24 +100,24 @@ open class CoopSpaceController @Autowired constructor(
         this.coopSpaceService.deleteCoopSpace(jwt, coopSpace)
     }
 
-    // TODO
+    /* Remove user from the CoopSpace by removing it both from the subgroup in Keycloak and the database. */
     @PreAuthorize("hasAuthority(#deleteMemberRequest.coopSpaceName + '-Admin')")
     @PostMapping("/deleteMember")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    open fun removeUserFromCoopSpace(
-        @RequestBody deleteMemberRequest: DeleteMemberRequest,
-        authentication: Authentication
-    ) {
-        // remove user from the CoopSpace by removing it both from the respective subgroup in Keycloak and the database
-        this.coopSpaceService.removeUserFromKeycloakGroup(
-            deleteMemberRequest.member.username!!,
-            deleteMemberRequest.member.role!!.toString(),
-            deleteMemberRequest.member.company!!,
-            deleteMemberRequest.coopSpaceName
-        )
-        this.coopSpaceService.removeUserFromDatabase(
-            deleteMemberRequest.member.id
-        )
+    open fun removeUserFromCoopSpace(@RequestBody deleteMemberRequest: DeleteMemberRequest) {
+        val username: String? = deleteMemberRequest.member.username
+        val role: String = deleteMemberRequest.member.role.toString()
+        val company: String? = deleteMemberRequest.member.company
+        val coopSpaceName: String = deleteMemberRequest.coopSpaceName
+        val id: Long = deleteMemberRequest.member.id
+
+        if (username == null) throw BusinessException("Username was null.", ErrorType.NOT_FOUND)
+        if (role.isEmpty()) throw BusinessException("Role was empty", ErrorType.NOT_FOUND)
+        if (company == null) throw BusinessException("Company was null.", ErrorType.NOT_FOUND)
+        if (coopSpaceName.isEmpty()) throw BusinessException("CoopSpaceName was empty", ErrorType.NOT_FOUND)
+
+        this.coopSpaceService.removeUserFromKeycloakGroup(username, role, company, coopSpaceName)
+        this.coopSpaceService.removeUserFromDatabase(id)
     }
 
     // TODO
