@@ -26,11 +26,12 @@ class CoopSpaceService(
     private val memberRepository: MemberRepository,
     private val minioService: MinioService,
     private val keycloakConnectorService: KeycloakConnectorService
-): HasLogger {
+) : HasLogger {
     private val webClient: WebClient = WebClient.create()
 
     fun getCoopSpacesWithUserAccess(coopSpaceAuthorities: List<GrantedAuthority>): List<CoopSpace> {
-        val coopSpaceNames: List<String> = coopSpaceAuthorities.map { it.authority.substringBeforeLast('-') }
+        val coopSpaceNames: List<String> =
+            coopSpaceAuthorities.map { it.authority.substringAfter('-').substringBeforeLast('-') }
         return findAll().filter { coopSpaceNames.contains(it.name) }
     }
 
@@ -171,12 +172,12 @@ class CoopSpaceService(
      * add a single user to a Keycloak subgroup, this function gets called directly when changing the role of a user
      */
     fun addUserToKeycloakGroup(member: Member, coopSpaceName: String) {
-            keycloakConnectorService.addUserToGroup(
-                member.username!!,
-                member.role!!.toString(),
-                coopSpaceName,
-                member.company!!
-            )
+        keycloakConnectorService.addUserToGroup(
+            member.username!!,
+            member.role!!.toString(),
+            coopSpaceName,
+            member.company!!
+        )
     }
 
     fun addUsersToDatabase(memberList: List<Member> = ArrayList(), coopSpace: CoopSpace) {
