@@ -93,7 +93,7 @@ open class CoopSpaceController @Autowired constructor(
         return ResponseEntity.ok(createdCoopSpaceDto)
     }
 
-    // TODO
+    @PreAuthorize("hasAuthority('coopspace-' + #coopSpaceDto.name + '-Admin')")
     @PostMapping("delete")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     open fun deleteCoopSpace(@RequestBody coopSpaceDto: CoopSpaceDto) {
