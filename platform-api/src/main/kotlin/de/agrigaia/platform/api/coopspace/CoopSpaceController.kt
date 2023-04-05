@@ -143,9 +143,7 @@ open class CoopSpaceController @Autowired constructor(
     @PostMapping("/changeMemberRole")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     open fun changeMemberRoleInCoopSpace(@RequestBody changeMemberRoleRequest: ChangeMemberRoleRequest) {
-        val coopSpaceDto =
-            this.coopSpaceMapper.map(this.coopSpaceService.findCoopSpace(changeMemberRoleRequest.coopSpaceId))
-        val coopSpace: CoopSpace = coopSpaceDto.toEntity(this.coopSpaceMapper)
+        val coopSpace: CoopSpace = this.coopSpaceService.findCoopSpace(changeMemberRoleRequest.coopSpaceId)
         val coopSpaceName = coopSpace.name ?: throw BusinessException("CoopSpaceName is null", ErrorType.NOT_FOUND)
 
         // change role of the user by removing it from its respective Keycloak subgroup (e.g. "...-User"), adding it to another subgroup (e.g. "...-Admin") and
