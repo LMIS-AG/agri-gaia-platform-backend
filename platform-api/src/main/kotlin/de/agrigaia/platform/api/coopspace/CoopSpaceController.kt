@@ -34,20 +34,9 @@ open class CoopSpaceController @Autowired constructor(
 ) : HasLogger, BaseController() {
 
     @GetMapping
-    open fun getCoopSpaces(): ResponseEntity<List<CoopSpaceDto>> {
-//        this.getLogger().error(authentication.authorities.toString())
-
-        val jwtAuthenticationToken = SecurityContextHolder.getContext().authentication as JwtAuthenticationToken
-        val jwt = jwtAuthenticationToken.token.tokenValue
-
-        // TODO: This can probably be done much easier using authorities.
-        // Filter the list of coop spaces, only returning those for which the user has access to the associated bucket
-        val coopSpacesWithUserAccess = this.coopSpaceService.filterCoopSpacesByBucketAccess(
-            coopSpaces = this.coopSpaceService.findAll(),  // All coopSpaces.
-            buckets = this.minioService.listBuckets(jwt),  // Buckets with user access.
-        )
-
-        // Map the coop spaces to DTOs and return the result
+    open fun getCoopSpaces(authentication: Authentication): ResponseEntity<List<CoopSpaceDto>> {
+        val coopSpaceAuthorities = authentication.authorities.filter { it.authority.startsWith("coopspace-") }
+        val coopSpacesWithUserAccess = this.coopSpaceService.getCoopSpacesWithUserAccess(coopSpaceAuthorities)
         val coopSpaceDtos = this.coopSpaceMapper.mapToDtos(coopSpacesWithUserAccess)
         return ResponseEntity.ok(coopSpaceDtos)
     }
