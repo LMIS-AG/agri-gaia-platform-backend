@@ -105,16 +105,11 @@ open class CoopSpaceController @Autowired constructor(
     @PostMapping("/deleteMember")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     open fun removeUserFromCoopSpace(@RequestBody deleteMemberRequest: DeleteMemberRequest) {
-        val username: String? = deleteMemberRequest.member.username
-        val role: String = deleteMemberRequest.member.role.toString()
-        val company: String? = deleteMemberRequest.member.company
-        val coopSpaceName: String = deleteMemberRequest.coopSpaceName
-        val id: Long = deleteMemberRequest.member.id
-
-        if (username == null) throw BusinessException("Username was null.", ErrorType.NOT_FOUND)
-        if (role.isEmpty()) throw BusinessException("Role was empty", ErrorType.NOT_FOUND)
-        if (company == null) throw BusinessException("Company was null.", ErrorType.NOT_FOUND)
-        if (coopSpaceName.isEmpty()) throw BusinessException("CoopSpaceName was empty", ErrorType.NOT_FOUND)
+        val username: String = deleteMemberRequest.member?.username ?: throw BusinessException("Username was null.", ErrorType.NOT_FOUND)
+        val role: String = deleteMemberRequest.member?.role.toString()
+        val company: String = deleteMemberRequest.member?.company ?: throw BusinessException("Company was null.", ErrorType.NOT_FOUND)
+        val coopSpaceName: String = deleteMemberRequest.coopSpaceName ?: throw BusinessException("CoopSpaceName was null", ErrorType.NOT_FOUND)
+        val id: Long = deleteMemberRequest.member?.id ?: throw BusinessException("ID was null", ErrorType.NOT_FOUND)
 
         this.coopSpaceService.removeUserFromKeycloakGroup(username, role, company, coopSpaceName)
         this.coopSpaceService.removeUserFromDatabase(id)
