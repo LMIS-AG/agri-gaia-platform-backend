@@ -45,21 +45,17 @@ open class CoopSpaceController @Autowired constructor(
     open fun getValidCompanyNames(authentication: Authentication): ResponseEntity<List<String>> {
         val validCompanyNames: List<String> = authentication.authorities
             .map { it.authority }
-            .filter { it.contains("-company") }
-            .map { it.removeSuffix("-company")}.distinct()
+            .filter { it.contains("company-") }
+            .map { it.removePrefix("company-")}.distinct()
         return ResponseEntity.ok(validCompanyNames)
     }
 
+    // Bisschen haesslich, ich weiss.
+    @PostAuthorize("hasAnyAuthority('coopspace-'+returnObject.body.name+'-Guest', 'coopspace-'+returnObject.body.name+'-User', 'coopspace-'+returnObject.body.name+'-Admin')")
     @GetMapping("{id}")
     open fun getCoopSpace(@PathVariable id: Long): ResponseEntity<CoopSpaceDto> {
-        val jwtAuthenticationToken = SecurityContextHolder.getContext().authentication as JwtAuthenticationToken
-        val username = jwtAuthenticationToken.token.claims["preferred_username"] as String
         val coopSpace: CoopSpace = this.coopSpaceService.findCoopSpace(id)
-        val coopSpaceDto = this.coopSpaceMapper.map(coopSpace)
-
-        if (!this.coopSpaceService.hasAccessToCoopSpace(username, coopSpace)) {
-            return ResponseEntity(HttpStatus.UNAUTHORIZED)
-        }
+        val coopSpaceDto: CoopSpaceDto = this.coopSpaceMapper.map(coopSpace)
         return ResponseEntity.ok(coopSpaceDto)
     }
 
