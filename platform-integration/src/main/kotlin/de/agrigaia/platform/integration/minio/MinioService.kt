@@ -36,13 +36,13 @@ class MinioService(
         return minioClient.bucketExists(BucketExistsArgs.builder().bucket(name).build())
     }
 
-    fun getAssetsForCoopspace(jwt: String, company: String, bucketName: String): List<Result<Item>> {
+    fun getAssetsForCoopspace(jwt: String, company: String, bucketName: String, folder: String): List<Result<Item>> {
         val minioClient = this.getMinioClient(jwt)
 
         val bucketArgs = ListObjectsArgs.builder()
             .bucket("prj-$company-$bucketName")
             .recursive(true)
-            .prefix("assets/")
+            .prefix(folder)
             .build()
 
         return minioClient.listObjects(bucketArgs).toList()
@@ -86,8 +86,9 @@ class MinioService(
         val minioClient = this.getMinioClient(jwt)
 
         val snowballObjects: List<SnowballObject> = files.map { file ->
+            val objectName = "/Dockerfile"
             SnowballObject(
-                currentRoot + file.originalFilename,
+                objectName,
                 ByteArrayInputStream(file.bytes),
                 file.size,
                 null,
