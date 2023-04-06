@@ -18,32 +18,39 @@ class EdcService(private val fusekiConnectorService: FusekiConnectorService) {
         longitude: String?,
         dateRange: String?,
         dataAddressKeyName: String?,
-    ) = """
-        {
-          "asset": {
-            "properties": {
-              "asset:prop:name": "$assetPropName",
-              "asset:prop:byteSize": null,
-              "asset:prop:description": "${assetPropDescription?:""}",
-              "asset:prop:contenttype": "${assetPropContentType?:""}",
-              "asset:prop:version": "${assetPropVersion?:""}",
-              "asset:prop:id": "$assetPropId",
-              "theme": ${agrovocKeywords?.map { w -> "\"${this.fusekiConnectorService.getConceptUriFromKeyword(w)}\""}},
-              "spatial": ${if (!latitude.isNullOrEmpty() && !longitude.isNullOrEmpty()) "\"${this.fusekiConnectorService.getUriFromCoordinates(latitude, longitude)}\"" else "null"},
-              "temporal": "${dateRange?:""}"
-            },
-            "id": "$assetPropId"
-          },
-          "dataAddress": {
-            "properties": {
-              "type": "AmazonS3",
-              "region": "us-east-1",
-              "bucketName": "$bucketName",
-              "assetName": "$assetName",
-              "keyName": "${dataAddressKeyName?:""}"
-            }
-          }
-        }"""
+    ): String {
+        val spatial = if (latitude.isNullOrEmpty() || longitude.isNullOrEmpty()) {
+            "null"
+        } else {
+            "\"${this.fusekiConnectorService.getUriFromCoordinates(latitude, longitude)}\""
+        }
+        return """
+            {
+              "asset": {
+                "properties": {
+                  "asset:prop:name": "$assetPropName",
+                  "asset:prop:byteSize": null,
+                  "asset:prop:description": "${assetPropDescription?:""}",
+                  "asset:prop:contenttype": "${assetPropContentType?:""}",
+                  "asset:prop:version": "${assetPropVersion?:""}",
+                  "asset:prop:id": "$assetPropId",
+                  "theme": ${agrovocKeywords?.map { w -> "\"${this.fusekiConnectorService.getConceptUriFromKeyword(w)}\""}},
+                  "spatial": ${spatial},
+                  "temporal": "${dateRange?:""}"
+                },
+                "id": "$assetPropId"
+              },
+              "dataAddress": {
+                "properties": {
+                  "type": "AmazonS3",
+                  "region": "us-east-1",
+                  "bucketName": "$bucketName",
+                  "assetName": "$assetName",
+                  "keyName": "${dataAddressKeyName?:""}"
+                }
+              }
+            }"""
+    }
 
     fun createPolicyJson(target: String, policyUUID: String): String = """{
   "uid": "use-eu",
