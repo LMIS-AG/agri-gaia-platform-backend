@@ -21,6 +21,9 @@ class BucketController @Autowired constructor(
         private val assetRepository: AssetRepository,
 ) : BaseController() {
 
+    /*
+    Returns all non-coopspace buckets the user has access to.
+     */
     @GetMapping
     fun getBuckets(): ResponseEntity<List<BucketDto>> {
         val jwtAuthenticationToken = SecurityContextHolder.getContext().authentication as JwtAuthenticationToken
@@ -34,21 +37,34 @@ class BucketController @Autowired constructor(
         return ResponseEntity.ok(bucketDtos)
     }
 
+    /*
+    Returns assets in a given MinIO bucket. Currently returns empty list if bucket empty and 204 if user has no access.
+     */
     @GetMapping("{bucket}/assets")
     fun getBucketAssets(@PathVariable bucket: String): ResponseEntity<List<AssetDto>> {
         val jwtAuthenticationToken = SecurityContextHolder.getContext().authentication as JwtAuthenticationToken
         val jwt = jwtAuthenticationToken.token.tokenValue
 
-        return try {
+        // TODO: `minioService.getPublishableAssetsForBucket()` returns a non-nullable list.
+        //  This should check if the `assetsForBucket` list is empty and, if so, return 204.
+        //  If user has no access, return 403.
+        try {
             val assetsForBucket = this.minioService.getPublishableAssetsForBucket(jwt, bucket)
                 .map { it.get() }
                 .map { asset ->
-                    AssetDto(asset.objectName().replace("assets/", ""), asset.lastModified().toString(), asset.lastModified().toString(),
-                        asset.size().toString(), "label", bucket, isPublished(bucket, asset.objectName().replace("assets/", "")))
+                    AssetDto(
+                        asset.objectName().replace("assets/", ""),
+                        asset.lastModified().toString(),
+                        asset.lastModified().toString(),
+                        asset.size().toString(),
+                        "label",
+                        bucket,
+                        isPublished(bucket, asset.objectName().replace("assets/", ""))
+                    )
                 }
-            ResponseEntity.ok(assetsForBucket)
+            return ResponseEntity.ok(assetsForBucket)
         } catch (e: Exception) {
-            ResponseEntity.noContent().build()
+            return ResponseEntity.noContent().build()
         }
     }
 
