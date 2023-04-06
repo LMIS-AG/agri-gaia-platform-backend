@@ -82,8 +82,8 @@ open class WebMvcConfig @Autowired constructor(private val applicationProperties
 
         val authorities = companyAuthorities + coopSpaceAuthorities
 
-        this.getLogger().debug("Company Authorities: {}", companyAuthorities)
-        this.getLogger().debug("Coopspace Authorities: {}", coopSpaceAuthorities)
+//        this.getLogger().debug("Company Authorities: {}", companyAuthorities)
+//        this.getLogger().debug("Coopspace Authorities: {}", coopSpaceAuthorities)
 
         return JwtAuthenticationToken(jwt, authorities)
     }

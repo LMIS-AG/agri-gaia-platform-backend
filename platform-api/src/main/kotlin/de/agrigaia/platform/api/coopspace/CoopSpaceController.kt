@@ -155,17 +155,17 @@ open class CoopSpaceController @Autowired constructor(
 
     }
 
-    // TODO
+    // TODO can't access coopspace name here.
     @GetMapping("{id}/assets")
     open fun getAssetsForCoopSpace(@PathVariable id: Long): ResponseEntity<Any> {
         val coopSpace = this.coopSpaceService.findCoopSpace(id)
-        val company = coopSpace.company?.lowercase()
-        val bucketName = coopSpace.name!!
+        val company = coopSpace.company?.lowercase() ?: throw BusinessException("Company was null", ErrorType.NOT_FOUND)
+        val bucketName = coopSpace.name ?: throw BusinessException("BucketName was null", ErrorType.NOT_FOUND)
         val jwtAuthenticationToken = SecurityContextHolder.getContext().authentication as JwtAuthenticationToken
         val jwt = jwtAuthenticationToken.token.tokenValue
         return try {
             val assetsForBucket =
-                this.minioService.getAssetsForCoopspace(jwt, company!!, bucketName).map { it.get() }.map {
+                this.minioService.getAssetsForCoopspace(jwt, company, bucketName).map { it.get() }.map {
                     AssetDto(
                         it.objectName().replace("assets/", ""),
                         it.lastModified().toString(),
