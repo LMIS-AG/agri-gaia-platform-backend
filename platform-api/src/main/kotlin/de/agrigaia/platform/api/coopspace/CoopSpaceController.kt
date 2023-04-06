@@ -90,31 +90,6 @@ open class CoopSpaceController @Autowired constructor(
         return ResponseEntity.ok(createdCoopSpaceDto)
     }
 
-    @PreAuthorize("hasAuthority('coopspace-' + #coopSpaceDto.name + '-Admin')")
-    @PostMapping("delete")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
-    open fun deleteCoopSpace(@RequestBody coopSpaceDto: CoopSpaceDto) {
-        val jwtAuthenticationToken = SecurityContextHolder.getContext().authentication as JwtAuthenticationToken
-        val jwt = jwtAuthenticationToken.token.tokenValue
-        val coopSpace: CoopSpace = coopSpaceDto.toEntity(this.coopSpaceMapper)
-        this.coopSpaceService.deleteCoopSpace(jwt, coopSpace)
-    }
-
-    /* Remove user from the CoopSpace by removing it both from the subgroup in Keycloak and the database. */
-    @PreAuthorize("hasAuthority(#deleteMemberRequest.coopSpaceName + '-Admin')")
-    @PostMapping("/deleteMember")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
-    open fun removeUserFromCoopSpace(@RequestBody deleteMemberRequest: DeleteMemberRequest) {
-        val username: String = deleteMemberRequest.member?.username ?: throw BusinessException("Username was null.", ErrorType.NOT_FOUND)
-        val role: String = deleteMemberRequest.member?.role.toString()
-        val company: String = deleteMemberRequest.member?.company ?: throw BusinessException("Company was null.", ErrorType.NOT_FOUND)
-        val coopSpaceName: String = deleteMemberRequest.coopSpaceName ?: throw BusinessException("CoopSpaceName was null", ErrorType.NOT_FOUND)
-        val id: Long = deleteMemberRequest.member?.id ?: throw BusinessException("ID was null", ErrorType.NOT_FOUND)
-
-        this.coopSpaceService.removeUserFromKeycloakGroup(username, role, company, coopSpaceName)
-        this.coopSpaceService.removeUserFromDatabase(id)
-    }
-
     // TODO can't access coopspace name here.
     @PostMapping("/addMember")
     @ResponseStatus(HttpStatus.NO_CONTENT)
@@ -185,6 +160,31 @@ open class CoopSpaceController @Autowired constructor(
     @GetMapping("existsbyname/{name}")
     open fun checkIfCoopSpaceAlreadyExistsByName(@PathVariable name: String): ResponseEntity<Boolean> {
         return ResponseEntity.ok(this.minioService.bucketExists(name))
+    }
+
+    @PreAuthorize("hasAuthority('coopspace-' + #coopSpaceDto.name + '-Admin')")
+    @PostMapping("delete")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    open fun deleteCoopSpace(@RequestBody coopSpaceDto: CoopSpaceDto) {
+        val jwtAuthenticationToken = SecurityContextHolder.getContext().authentication as JwtAuthenticationToken
+        val jwt = jwtAuthenticationToken.token.tokenValue
+        val coopSpace: CoopSpace = coopSpaceDto.toEntity(this.coopSpaceMapper)
+        this.coopSpaceService.deleteCoopSpace(jwt, coopSpace)
+    }
+
+    /* Remove user from the CoopSpace by removing it both from the subgroup in Keycloak and the database. */
+    @PreAuthorize("hasAuthority(#deleteMemberRequest.coopSpaceName + '-Admin')")
+    @PostMapping("/deleteMember")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    open fun removeUserFromCoopSpace(@RequestBody deleteMemberRequest: DeleteMemberRequest) {
+        val username: String = deleteMemberRequest.member?.username ?: throw BusinessException("Username was null.", ErrorType.NOT_FOUND)
+        val role: String = deleteMemberRequest.member?.role.toString()
+        val company: String = deleteMemberRequest.member?.company ?: throw BusinessException("Company was null.", ErrorType.NOT_FOUND)
+        val coopSpaceName: String = deleteMemberRequest.coopSpaceName ?: throw BusinessException("CoopSpaceName was null", ErrorType.NOT_FOUND)
+        val id: Long = deleteMemberRequest.member?.id ?: throw BusinessException("ID was null", ErrorType.NOT_FOUND)
+
+        this.coopSpaceService.removeUserFromKeycloakGroup(username, role, company, coopSpaceName)
+        this.coopSpaceService.removeUserFromDatabase(id)
     }
 }
 
