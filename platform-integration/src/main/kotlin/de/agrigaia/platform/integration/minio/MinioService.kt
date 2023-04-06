@@ -132,7 +132,8 @@ class MinioService(
         body.add("Version", "2011-06-15")
         body.add("DurationSeconds", "21600")
 
-        val webClient = WebClient.builder().baseUrl(this.minioProperties.url).build()
+        val url = this.minioProperties.url ?: throw Exception("MinIo url was null.")
+        val webClient = WebClient.builder().baseUrl(url).build()
 
         val request = webClient.post()
             .uri("/")
