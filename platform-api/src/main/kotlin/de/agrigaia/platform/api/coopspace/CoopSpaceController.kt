@@ -184,8 +184,10 @@ class CoopSpaceController @Autowired constructor(
         val bucketName = coopSpace.name!!
         val jwtAuthenticationToken = SecurityContextHolder.getContext().authentication as JwtAuthenticationToken
         val jwt = jwtAuthenticationToken.token.tokenValue
-        val folder = String(Base64.getDecoder().decode(base64encodedFolderName))
-
+        var folder = "/"
+        if (base64encodedFolderName != "default") {
+            folder = String(Base64.getDecoder().decode(base64encodedFolderName))
+        }
         return try {
             val assetsForBucket =
                 this.minioService.getAssetsForCoopspace(jwt, company!!, bucketName, folder).map { it.get() }.map {

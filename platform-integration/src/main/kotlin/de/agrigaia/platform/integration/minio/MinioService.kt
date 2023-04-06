@@ -86,7 +86,7 @@ class MinioService(
         val minioClient = this.getMinioClient(jwt)
 
         val snowballObjects: List<SnowballObject> = files.map { file ->
-            val objectName = "/Dockerfile"
+            val objectName = currentRoot + file.originalFilename
             SnowballObject(
                 objectName,
                 ByteArrayInputStream(file.bytes),

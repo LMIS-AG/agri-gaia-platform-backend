@@ -64,9 +64,12 @@ class BucketController @Autowired constructor(
         val jwtAuthenticationToken = SecurityContextHolder.getContext().authentication as JwtAuthenticationToken
         val jwt = jwtAuthenticationToken.token.tokenValue
 
-        val currentRootDecoded = String(Base64.getDecoder().decode(base64encodedFolderName))
+        var folder = "/"
+        if (base64encodedFolderName != "default") {
+            folder = String(Base64.getDecoder().decode(base64encodedFolderName))
+        }
 
-        this.minioService.uploadAssets(jwt, bucket, currentRootDecoded, files)
+        this.minioService.uploadAssets(jwt, bucket, folder, files)
     }
 
     @DeleteMapping("delete/{bucket}/{base64EncodedFileName}")
