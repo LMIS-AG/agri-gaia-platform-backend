@@ -17,6 +17,8 @@ import org.springframework.web.reactive.function.client.ClientResponse
 import org.springframework.web.reactive.function.client.WebClient
 import reactor.core.publisher.Mono
 import java.io.*
+import java.util.zip.ZipEntry
+import java.util.zip.ZipOutputStream
 import javax.servlet.http.HttpServletResponse
 
 @Service
@@ -104,7 +106,7 @@ class MinioService(
 
         val builder = GetObjectArgs.builder()
             .bucket(bucketName)
-            .`object`("assets/$fileName")
+            .`object`(fileName)
 
         val stream = minioClient.getObject(builder.build())
         val inputStream = BufferedInputStream(stream)
@@ -114,6 +116,40 @@ class MinioService(
 
         val outputStream = response.outputStream
             inputStream.use { input -> outputStream.use { output -> input.copyTo(output) } }
+    }
+
+    fun downloadFolder(jwt: String, bucketName: String, folderName: String, response: HttpServletResponse) {
+        val minioClient = this.getMinioClient(jwt)
+
+        val listObjectsArgs = ListObjectsArgs.builder()
+            .bucket(bucketName)
+            .prefix("$folderName/")
+            .recursive(true)
+            .build()
+
+        val objectList = minioClient.listObjects(listObjectsArgs).toList().map{ it.get() }
+
+        val baseName = File(folderName).name
+        response.contentType = "application/zip"
+        response.setHeader("Content-Disposition", "attachment; filename=$baseName.zip")
+
+        val zipOutputStream = ZipOutputStream(BufferedOutputStream(response.outputStream))
+
+        objectList.forEach { item ->
+            val getObjectArgs = GetObjectArgs.builder()
+                .bucket(bucketName)
+                .`object`(item.objectName())
+                .build()
+
+            val inputStream = BufferedInputStream(minioClient.getObject(getObjectArgs))
+            val entryName = item.objectName().removePrefix("$folderName/")
+            zipOutputStream.putNextEntry(ZipEntry(entryName))
+            inputStream.copyTo(zipOutputStream)
+            inputStream.close()
+            zipOutputStream.closeEntry()
+        }
+
+        zipOutputStream.close()
     }
 
     fun deleteAsset(jwt: String, bucket: String, fileName: String) {
