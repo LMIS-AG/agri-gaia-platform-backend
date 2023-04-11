@@ -79,6 +79,7 @@ open class CoopSpaceController @Autowired constructor(
         return ResponseEntity.ok(memberDtos)
     }
 
+    // TODO: Check whether creator is member of the organisation they create a coopspace with!!
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     open fun createCoopSpace(@RequestBody coopSpaceDto: CoopSpaceDto): ResponseEntity<CoopSpaceDto> {
@@ -162,6 +163,7 @@ open class CoopSpaceController @Autowired constructor(
         return ResponseEntity.ok(this.minioService.bucketExists(name))
     }
 
+    // TODO: This should be a @DeleteMapping.
     @PreAuthorize("hasAuthority('coopspace-' + #coopSpaceDto.name + '-Admin')")
     @PostMapping("delete")
     @ResponseStatus(HttpStatus.NO_CONTENT)
@@ -172,6 +174,7 @@ open class CoopSpaceController @Autowired constructor(
         this.coopSpaceService.deleteCoopSpace(jwt, coopSpace)
     }
 
+    // TODO: This should be a @DeleteMapping.
     /* Remove user from the CoopSpace by removing it both from the subgroup in Keycloak and the database. */
     @PreAuthorize("hasAuthority(#deleteMemberRequest.coopSpaceName + '-Admin')")
     @PostMapping("/deleteMember")

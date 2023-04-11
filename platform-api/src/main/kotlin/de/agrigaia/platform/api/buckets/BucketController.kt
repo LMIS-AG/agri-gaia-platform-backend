@@ -68,10 +68,12 @@ class BucketController @Autowired constructor(
         }
     }
 
+    // TODO
     private fun isPublished(bucket: String, name: String): Boolean {
         return assetRepository.findByBucketAndName(bucket, name) != null
     }
 
+    // TODO `this.minioService.uploadAssets()` may fail if no access to requested bucket.
     @PostMapping("upload/{bucket}")
     @ResponseStatus(HttpStatus.OK)
     fun uploadAsset(@PathVariable bucket: String, @RequestBody files: Array<MultipartFile>) {
@@ -81,6 +83,7 @@ class BucketController @Autowired constructor(
         this.minioService.uploadAssets(jwt, bucket, files)
     }
 
+    // TODO `this.minioService.deleteAsset()` may fail if no access to requested bucket.
     @DeleteMapping("delete/{bucket}/{name}")
     @ResponseStatus(HttpStatus.OK)
     fun deleteAsset(@PathVariable bucket: String, @PathVariable name: String) {
@@ -90,6 +93,7 @@ class BucketController @Autowired constructor(
         this.minioService.deleteAsset(jwt, bucket, name)
     }
 
+    // TODO
     @GetMapping("/sts")
     fun getKeysAndToken(): ResponseEntity<STSDto> {
         val jwtAuthenticationToken = SecurityContextHolder.getContext().authentication as JwtAuthenticationToken

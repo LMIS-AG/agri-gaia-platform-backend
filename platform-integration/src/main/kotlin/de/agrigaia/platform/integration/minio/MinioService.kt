@@ -19,6 +19,7 @@ import java.io.BufferedReader
 import java.io.ByteArrayInputStream
 
 
+// TODO: Many of these need error handling.
 @Service
 class MinioService(
     private val minioProperties: MinioProperties,
