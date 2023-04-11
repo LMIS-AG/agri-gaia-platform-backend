@@ -65,10 +65,10 @@ class BucketController @Autowired constructor(
         val jwtAuthenticationToken = SecurityContextHolder.getContext().authentication as JwtAuthenticationToken
         val jwt = jwtAuthenticationToken.token.tokenValue
 
-        var folder = "/"
-        if (base64encodedFolderName != "default") {
-            folder = String(Base64.getDecoder().decode(base64encodedFolderName))
-        }
+        val defaultName = "/"
+        val folder = if (base64encodedFolderName == "default") defaultName else String(
+            Base64.getDecoder().decode(base64encodedFolderName)
+        )
 
         this.minioService.uploadAssets(jwt, bucket, folder, files)
     }
