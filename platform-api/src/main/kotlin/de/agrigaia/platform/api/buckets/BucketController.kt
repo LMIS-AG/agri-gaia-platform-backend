@@ -73,7 +73,6 @@ class BucketController @Autowired constructor(
         this.minioService.uploadAssets(jwt, bucket, folder, files)
     }
 
-    @DeleteMapping("delete/{bucket}/{base64EncodedFileName}")
     @PostMapping("download/{bucket}/{name}")
     @ResponseStatus(HttpStatus.OK)
     fun downloadAsset(@PathVariable bucket: String, @PathVariable name: String, response: HttpServletResponse) {
@@ -83,7 +82,7 @@ class BucketController @Autowired constructor(
         this.minioService.downloadAsset(jwt, bucket, name, response)
     }
 
-    @DeleteMapping("delete/{bucket}/{name}")
+    @DeleteMapping("delete/{bucket}/{base64EncodedFileName}")
     @ResponseStatus(HttpStatus.OK)
     fun deleteAsset(@PathVariable bucket: String, @PathVariable base64EncodedFileName: String) {
         val jwtAuthenticationToken = SecurityContextHolder.getContext().authentication as JwtAuthenticationToken
