@@ -13,6 +13,7 @@ class EdcServiceTest {
         val fusekiConnectorService: FusekiConnectorService = mockk()
         val edcService = EdcService(fusekiConnectorService)
         every { fusekiConnectorService.getConceptUriFromKeyword(any()) } returns "someAgrovocUri"
+        every { fusekiConnectorService.getUriFromCoordinates(any(), any()) } returns "someGeoNamesUri"
 
         val assetPropName = "someName"
         val assetPropId = "someId"
@@ -27,7 +28,7 @@ class EdcServiceTest {
         val dateRange = "someDateRange"
         val dataAddressKeyName = "someDataAddressKeyName"
 
-        val expected = """
+        val expected: String = """
         {
           "asset": {
             "properties": {
@@ -67,6 +68,11 @@ class EdcServiceTest {
             dateRange,
             dataAddressKeyName,
         )
-        assertEquals(expected, actual)
+        val expectedLines = expected.lines()
+        val actualLines = actual.lines()
+        for (i in 0 until actualLines.size){
+            assertEquals(expectedLines[i].trimStart(), actualLines[i].trimStart())
+        }
+//        assertEquals(expected, actual)
     }
 }

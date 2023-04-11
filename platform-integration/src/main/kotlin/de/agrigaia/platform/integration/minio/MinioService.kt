@@ -15,7 +15,8 @@ import org.springframework.web.reactive.function.BodyInserters
 import org.springframework.web.reactive.function.client.ClientResponse
 import org.springframework.web.reactive.function.client.WebClient
 import reactor.core.publisher.Mono
-import java.io.BufferedReader
+import java.io.*
+import jakarta.servlet.http.HttpServletResponse
 import java.io.ByteArrayInputStream
 
 
@@ -99,10 +100,27 @@ class MinioService(
         )
     }
 
+    fun downloadAsset(jwt: String, bucketName: String, fileName: String, response: HttpServletResponse) {
+        val minioClient = this.getMinioClient(jwt)
+
+        val builder = GetObjectArgs.builder()
+            .bucket(bucketName)
+            .`object`("assets/$fileName")
+
+        val stream = minioClient.getObject(builder.build())
+        val inputStream = BufferedInputStream(stream)
+
+        response.contentType = "application/octet-stream"
+        response.setHeader("Content-Disposition", "attachment; filename=$fileName")
+
+        val outputStream = response.outputStream
+            inputStream.use { input -> outputStream.use { output -> input.copyTo(output) } }
+    }
+
     fun deleteAsset(jwt: String, bucket: String, fileName: String) {
         val minioClient = this.getMinioClient(jwt)
 
-        minioClient.removeObject(RemoveObjectArgs.builder().bucket(bucket).`object`("assets/" + fileName).build())
+        minioClient.removeObject(RemoveObjectArgs.builder().bucket(bucket).`object`("assets/$fileName").build())
     }
 
     // TODO Please fix this, it's so bad
