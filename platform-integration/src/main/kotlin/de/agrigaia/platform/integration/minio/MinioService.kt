@@ -55,7 +55,7 @@ class MinioService(
         val bucketArgs = ListObjectsArgs.builder()
             .bucket(bucketName)
             .recursive(true)
-            .prefix("/$folder")
+            .prefix(folder)
             .build()
 
         return minioClient.listObjects(bucketArgs).toList()
