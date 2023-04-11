@@ -14,6 +14,7 @@ import org.springframework.security.oauth2.server.resource.authentication.JwtAut
 import org.springframework.web.bind.annotation.*
 import org.springframework.web.multipart.MultipartFile
 import java.util.*
+import javax.servlet.http.HttpServletResponse
 
 @RestController
 @RequestMapping("/buckets")
@@ -73,6 +74,16 @@ class BucketController @Autowired constructor(
     }
 
     @DeleteMapping("delete/{bucket}/{base64EncodedFileName}")
+    @PostMapping("download/{bucket}/{name}")
+    @ResponseStatus(HttpStatus.OK)
+    fun downloadAsset(@PathVariable bucket: String, @PathVariable name: String, response: HttpServletResponse) {
+        val jwtAuthenticationToken = SecurityContextHolder.getContext().authentication as JwtAuthenticationToken
+        val jwt = jwtAuthenticationToken.token.tokenValue
+
+        this.minioService.downloadAsset(jwt, bucket, name, response)
+    }
+
+    @DeleteMapping("delete/{bucket}/{name}")
     @ResponseStatus(HttpStatus.OK)
     fun deleteAsset(@PathVariable bucket: String, @PathVariable base64EncodedFileName: String) {
         val jwtAuthenticationToken = SecurityContextHolder.getContext().authentication as JwtAuthenticationToken

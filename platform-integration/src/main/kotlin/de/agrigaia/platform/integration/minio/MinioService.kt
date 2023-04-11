@@ -6,19 +6,18 @@ import io.minio.credentials.Jwt
 import io.minio.credentials.WebIdentityProvider
 import io.minio.messages.*
 import org.apache.logging.log4j.LogManager.getLogger
-import org.springframework.stereotype.Service
-import org.springframework.web.multipart.MultipartFile
-import java.io.BufferedReader
-import java.io.ByteArrayInputStream
 import org.jsoup.Jsoup
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
+import org.springframework.stereotype.Service
 import org.springframework.util.LinkedMultiValueMap
+import org.springframework.web.multipart.MultipartFile
 import org.springframework.web.reactive.function.BodyInserters
 import org.springframework.web.reactive.function.client.ClientResponse
 import org.springframework.web.reactive.function.client.WebClient
 import reactor.core.publisher.Mono
-
+import java.io.*
+import javax.servlet.http.HttpServletResponse
 
 @Service
 class MinioService(
@@ -98,6 +97,23 @@ class MinioService(
         minioClient.uploadSnowballObjects(
             UploadSnowballObjectsArgs.builder().bucket(bucketName).objects(snowballObjects).build()
         )
+    }
+
+    fun downloadAsset(jwt: String, bucketName: String, fileName: String, response: HttpServletResponse) {
+        val minioClient = this.getMinioClient(jwt)
+
+        val builder = GetObjectArgs.builder()
+            .bucket(bucketName)
+            .`object`("assets/$fileName")
+
+        val stream = minioClient.getObject(builder.build())
+        val inputStream = BufferedInputStream(stream)
+
+        response.contentType = "application/octet-stream"
+        response.setHeader("Content-Disposition", "attachment; filename=$fileName")
+
+        val outputStream = response.outputStream
+            inputStream.use { input -> outputStream.use { output -> input.copyTo(output) } }
     }
 
     fun deleteAsset(jwt: String, bucket: String, fileName: String) {
