@@ -121,8 +121,8 @@ open class CoopSpaceController @Autowired constructor(
         val username = member.username ?: throw BusinessException("Username was null", ErrorType.NOT_FOUND)
         val originalRole = changeMemberRoleRequest.originalRole ?: throw BusinessException("OriginalRole was null", ErrorType.NOT_FOUND)
         val company = member.company ?: throw BusinessException("Company was null", ErrorType.NOT_FOUND)
-        val id = changeMemberRoleRequest.coopSpaceId ?: throw BusinessException("CoopspaceId was null", ErrorType.NOT_FOUND)
-        val coopSpace: CoopSpace = this.coopSpaceService.findCoopSpace(id)
+        val coopSpaceId = changeMemberRoleRequest.coopSpaceId ?: throw BusinessException("CoopspaceId was null", ErrorType.NOT_FOUND)
+        val coopSpace: CoopSpace = this.coopSpaceService.findCoopSpace(coopSpaceId)
         val coopSpaceName = coopSpace.name ?: throw BusinessException("CoopSpaceName is null", ErrorType.NOT_FOUND)
 
         this.coopSpaceService.removeUserFromKeycloakGroup(username, originalRole, company, coopSpaceName)
