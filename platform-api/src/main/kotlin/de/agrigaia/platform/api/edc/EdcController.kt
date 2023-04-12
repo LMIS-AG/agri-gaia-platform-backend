@@ -77,7 +77,8 @@ class EdcController @Autowired constructor(
         val policyId = asset?.policyId
         val contractId = asset?.contractId
 
-        this.edcConnectorService.unpublishAsset(assetId!!, policyId!!, contractId!!)
         assetRepository.delete(asset)
+        this.edcConnectorService.unpublishAsset(assetId!!, policyId!!, contractId!!)
+
     }
 }
