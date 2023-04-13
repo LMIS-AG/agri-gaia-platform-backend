@@ -103,7 +103,8 @@ class BucketController @Autowired constructor(
         val jwtAuthenticationToken = SecurityContextHolder.getContext().authentication as JwtAuthenticationToken
         val jwt = jwtAuthenticationToken.token.tokenValue
 
-        val name = String(Base64.getDecoder().decode(base64EncodedFileName))
+        val decodedBytes = Base64.getDecoder().decode(base64EncodedFileName)
+        val name = String(decodedBytes, Charset.forName("ISO-8859-1"))
 
         this.minioService.deleteAsset(jwt, bucket, name)
     }
