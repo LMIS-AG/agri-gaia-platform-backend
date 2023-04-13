@@ -68,8 +68,7 @@ class BucketController @Autowired constructor(
 
         val defaultName = "/"
         val folder = if (base64encodedFolderName == "default") defaultName else String(
-            Base64.getDecoder().decode(base64encodedFolderName)
-        )
+            (Base64.getDecoder().decode(base64encodedFolderName)), Charset.forName("ISO-8859-1"))
 
         this.minioService.uploadAssets(jwt, bucket, folder, files)
     }
