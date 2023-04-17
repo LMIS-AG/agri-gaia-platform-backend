@@ -16,6 +16,8 @@ import org.springframework.web.reactive.function.client.ClientResponse
 import org.springframework.web.reactive.function.client.WebClient
 import reactor.core.publisher.Mono
 import java.io.*
+import java.util.zip.ZipEntry
+import java.util.zip.ZipOutputStream
 import jakarta.servlet.http.HttpServletResponse
 import java.io.ByteArrayInputStream
 
@@ -37,25 +39,25 @@ class MinioService(
         return minioClient.bucketExists(BucketExistsArgs.builder().bucket(name).build())
     }
 
-    fun getAssetsForCoopspace(jwt: String, company: String, bucketName: String): List<Result<Item>> {
+    fun getAssetsForCoopspace(jwt: String, company: String, bucketName: String, folder: String): List<Result<Item>> {
         val minioClient = this.getMinioClient(jwt)
 
         val bucketArgs = ListObjectsArgs.builder()
             .bucket("prj-$company-$bucketName")
             .recursive(true)
-            .prefix("assets/")
+            .prefix(folder)
             .build()
 
         return minioClient.listObjects(bucketArgs).toList()
     }
 
-    fun getPublishableAssetsForBucket(jwt: String, bucketName: String): List<Result<Item>> {
+    fun getPublishableAssetsForBucket(jwt: String, bucketName: String, folder: String): List<Result<Item>> {
         val minioClient = this.getMinioClient(jwt)
 
         val bucketArgs = ListObjectsArgs.builder()
             .bucket(bucketName)
             .recursive(true)
-            .prefix("assets/")
+            .prefix(folder)
             .build()
 
         return minioClient.listObjects(bucketArgs).toList()
@@ -83,12 +85,12 @@ class MinioService(
         return fixString(text)
     }
 
-    fun uploadAssets(jwt: String, bucketName: String, files: Array<MultipartFile>) {
+    fun uploadAssets(jwt: String, bucketName: String, currentRoot: String, files: Array<MultipartFile>) {
         val minioClient = this.getMinioClient(jwt)
 
         val snowballObjects: List<SnowballObject> = files.map { file ->
             SnowballObject(
-                "assets/" + file.originalFilename,
+                currentRoot + file.originalFilename,
                 ByteArrayInputStream(file.bytes),
                 file.size,
                 null,
@@ -105,7 +107,7 @@ class MinioService(
 
         val builder = GetObjectArgs.builder()
             .bucket(bucketName)
-            .`object`("assets/$fileName")
+            .`object`(fileName)
 
         val stream = minioClient.getObject(builder.build())
         val inputStream = BufferedInputStream(stream)
@@ -117,10 +119,44 @@ class MinioService(
             inputStream.use { input -> outputStream.use { output -> input.copyTo(output) } }
     }
 
+    fun downloadFolder(jwt: String, bucketName: String, folderName: String, response: HttpServletResponse) {
+        val minioClient = this.getMinioClient(jwt)
+
+        val listObjectsArgs = ListObjectsArgs.builder()
+            .bucket(bucketName)
+            .prefix("$folderName/")
+            .recursive(true)
+            .build()
+
+        val objectList = minioClient.listObjects(listObjectsArgs).toList().map{ it.get() }
+
+        val baseName = File(folderName).name
+        response.contentType = "application/zip"
+        response.setHeader("Content-Disposition", "attachment; filename=$baseName.zip")
+
+        val zipOutputStream = ZipOutputStream(BufferedOutputStream(response.outputStream))
+
+        objectList.forEach { item ->
+            val getObjectArgs = GetObjectArgs.builder()
+                .bucket(bucketName)
+                .`object`(item.objectName())
+                .build()
+
+            val inputStream = BufferedInputStream(minioClient.getObject(getObjectArgs))
+            val entryName = item.objectName().removePrefix("$folderName/")
+            zipOutputStream.putNextEntry(ZipEntry(entryName))
+            inputStream.copyTo(zipOutputStream)
+            inputStream.close()
+            zipOutputStream.closeEntry()
+        }
+
+        zipOutputStream.close()
+    }
+
     fun deleteAsset(jwt: String, bucket: String, fileName: String) {
         val minioClient = this.getMinioClient(jwt)
 
-        minioClient.removeObject(RemoveObjectArgs.builder().bucket(bucket).`object`("assets/$fileName").build())
+        minioClient.removeObject(RemoveObjectArgs.builder().bucket(bucket).`object`(fileName).build())
     }
 
     // TODO Please fix this, it's so bad

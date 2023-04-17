@@ -14,6 +14,8 @@ import org.springframework.security.oauth2.server.resource.authentication.JwtAut
 import org.springframework.web.bind.annotation.*
 import org.springframework.web.multipart.MultipartFile
 import jakarta.servlet.http.HttpServletResponse
+import java.nio.charset.Charset
+import java.util.*
 
 @RestController
 @RequestMapping("/buckets")
@@ -41,16 +43,17 @@ class BucketController @Autowired constructor(
     /*
     Returns assets in a given MinIO bucket. Currently returns empty list if bucket empty and 204 if user has no access.
      */
-    @GetMapping("{bucket}/assets")
-    fun getBucketAssets(@PathVariable bucket: String): ResponseEntity<List<AssetDto>> {
+    @GetMapping("{bucket}/{base64encodedFolderName}")
+    fun getBucketAssets(@PathVariable bucket: String, @PathVariable base64encodedFolderName: String): ResponseEntity<List<AssetDto>> {
         val jwtAuthenticationToken = SecurityContextHolder.getContext().authentication as JwtAuthenticationToken
         val jwt = jwtAuthenticationToken.token.tokenValue
+        val folder = String(Base64.getDecoder().decode(base64encodedFolderName))
 
         // TODO: `minioService.getPublishableAssetsForBucket()` returns a non-nullable list.
         //  This should check if the `assetsForBucket` list is empty and, if so, return 204.
         //  If user has no access, return 403.
         try {
-            val assetsForBucket = this.minioService.getPublishableAssetsForBucket(jwt, bucket)
+            val assetsForBucket = this.minioService.getPublishableAssetsForBucket(jwt, bucket, folder)
                 .map { it.get() }
                 .map { asset ->
                     AssetDto(
@@ -75,31 +78,47 @@ class BucketController @Autowired constructor(
     }
 
     // TODO `this.minioService.uploadAssets()` may fail if no access to requested bucket.
-    @PostMapping("upload/{bucket}")
+    @PostMapping("upload/{bucket}/{base64encodedFolderName}")
     @ResponseStatus(HttpStatus.OK)
-    fun uploadAsset(@PathVariable bucket: String, @RequestBody files: Array<MultipartFile>) {
+    fun uploadAsset(@PathVariable bucket: String, @PathVariable base64encodedFolderName: String, @RequestBody files: Array<MultipartFile>) {
         val jwtAuthenticationToken = SecurityContextHolder.getContext().authentication as JwtAuthenticationToken
         val jwt = jwtAuthenticationToken.token.tokenValue
 
-        this.minioService.uploadAssets(jwt, bucket, files)
+        val folder = if (base64encodedFolderName == "default") "/" else String(
+            (Base64.getDecoder().decode(base64encodedFolderName)), Charset.forName("ISO-8859-1"))
+
+        this.minioService.uploadAssets(jwt, bucket, folder, files)
     }
 
-    @PostMapping("download/{bucket}/{name}")
+    @PostMapping("downloadAsset/{bucket}/{base64EncodedFileName}")
     @ResponseStatus(HttpStatus.OK)
-    fun downloadAsset(@PathVariable bucket: String, @PathVariable name: String, response: HttpServletResponse) {
+    fun downloadAsset(@PathVariable bucket: String, @PathVariable base64EncodedFileName: String, response: HttpServletResponse) {
         val jwtAuthenticationToken = SecurityContextHolder.getContext().authentication as JwtAuthenticationToken
         val jwt = jwtAuthenticationToken.token.tokenValue
+
+        val decodedBytes = Base64.getDecoder().decode(base64EncodedFileName)
+        val name = String(decodedBytes, Charset.forName("ISO-8859-1"))
 
         this.minioService.downloadAsset(jwt, bucket, name, response)
     }
 
-    // TODO `this.minioService.deleteAsset()` may fail if no access to requested bucket.
-    @DeleteMapping("delete/{bucket}/{name}")
+    @PostMapping("downloadFolder/{bucket}/{base64EncodedFolderName}")
     @ResponseStatus(HttpStatus.OK)
-    fun deleteAsset(@PathVariable bucket: String, @PathVariable name: String) {
+    fun downloadFolder(@PathVariable bucket: String, @PathVariable base64EncodedFolderName: String, response: HttpServletResponse) {
         val jwtAuthenticationToken = SecurityContextHolder.getContext().authentication as JwtAuthenticationToken
         val jwt = jwtAuthenticationToken.token.tokenValue
+        val folderName = String(Base64.getDecoder().decode(base64EncodedFolderName))
+        this.minioService.downloadFolder(jwt, bucket, folderName, response)
+    }
 
+    // TODO `this.minioService.deleteAsset()` may fail if no access to requested bucket.
+    @DeleteMapping("delete/{bucket}/{base64EncodedFileName}")
+    @ResponseStatus(HttpStatus.OK)
+    fun deleteAsset(@PathVariable bucket: String, @PathVariable base64EncodedFileName: String) {
+        val jwtAuthenticationToken = SecurityContextHolder.getContext().authentication as JwtAuthenticationToken
+        val jwt = jwtAuthenticationToken.token.tokenValue
+        val decodedBytes = Base64.getDecoder().decode(base64EncodedFileName)
+        val name = String(decodedBytes, Charset.forName("ISO-8859-1"))
         this.minioService.deleteAsset(jwt, bucket, name)
     }
 

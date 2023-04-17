@@ -18,6 +18,7 @@ import org.springframework.security.core.Authentication
 import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken
 import org.springframework.web.bind.annotation.*
+import java.util.*
 
 
 // TODO Parse JWT and look for roles to see if the user has the rights for the coopspaces and buckets (local db and minio)
@@ -132,18 +133,23 @@ open class CoopSpaceController @Autowired constructor(
     }
 
     // TODO can't access coopspace name here.
-    @GetMapping("{id}/assets")
-    open fun getAssetsForCoopSpace(@PathVariable id: Long): ResponseEntity<Any> {
+    @GetMapping("{id}/{base64encodedFolderName}")
+    open fun getAssetsForCoopSpace(@PathVariable id: Long, @PathVariable base64encodedFolderName: String): ResponseEntity<Any> {
         val coopSpace = this.coopSpaceService.findCoopSpace(id)
         val company = coopSpace.company?.lowercase() ?: throw BusinessException("Company was null", ErrorType.NOT_FOUND)
         val bucketName = coopSpace.name ?: throw BusinessException("BucketName was null", ErrorType.NOT_FOUND)
         val jwtAuthenticationToken = SecurityContextHolder.getContext().authentication as JwtAuthenticationToken
         val jwt = jwtAuthenticationToken.token.tokenValue
+        // TODO: This was handled differently in another controller.
+        var folder = "/"
+        if (base64encodedFolderName != "default") {
+            folder = String(Base64.getDecoder().decode(base64encodedFolderName))
+        }
         return try {
             val assetsForBucket =
-                this.minioService.getAssetsForCoopspace(jwt, company, bucketName).map { it.get() }.map {
+                this.minioService.getAssetsForCoopspace(jwt, company, bucketName, folder).map { it.get() }.map {
                     AssetDto(
-                        it.objectName().replace("assets/", ""),
+                        it.objectName(),
                         it.lastModified().toString(),
                         it.lastModified().toString(),
                         it.size().toString(),

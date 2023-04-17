@@ -97,7 +97,7 @@ class CoopSpaceService(
 
     fun deleteCoopSpace(jwt: String, coopSpace: CoopSpace) {
         val assetsForBucket =
-            this.minioService.getAssetsForCoopspace(jwt, coopSpace.company!!.lowercase(), coopSpace.name!!)
+            this.minioService.getAssetsForCoopspace(jwt, coopSpace.company!!.lowercase(), coopSpace.name!!, folder = "/assets")
         if (assetsForBucket.isNotEmpty()) {
             throw BusinessException("Cannot delete bucket with assets inside", ErrorType.BUCKET_NOT_EMPTY)
         }
