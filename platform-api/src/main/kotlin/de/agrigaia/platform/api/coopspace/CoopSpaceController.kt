@@ -182,7 +182,7 @@ open class CoopSpaceController @Autowired constructor(
 
     // TODO: This should be a @DeleteMapping.
     /* Remove user from the CoopSpace by removing it both from the subgroup in Keycloak and the database. */
-    @PreAuthorize("hasAuthority(#deleteMemberRequest.coopSpaceName + '-Admin')")
+    @PreAuthorize("hasAuthority('coopspace-' + #deleteMemberRequest.coopSpaceName + '-Admin')")
     @PostMapping("/deleteMember")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     open fun removeUserFromCoopSpace(@RequestBody deleteMemberRequest: DeleteMemberRequest) {
