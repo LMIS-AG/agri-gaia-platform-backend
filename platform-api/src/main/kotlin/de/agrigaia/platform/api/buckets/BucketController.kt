@@ -13,6 +13,8 @@ import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken
 import org.springframework.web.bind.annotation.*
 import org.springframework.web.multipart.MultipartFile
+import java.nio.charset.Charset
+import java.util.*
 import javax.servlet.http.HttpServletResponse
 
 @RestController
@@ -35,13 +37,14 @@ class BucketController @Autowired constructor(
         return ResponseEntity.ok(bucketDtos)
     }
 
-    @GetMapping("{bucket}/assets")
-    fun getBucketAssets(@PathVariable bucket: String): ResponseEntity<List<AssetDto>> {
+    @GetMapping("{bucket}/{base64encodedFolderName}")
+    fun getBucketAssets(@PathVariable bucket: String, @PathVariable base64encodedFolderName: String): ResponseEntity<List<AssetDto>> {
         val jwtAuthenticationToken = SecurityContextHolder.getContext().authentication as JwtAuthenticationToken
         val jwt = jwtAuthenticationToken.token.tokenValue
+        val folder = String(Base64.getDecoder().decode(base64encodedFolderName))
 
         return try {
-            val assetsForBucket = this.minioService.getPublishableAssetsForBucket(jwt, bucket)
+            val assetsForBucket = this.minioService.getPublishableAssetsForBucket(jwt, bucket, folder)
                 .map { it.get() }
                 .map { asset ->
                     AssetDto(asset.objectName().replace("assets/", ""), asset.lastModified().toString(), asset.lastModified().toString(),
@@ -57,29 +60,50 @@ class BucketController @Autowired constructor(
         return assetRepository.findByBucketAndName(bucket, name) != null
     }
 
-    @PostMapping("upload/{bucket}")
+    @PostMapping("upload/{bucket}/{base64encodedFolderName}")
     @ResponseStatus(HttpStatus.OK)
-    fun uploadAsset(@PathVariable bucket: String, @RequestBody files: Array<MultipartFile>) {
+    fun uploadAsset(@PathVariable bucket: String, @PathVariable base64encodedFolderName: String, @RequestBody files: Array<MultipartFile>) {
         val jwtAuthenticationToken = SecurityContextHolder.getContext().authentication as JwtAuthenticationToken
         val jwt = jwtAuthenticationToken.token.tokenValue
 
-        this.minioService.uploadAssets(jwt, bucket, files)
+        val defaultName = "/"
+        val folder = if (base64encodedFolderName == "default") defaultName else String(
+            (Base64.getDecoder().decode(base64encodedFolderName)), Charset.forName("ISO-8859-1"))
+
+        this.minioService.uploadAssets(jwt, bucket, folder, files)
     }
 
-    @PostMapping("download/{bucket}/{name}")
+    @PostMapping("downloadAsset/{bucket}/{base64EncodedFileName}")
     @ResponseStatus(HttpStatus.OK)
-    fun downloadAsset(@PathVariable bucket: String, @PathVariable name: String, response: HttpServletResponse) {
+    fun downloadAsset(@PathVariable bucket: String, @PathVariable base64EncodedFileName: String, response: HttpServletResponse) {
         val jwtAuthenticationToken = SecurityContextHolder.getContext().authentication as JwtAuthenticationToken
         val jwt = jwtAuthenticationToken.token.tokenValue
+
+        val decodedBytes = Base64.getDecoder().decode(base64EncodedFileName)
+        val name = String(decodedBytes, Charset.forName("ISO-8859-1"))
 
         this.minioService.downloadAsset(jwt, bucket, name, response)
     }
 
-    @DeleteMapping("delete/{bucket}/{name}")
+    @PostMapping("downloadFolder/{bucket}/{base64EncodedFolderName}")
     @ResponseStatus(HttpStatus.OK)
-    fun deleteAsset(@PathVariable bucket: String, @PathVariable name: String) {
+    fun downloadFolder(@PathVariable bucket: String, @PathVariable base64EncodedFolderName: String, response: HttpServletResponse) {
         val jwtAuthenticationToken = SecurityContextHolder.getContext().authentication as JwtAuthenticationToken
         val jwt = jwtAuthenticationToken.token.tokenValue
+
+        val folderName = String(Base64.getDecoder().decode(base64EncodedFolderName))
+
+        this.minioService.downloadFolder(jwt, bucket, folderName, response)
+    }
+
+    @DeleteMapping("delete/{bucket}/{base64EncodedFileName}")
+    @ResponseStatus(HttpStatus.OK)
+    fun deleteAsset(@PathVariable bucket: String, @PathVariable base64EncodedFileName: String) {
+        val jwtAuthenticationToken = SecurityContextHolder.getContext().authentication as JwtAuthenticationToken
+        val jwt = jwtAuthenticationToken.token.tokenValue
+
+        val decodedBytes = Base64.getDecoder().decode(base64EncodedFileName)
+        val name = String(decodedBytes, Charset.forName("ISO-8859-1"))
 
         this.minioService.deleteAsset(jwt, bucket, name)
     }
