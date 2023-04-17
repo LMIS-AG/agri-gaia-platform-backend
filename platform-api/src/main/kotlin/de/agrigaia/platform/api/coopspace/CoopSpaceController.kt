@@ -169,7 +169,7 @@ open class CoopSpaceController @Autowired constructor(
         return ResponseEntity.ok(this.minioService.bucketExists(name))
     }
 
-    // TODO: This should be a @DeleteMapping.
+    // TODO: This should be a @DeleteMapping and only require an id.
     @PreAuthorize("hasAuthority('coopspace-' + #coopSpaceDto.name + '-Admin')")
     @PostMapping("delete")
     @ResponseStatus(HttpStatus.NO_CONTENT)
