@@ -6,6 +6,7 @@ import de.agrigaia.platform.integration.minio.MinioService
 import de.agrigaia.platform.model.buckets.STSDto
 import de.agrigaia.platform.persistence.repository.AssetRepository
 import io.minio.messages.Bucket
+import jakarta.servlet.http.HttpServletResponse
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
@@ -13,7 +14,6 @@ import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken
 import org.springframework.web.bind.annotation.*
 import org.springframework.web.multipart.MultipartFile
-import jakarta.servlet.http.HttpServletResponse
 import java.nio.charset.Charset
 import java.util.*
 
@@ -72,7 +72,6 @@ class BucketController @Autowired constructor(
         }
     }
 
-    // TODO
     private fun isPublished(bucket: String, name: String): Boolean {
         return assetRepository.findByBucketAndName(bucket, name) != null
     }
@@ -122,7 +121,6 @@ class BucketController @Autowired constructor(
         this.minioService.deleteAsset(jwt, bucket, name)
     }
 
-    // TODO
     @GetMapping("/sts")
     fun getKeysAndToken(): ResponseEntity<STSDto> {
         val jwtAuthenticationToken = SecurityContextHolder.getContext().authentication as JwtAuthenticationToken
