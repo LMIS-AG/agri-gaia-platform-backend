@@ -14,8 +14,6 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import java.util.*
-import kotlin.test.assertFalse
-import kotlin.test.assertTrue
 
 class CoopSpaceServiceTest {
 
@@ -33,12 +31,22 @@ class CoopSpaceServiceTest {
     )
 
     @Test
-    fun `Test findCoopSpace`() {
+    fun `Test findCoopSpaceById`() {
         val dummyId: Long = 42
         val dummyCoopSpace = CoopSpace("someName", "someCompany", "someMandant", listOf())
         every { coopSpaceRepository.findById(dummyId) } returns Optional.of(dummyCoopSpace)
-        val actual = coopSpaceService.findCoopSpace(dummyId)
+        val actual = coopSpaceService.findCoopSpaceById(dummyId)
         verify { coopSpaceRepository.findById(match { it == dummyId }) }
+        assertEquals(dummyCoopSpace, actual, "Should return CoopSpace.")
+    }
+
+    @Test
+    fun `Test findCoopSpaceByName`() {
+        val dummyName = "someName"
+        val dummyCoopSpace = CoopSpace(dummyName, "someCompany", "someMandant", listOf())
+        every { coopSpaceRepository.findByName(dummyName) } returns Optional.of(dummyCoopSpace)
+        val actual = coopSpaceService.findCoopSpaceByName(dummyName)
+        verify { coopSpaceRepository.findByName(match { it == dummyName }) }
         assertEquals(dummyCoopSpace, actual, "Should return CoopSpace.")
     }
 
@@ -118,23 +126,5 @@ class CoopSpaceServiceTest {
                         actualSavedMember.id == expectedSavedMember.id
             })
         }
-    }
-
-    @Test
-    fun `Test hasAccessToCoopSpace`() {
-        val c: CoopSpace = mockk()
-        every { c.members } returns listOf()
-        assertFalse(coopSpaceService.hasAccessToCoopSpace("", c), "Should return false when given empty username.")
-        assertFalse(
-            coopSpaceService.hasAccessToCoopSpace("Antonia", c), "Cannot have access to coopSpace with no members."
-        )
-
-        every { c.members } returns listOf(Member(username = "Antonia"), Member(username = "Norbert"))
-        assertFalse(coopSpaceService.hasAccessToCoopSpace("", c), "Should return false when given empty username.")
-        assertTrue(
-            coopSpaceService.hasAccessToCoopSpace("Antonia", c),
-            "Should have access to coopSpace containing member with matching username."
-        )
-        assertFalse(coopSpaceService.hasAccessToCoopSpace("antonia", c), "Should be case-sensitive.")
     }
 }

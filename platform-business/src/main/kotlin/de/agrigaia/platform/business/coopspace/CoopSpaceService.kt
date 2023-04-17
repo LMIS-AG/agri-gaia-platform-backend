@@ -97,7 +97,12 @@ class CoopSpaceService(
 
     fun deleteCoopSpace(jwt: String, coopSpace: CoopSpace) {
         val assetsForBucket =
-            this.minioService.getAssetsForCoopspace(jwt, coopSpace.company!!.lowercase(), coopSpace.name!!, folder = "/assets")
+            this.minioService.getAssetsForCoopspace(
+                jwt,
+                coopSpace.company!!.lowercase(),
+                coopSpace.name!!,
+                folder = "/assets"
+            )
         if (assetsForBucket.isNotEmpty()) {
             throw BusinessException("Cannot delete bucket with assets inside", ErrorType.BUCKET_NOT_EMPTY)
         }
@@ -135,10 +140,16 @@ class CoopSpaceService(
         return this.coopSpaceRepository.findAll()
     }
 
-    fun findCoopSpace(id: Long): CoopSpace {
+    fun findCoopSpaceById(id: Long): CoopSpace {
         return coopSpaceRepository
             .findById(id)
             .orElseThrow { BusinessException("CoopSpace with id $id does not exist.", ErrorType.NOT_FOUND) }
+    }
+
+    fun findCoopSpaceByName(name: String): CoopSpace {
+        return coopSpaceRepository
+            .findByName(name)
+            .orElseThrow { BusinessException("CoopSpace with name $name does not exist.", ErrorType.NOT_FOUND) }
     }
 
     fun removeUserFromKeycloakGroup(username: String, role: String, companyName: String, coopSpaceName: String) {
@@ -200,12 +211,5 @@ class CoopSpaceService(
         originalMember.id = member.id
 
         this.memberRepository.save(originalMember);
-    }
-
-    /**
-     * check whether a user has access to a certain coopspace by searching through its member list
-     */
-    fun hasAccessToCoopSpace(username: String, coopSpace: CoopSpace): Boolean {
-        return coopSpace.members.any { m: Member -> m.username == username }
     }
 }

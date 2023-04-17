@@ -53,21 +53,16 @@ open class CoopSpaceController @Autowired constructor(
     @PostAuthorize("hasAnyAuthority('coopspace-'+returnObject.body.name+'-Guest', 'coopspace-'+returnObject.body.name+'-User', 'coopspace-'+returnObject.body.name+'-Admin')")
     @GetMapping("{id}")
     open fun getCoopSpace(@PathVariable id: Long): ResponseEntity<CoopSpaceDto> {
-        val coopSpace: CoopSpace = this.coopSpaceService.findCoopSpace(id)
+        val coopSpace: CoopSpace = this.coopSpaceService.findCoopSpaceById(id)
         val coopSpaceDto: CoopSpaceDto = this.coopSpaceMapper.map(coopSpace)
         return ResponseEntity.ok(coopSpaceDto)
     }
 
-    // TODO can't access coopspace name here.
-    @GetMapping("{id}/members")
-    open fun getMembersOfCoopSpace(@PathVariable id: Long): ResponseEntity<List<MemberDto>> {
-        val jwtAuthenticationToken = SecurityContextHolder.getContext().authentication as JwtAuthenticationToken
-        val username = jwtAuthenticationToken.token.claims["preferred_username"] as String
-        val coopSpace: CoopSpace = this.coopSpaceService.findCoopSpace(id)
 
-        if (!this.coopSpaceService.hasAccessToCoopSpace(username, coopSpace)) {
-            return ResponseEntity(HttpStatus.UNAUTHORIZED)
-        }
+    @PreAuthorize("hasAnyAuthority('coopspace-'+#coopSpaceName+'-Guest', 'coopspace-'+#coopSpaceName+'-User', 'coopspace-'+#coopSpaceName+'-Admin')")
+    @GetMapping("{coopSpaceName}/members")
+    open fun getMembersOfCoopSpace(@PathVariable coopSpaceName: String): ResponseEntity<List<MemberDto>> {
+        val coopSpace: CoopSpace = this.coopSpaceService.findCoopSpaceByName(coopSpaceName)
         return ResponseEntity.ok(this.memberMapper.mapToDtos(coopSpace.members))
     }
 
@@ -96,7 +91,7 @@ open class CoopSpaceController @Autowired constructor(
     @PostMapping("/addMember")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     open fun addUserToCoopSpace(@RequestBody addMemberRequest: AddMemberRequest) {
-        val coopSpaceDto = this.coopSpaceMapper.map(this.coopSpaceService.findCoopSpace(addMemberRequest.coopSpaceId))
+        val coopSpaceDto = this.coopSpaceMapper.map(this.coopSpaceService.findCoopSpaceById(addMemberRequest.coopSpaceId))
         val coopSpace: CoopSpace = coopSpaceDto.toEntity(this.coopSpaceMapper)
         val coopSpaceName = coopSpace.name ?: throw BusinessException("CoopSpaceName is null", ErrorType.NOT_FOUND)
 
@@ -123,7 +118,7 @@ open class CoopSpaceController @Autowired constructor(
         val originalRole = changeMemberRoleRequest.originalRole ?: throw BusinessException("OriginalRole was null", ErrorType.NOT_FOUND)
         val company = member.company ?: throw BusinessException("Company was null", ErrorType.NOT_FOUND)
         val coopSpaceId = changeMemberRoleRequest.coopSpaceId ?: throw BusinessException("CoopspaceId was null", ErrorType.NOT_FOUND)
-        val coopSpace: CoopSpace = this.coopSpaceService.findCoopSpace(coopSpaceId)
+        val coopSpace: CoopSpace = this.coopSpaceService.findCoopSpaceById(coopSpaceId)
         val coopSpaceName = coopSpace.name ?: throw BusinessException("CoopSpaceName is null", ErrorType.NOT_FOUND)
 
         this.coopSpaceService.removeUserFromKeycloakGroup(username, originalRole, company, coopSpaceName)
@@ -135,7 +130,7 @@ open class CoopSpaceController @Autowired constructor(
     // TODO can't access coopspace name here.
     @GetMapping("{id}/{base64encodedFolderName}")
     open fun getAssetsForCoopSpace(@PathVariable id: Long, @PathVariable base64encodedFolderName: String): ResponseEntity<Any> {
-        val coopSpace = this.coopSpaceService.findCoopSpace(id)
+        val coopSpace = this.coopSpaceService.findCoopSpaceById(id)
         val company = coopSpace.company?.lowercase() ?: throw BusinessException("Company was null", ErrorType.NOT_FOUND)
         val bucketName = coopSpace.name ?: throw BusinessException("BucketName was null", ErrorType.NOT_FOUND)
         val jwtAuthenticationToken = SecurityContextHolder.getContext().authentication as JwtAuthenticationToken
