@@ -87,12 +87,12 @@ open class CoopSpaceController @Autowired constructor(
         return ResponseEntity.ok(createdCoopSpaceDto)
     }
 
-    @PreAuthorize("hasAnyAuthority('coopspace-'+#addMembersRequest.coopSpaceName+'-Guest', 'coopspace-'+#addMembersRequest.coopSpaceName+'-User', 'coopspace-'+#addMembersRequest.coopSpaceName+'-Admin')")
+    @PreAuthorize("hasAuthority('coopspace-'+#addMembersDto.coopSpaceName+'-Admin')")
     @PostMapping("/addMembers")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    open fun addMembersToCoopSpace(@RequestBody addMembersRequest: AddMembersRequest) {
-        val coopSpaceName = addMembersRequest.coopSpaceName ?: throw BusinessException("coopSpaceName is null", ErrorType.BAD_REQUEST)
-        val memberList = addMembersRequest.memberList ?: throw BusinessException("memberList is null", ErrorType.BAD_REQUEST)
+    open fun addMembersToCoopSpace(@RequestBody addMembersDto: AddMembersDto) {
+        val coopSpaceName = addMembersDto.coopSpaceName ?: throw BusinessException("coopSpaceName is null", ErrorType.BAD_REQUEST)
+        val memberList = addMembersDto.memberList ?: throw BusinessException("memberList is null", ErrorType.BAD_REQUEST)
         // This maps the CoopSpace to a CoopSpaceDto and back to a CoopSpace, i.e. inelegantly creates a copy.
         val coopSpace: CoopSpace = this.coopSpaceMapper.map(this.coopSpaceService.findCoopSpaceByName(coopSpaceName)).toEntity(this.coopSpaceMapper)
 
@@ -104,21 +104,21 @@ open class CoopSpaceController @Autowired constructor(
     /*
     Change member role in coopspace by removing/adding to keycloak groups and updating the database.
      */
-    // TODO can't access coopspace name here.
+    @PreAuthorize("hasAuthority('coopspace-'+#changeMemberRoleDto.coopSpaceName+'-Admin')")
     @PostMapping("/changeMemberRole")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    open fun changeMemberRole(@RequestBody changeMemberRoleRequest: ChangeMemberRoleRequest) {
-        val member = changeMemberRoleRequest.member ?: throw BusinessException("Member was null", ErrorType.NOT_FOUND)
-        val username = member.username ?: throw BusinessException("Username was null", ErrorType.NOT_FOUND)
-        val originalRole = changeMemberRoleRequest.originalRole ?: throw BusinessException("OriginalRole was null", ErrorType.NOT_FOUND)
-        val company = member.company ?: throw BusinessException("Company was null", ErrorType.NOT_FOUND)
-        val coopSpaceId = changeMemberRoleRequest.coopSpaceId ?: throw BusinessException("CoopspaceId was null", ErrorType.NOT_FOUND)
-        val coopSpace: CoopSpace = this.coopSpaceService.findCoopSpaceById(coopSpaceId)
-        val coopSpaceName = coopSpace.name ?: throw BusinessException("CoopSpaceName is null", ErrorType.NOT_FOUND)
+    open fun changeMemberRole(@RequestBody changeMemberRoleDto: ChangeMemberRoleDto) {
+        val username = changeMemberRoleDto.username ?: throw BusinessException("No username given", ErrorType.BAD_REQUEST)
+        val id = changeMemberRoleDto.id ?: throw BusinessException("No member.id given", ErrorType.BAD_REQUEST)
+        val oldRole = changeMemberRoleDto.oldRole ?: throw BusinessException("No originalRole given", ErrorType.BAD_REQUEST)
+        val newRole = changeMemberRoleDto.newRole ?: throw BusinessException("No role given", ErrorType.BAD_REQUEST)
+        val coopSpaceName = changeMemberRoleDto.coopSpaceName ?: throw BusinessException("No coopSpaceName given", ErrorType.BAD_REQUEST)
+        val company = changeMemberRoleDto.company ?: throw BusinessException("No member.company given", ErrorType.BAD_REQUEST)
+        val coopSpace: CoopSpace = this.coopSpaceService.findCoopSpaceByName(coopSpaceName)
 
-        this.coopSpaceService.removeUserFromKeycloakGroup(username, originalRole, company, coopSpaceName)
-        this.coopSpaceService.addUserToKeycloakGroup(member, coopSpaceName)
-        this.coopSpaceService.changeUserRoleInDatabase(member, coopSpace)
+        this.coopSpaceService.removeUserFromKeycloakGroup(username, oldRole, company, coopSpaceName)
+        this.coopSpaceService.addUserToKeycloakGroup(username, newRole, company, coopSpaceName)
+        this.coopSpaceService.changeUserRoleInDatabase(username, newRole, id, coopSpace)
 
     }
 
@@ -172,15 +172,15 @@ open class CoopSpaceController @Autowired constructor(
 
     // TODO: This should be a @DeleteMapping.
     /* Remove user from the CoopSpace by removing it both from the subgroup in Keycloak and the database. */
-    @PreAuthorize("hasAuthority('coopspace-' + #deleteMemberRequest.coopSpaceName + '-Admin')")
+    @PreAuthorize("hasAuthority('coopspace-' + #deleteMemberDto.coopSpaceName + '-Admin')")
     @PostMapping("/deleteMember")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    open fun removeUserFromCoopSpace(@RequestBody deleteMemberRequest: DeleteMemberRequest) {
-        val username: String = deleteMemberRequest.member?.username ?: throw BusinessException("Username was null.", ErrorType.NOT_FOUND)
-        val role: String = deleteMemberRequest.member?.role.toString()
-        val company: String = deleteMemberRequest.member?.company ?: throw BusinessException("Company was null.", ErrorType.NOT_FOUND)
-        val coopSpaceName: String = deleteMemberRequest.coopSpaceName ?: throw BusinessException("CoopSpaceName was null", ErrorType.NOT_FOUND)
-        val id: Long = deleteMemberRequest.member?.id ?: throw BusinessException("ID was null", ErrorType.NOT_FOUND)
+    open fun removeUserFromCoopSpace(@RequestBody deleteMemberDto: DeleteMemberDto) {
+        val username: String = deleteMemberDto.member?.username ?: throw BusinessException("Username was null.", ErrorType.NOT_FOUND)
+        val role: String = deleteMemberDto.member?.role.toString()
+        val company: String = deleteMemberDto.member?.company ?: throw BusinessException("Company was null.", ErrorType.NOT_FOUND)
+        val coopSpaceName: String = deleteMemberDto.coopSpaceName ?: throw BusinessException("CoopSpaceName was null", ErrorType.NOT_FOUND)
+        val id: Long = deleteMemberDto.member?.id ?: throw BusinessException("ID was null", ErrorType.NOT_FOUND)
 
         this.coopSpaceService.removeUserFromKeycloakGroup(username, role, company, coopSpaceName)
         this.coopSpaceService.removeUserFromDatabase(id)

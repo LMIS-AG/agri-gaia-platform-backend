@@ -172,23 +172,18 @@ class CoopSpaceService(
      */
     fun addUsersToKeycloakGroup(memberList: List<Member> = ArrayList(), coopSpaceName: String) {
         for (member in memberList) {
-            addUserToKeycloakGroup(
-                member,
-                coopSpaceName,
-            )
+            val username = member.username ?: throw BusinessException("Member $member has no username", ErrorType.BAD_REQUEST)
+            val role = member.role ?: throw BusinessException("Member $member has no role", ErrorType.BAD_REQUEST)
+            val company = member.company ?: throw BusinessException("Member $member has no company", ErrorType.BAD_REQUEST)
+            addUserToKeycloakGroup(username, role, company, coopSpaceName)
         }
     }
 
     /**
      * add a single user to a Keycloak subgroup, this function gets called directly when changing the role of a user
      */
-    fun addUserToKeycloakGroup(member: Member, coopSpaceName: String) {
-        keycloakConnectorService.addUserToGroup(
-            member.username!!,
-            member.role!!.toString(),
-            coopSpaceName,
-            member.company!!
-        )
+    fun addUserToKeycloakGroup(username: String, role: CoopSpaceRole, company: String, coopSpaceName: String) {
+        keycloakConnectorService.addUserToGroup(username, role.toString(), coopSpaceName, company)
     }
 
     fun addUsersToDatabase(memberList: List<Member> = ArrayList(), coopSpace: CoopSpace) {
@@ -203,13 +198,11 @@ class CoopSpaceService(
     /**
      * change role in the database
      */
-    fun changeUserRoleInDatabase(member: Member, coopSpace: CoopSpace) {
-        val originalMember = coopSpace.members.find { it.username == member.username }
-            ?: throw BusinessException("originalMember not found", ErrorType.NOT_FOUND)
-
-        originalMember.role = member.role
-        originalMember.id = member.id
-
-        this.memberRepository.save(originalMember);
+    fun changeUserRoleInDatabase(username: String, role: CoopSpaceRole, id: Long, coopSpace: CoopSpace) {
+        val member = coopSpace.members.find { it.username == username }
+            ?: throw BusinessException("Member with username $username not found in coopSpace", ErrorType.UNKNOWN)
+        member.role = role
+        member.id = id
+        this.memberRepository.save(member)
     }
 }
