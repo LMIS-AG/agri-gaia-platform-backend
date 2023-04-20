@@ -123,9 +123,9 @@ open class CoopSpaceController @Autowired constructor(
     }
 
     // TODO can't access coopspace name here.
-    @GetMapping("{id}/{base64encodedFolderName}")
-    open fun getAssetsForCoopSpace(@PathVariable id: Long, @PathVariable base64encodedFolderName: String): ResponseEntity<Any> {
-        val coopSpace = this.coopSpaceService.findCoopSpaceById(id)
+    @GetMapping("{coopSpaceName}/{base64encodedFolderName}")
+    open fun getAssetsForCoopSpace(@PathVariable coopSpaceName: String, @PathVariable base64encodedFolderName: String): ResponseEntity<Any> {
+        val coopSpace = this.coopSpaceService.findCoopSpaceByName(coopSpaceName)
         val company = coopSpace.company?.lowercase() ?: throw BusinessException("Company was null", ErrorType.NOT_FOUND)
         val bucketName = coopSpace.name ?: throw BusinessException("BucketName was null", ErrorType.NOT_FOUND)
         val jwtAuthenticationToken = SecurityContextHolder.getContext().authentication as JwtAuthenticationToken
