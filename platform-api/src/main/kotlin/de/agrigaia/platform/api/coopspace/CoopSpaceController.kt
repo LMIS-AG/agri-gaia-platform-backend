@@ -129,11 +129,8 @@ open class CoopSpaceController @Autowired constructor(
         val bucketName = coopSpace.name ?: throw BusinessException("BucketName was null", ErrorType.NOT_FOUND)
         val jwtAuthenticationToken = SecurityContextHolder.getContext().authentication as JwtAuthenticationToken
         val jwt = jwtAuthenticationToken.token.tokenValue
-        // TODO: This was handled differently in another controller.
-        var folder = "/"
-        if (base64encodedFolderName != "default") {
-            folder = String(Base64.getDecoder().decode(base64encodedFolderName))
-        }
+        val folder = if (base64encodedFolderName == "default") "/" else
+            String(Base64.getDecoder().decode(base64encodedFolderName))
         return try {
             val assetsForBucket =
                 this.minioService.getAssetsForCoopspace(jwt, company, bucketName, folder).map { it.get() }.map {
