@@ -21,7 +21,6 @@ import org.springframework.web.bind.annotation.*
 import java.util.*
 
 
-// TODO Parse JWT and look for roles to see if the user has the rights for the coopspaces and buckets (local db and minio)
 @RestController
 @RequestMapping("/coopspaces")
 open class CoopSpaceController @Autowired constructor(
@@ -75,7 +74,7 @@ open class CoopSpaceController @Autowired constructor(
         return ResponseEntity.ok(memberDtos)
     }
 
-    // TODO: Check whether creator is member of the organisation they create a coopspace with!!
+    @PreAuthorize("hasAuthority('company-'+#coopSpaceDto.company)")
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     open fun createCoopSpace(@RequestBody coopSpaceDto: CoopSpaceDto): ResponseEntity<CoopSpaceDto> {
