@@ -87,23 +87,18 @@ open class CoopSpaceController @Autowired constructor(
         return ResponseEntity.ok(createdCoopSpaceDto)
     }
 
-    // TODO can't access coopspace name here.
-    @PostMapping("/addMember")
+    @PreAuthorize("hasAnyAuthority('coopspace-'+#addMembersRequest.coopSpaceName+'-Guest', 'coopspace-'+#addMembersRequest.coopSpaceName+'-User', 'coopspace-'+#addMembersRequest.coopSpaceName+'-Admin')")
+    @PostMapping("/addMembers")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    open fun addUserToCoopSpace(@RequestBody addMemberRequest: AddMemberRequest) {
-        val coopSpaceDto = this.coopSpaceMapper.map(this.coopSpaceService.findCoopSpaceById(addMemberRequest.coopSpaceId))
-        val coopSpace: CoopSpace = coopSpaceDto.toEntity(this.coopSpaceMapper)
-        val coopSpaceName = coopSpace.name ?: throw BusinessException("CoopSpaceName is null", ErrorType.NOT_FOUND)
+    open fun addMembersToCoopSpace(@RequestBody addMembersRequest: AddMembersRequest) {
+        val coopSpaceName = addMembersRequest.coopSpaceName ?: throw BusinessException("coopSpaceName is null", ErrorType.BAD_REQUEST)
+        val memberList = addMembersRequest.memberList ?: throw BusinessException("memberList is null", ErrorType.BAD_REQUEST)
+        // This maps the CoopSpace to a CoopSpaceDto and back to a CoopSpace, i.e. inelegantly creates a copy.
+        val coopSpace: CoopSpace = this.coopSpaceMapper.map(this.coopSpaceService.findCoopSpaceByName(coopSpaceName)).toEntity(this.coopSpaceMapper)
 
         // add user to the CoopSpace by adding it both to the respective subgroup in Keycloak and the database
-        this.coopSpaceService.addUsersToKeycloakGroup(
-            addMemberRequest.member,
-            coopSpaceName
-        )
-        this.coopSpaceService.addUsersToDatabase(
-            addMemberRequest.member,
-            coopSpace
-        )
+        this.coopSpaceService.addUsersToKeycloakGroup(memberList, coopSpaceName)
+        this.coopSpaceService.addUsersToDatabase(memberList, coopSpace)
     }
 
     /*
@@ -112,7 +107,7 @@ open class CoopSpaceController @Autowired constructor(
     // TODO can't access coopspace name here.
     @PostMapping("/changeMemberRole")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    open fun changeMemberRoleInCoopSpace(@RequestBody changeMemberRoleRequest: ChangeMemberRoleRequest) {
+    open fun changeMemberRole(@RequestBody changeMemberRoleRequest: ChangeMemberRoleRequest) {
         val member = changeMemberRoleRequest.member ?: throw BusinessException("Member was null", ErrorType.NOT_FOUND)
         val username = member.username ?: throw BusinessException("Username was null", ErrorType.NOT_FOUND)
         val originalRole = changeMemberRoleRequest.originalRole ?: throw BusinessException("OriginalRole was null", ErrorType.NOT_FOUND)
