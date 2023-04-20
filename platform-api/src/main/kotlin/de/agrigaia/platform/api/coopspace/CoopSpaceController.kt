@@ -122,7 +122,7 @@ open class CoopSpaceController @Autowired constructor(
 
     }
 
-    // TODO can't access coopspace name here.
+    @PreAuthorize("hasAnyAuthority('coopspace-'+#coopSpaceName+'-Guest', 'coopspace-'+#coopSpaceName+'-User', 'coopspace-'+#coopSpaceName+'-Admin')")
     @GetMapping("{coopSpaceName}/{base64encodedFolderName}")
     open fun getAssetsForCoopSpace(@PathVariable coopSpaceName: String, @PathVariable base64encodedFolderName: String): ResponseEntity<Any> {
         val coopSpace = this.coopSpaceService.findCoopSpaceByName(coopSpaceName)
