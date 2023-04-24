@@ -7,6 +7,7 @@ import org.springframework.beans.TypeMismatchException
 import org.springframework.core.NestedRuntimeException
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatus
+import org.springframework.http.HttpStatusCode
 import org.springframework.http.ResponseEntity
 import org.springframework.http.converter.HttpMessageNotReadableException
 import org.springframework.web.bind.annotation.ControllerAdvice
@@ -30,24 +31,30 @@ open class AgriGaiaPlatformExceptionHandler : ResponseEntityExceptionHandler(), 
     override fun handleHttpMessageNotReadable(
         e: HttpMessageNotReadableException,
         h: HttpHeaders,
-        s: HttpStatus,
+        s: HttpStatusCode,
         r: WebRequest,
     )
             : ResponseEntity<Any> {
         return this.handleGenericException(e, s)
     }
 
-    override fun handleTypeMismatch(e: TypeMismatchException, h: HttpHeaders, status: HttpStatus, r: WebRequest)
+
+    override fun handleTypeMismatch(
+        e: TypeMismatchException,
+        h: HttpHeaders,
+        status: HttpStatusCode,
+        r: WebRequest
+    )
             : ResponseEntity<Any> {
         return this.handleGenericException(e, status)
     }
 
-    private fun handleGenericException(e: NestedRuntimeException, s: HttpStatus)
+    private fun handleGenericException(e: NestedRuntimeException, s: HttpStatusCode)
             : ResponseEntity<Any> {
         val message = e.message?.substringBefore("; nested exception is")
             ?: "Unknown error occurred. No error message was provided"
         this.getLogger().warn("$s | $message")
-        val errorDto = ErrorDto(message, s.name)
+        val errorDto = ErrorDto(message, HttpStatus.valueOf(s.value()).name)
         return ResponseEntity.status(s).body(errorDto)
     }
 
@@ -63,7 +70,7 @@ open class AgriGaiaPlatformExceptionHandler : ResponseEntityExceptionHandler(), 
 
     private fun getStatus(errorType: ErrorType): HttpStatus {
         return when (errorType) {
-            ErrorType.EXAMPLE, ErrorType.RESOURCE_ID_MISMATCH, ErrorType.BUCKET_NOT_EMPTY -> HttpStatus.BAD_REQUEST
+            ErrorType.BAD_REQUEST, ErrorType.EXAMPLE, ErrorType.RESOURCE_ID_MISMATCH, ErrorType.BUCKET_NOT_EMPTY -> HttpStatus.BAD_REQUEST
             ErrorType.NOT_FOUND -> HttpStatus.NOT_FOUND
             ErrorType.UNKNOWN -> HttpStatus.INTERNAL_SERVER_ERROR
         }

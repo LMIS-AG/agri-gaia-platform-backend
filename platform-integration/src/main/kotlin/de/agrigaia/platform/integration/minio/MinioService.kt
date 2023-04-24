@@ -7,7 +7,6 @@ import io.minio.credentials.WebIdentityProvider
 import io.minio.messages.*
 import org.apache.logging.log4j.LogManager.getLogger
 import org.jsoup.Jsoup
-import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
 import org.springframework.stereotype.Service
 import org.springframework.util.LinkedMultiValueMap
@@ -19,8 +18,11 @@ import reactor.core.publisher.Mono
 import java.io.*
 import java.util.zip.ZipEntry
 import java.util.zip.ZipOutputStream
-import javax.servlet.http.HttpServletResponse
+import jakarta.servlet.http.HttpServletResponse
+import java.io.ByteArrayInputStream
 
+
+// TODO: Many of these need error handling.
 @Service
 class MinioService(
     private val minioProperties: MinioProperties,
@@ -87,9 +89,8 @@ class MinioService(
         val minioClient = this.getMinioClient(jwt)
 
         val snowballObjects: List<SnowballObject> = files.map { file ->
-            val objectName = currentRoot + file.originalFilename
             SnowballObject(
-                objectName,
+                currentRoot + file.originalFilename,
                 ByteArrayInputStream(file.bytes),
                 file.size,
                 null,
@@ -186,7 +187,8 @@ class MinioService(
         body.add("Version", "2011-06-15")
         body.add("DurationSeconds", "21600")
 
-        val webClient = WebClient.builder().baseUrl(this.minioProperties.url).build()
+        val url = this.minioProperties.url ?: throw Exception("MinIo url was null.")
+        val webClient = WebClient.builder().baseUrl(url).build()
 
         val request = webClient.post()
             .uri("/")
@@ -195,8 +197,8 @@ class MinioService(
 
         val response: String = request
             .retrieve()
-            .onStatus(HttpStatus::is4xxClientError, ::handleClientError)
-            .onStatus(HttpStatus::is5xxServerError, ::handleServerError)
+            .onStatus({ it.is4xxClientError}, ::handleClientError)
+            .onStatus({ it.is5xxServerError}, ::handleServerError)
             .bodyToMono(String::class.java)
             .block() ?: throw Exception("Response from Minio was null.")
 

@@ -10,10 +10,9 @@ import de.agrigaia.platform.model.coopspace.CoopSpaceRole
 import de.agrigaia.platform.model.coopspace.Member
 import de.agrigaia.platform.persistence.repository.CoopSpaceRepository
 import de.agrigaia.platform.persistence.repository.MemberRepository
-import io.minio.messages.Bucket
 import org.springframework.http.HttpHeaders
-import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
+import org.springframework.security.core.GrantedAuthority
 import org.springframework.stereotype.Service
 import org.springframework.web.reactive.function.client.ClientResponse
 import org.springframework.web.reactive.function.client.WebClient
@@ -27,19 +26,13 @@ class CoopSpaceService(
     private val memberRepository: MemberRepository,
     private val minioService: MinioService,
     private val keycloakConnectorService: KeycloakConnectorService
-): HasLogger {
+) : HasLogger {
     private val webClient: WebClient = WebClient.create()
 
-    /**
-     * Returns only those CoopSpaces where the user has access to the corresponding bucket.
-     * I.e. all they are allowed to see.
-     */
-    fun filterCoopSpacesByBucketAccess(coopSpaces: List<CoopSpace>, buckets: List<Bucket>): List<CoopSpace> {
-        return coopSpaces.filter {
-            buckets.any(fun(bucket: Bucket): Boolean {
-                return bucket.name() == "prj-${it.company?.lowercase()}-${it.name}"
-            })
-        }
+    fun getCoopSpacesWithUserAccess(coopSpaceAuthorities: List<GrantedAuthority>): List<CoopSpace> {
+        val coopSpaceNames: List<String> =
+            coopSpaceAuthorities.map { it.authority.substringAfter('-').substringBeforeLast('-') }
+        return findAll().filter { coopSpaceNames.contains(it.name) }
     }
 
     fun createCoopSpace(coopSpace: CoopSpace, creator: Member): CoopSpace {
@@ -84,8 +77,8 @@ class CoopSpaceService(
             .accept(MediaType.TEXT_PLAIN)
             .body(Mono.just(body))
             .retrieve()
-            .onStatus(HttpStatus::is4xxClientError, ::handleClientError)
-            .onStatus(HttpStatus::is5xxServerError, ::handleClientError)
+            .onStatus({ it.is4xxClientError }, ::handleClientError)
+            .onStatus({ it.is5xxServerError }, ::handleClientError)
             .bodyToMono(String::class.java)
             .block()
         // FIXME Properly handle errors
@@ -104,7 +97,12 @@ class CoopSpaceService(
 
     fun deleteCoopSpace(jwt: String, coopSpace: CoopSpace) {
         val assetsForBucket =
-            this.minioService.getAssetsForCoopspace(jwt, coopSpace.company!!.lowercase(), coopSpace.name!!, folder = "/assets")
+            this.minioService.getAssetsForCoopspace(
+                jwt,
+                coopSpace.company!!.lowercase(),
+                coopSpace.name!!,
+                folder = "/assets"
+            )
         if (assetsForBucket.isNotEmpty()) {
             throw BusinessException("Cannot delete bucket with assets inside", ErrorType.BUCKET_NOT_EMPTY)
         }
@@ -130,8 +128,8 @@ class CoopSpaceService(
             .accept(MediaType.TEXT_PLAIN)
             .body(Mono.just(body))
             .retrieve()
-            .onStatus(HttpStatus::is4xxClientError, ::handleClientError)
-            .onStatus(HttpStatus::is5xxServerError, ::handleClientError)
+            .onStatus({ it.is4xxClientError }, ::handleClientError)
+            .onStatus({ it.is5xxServerError }, ::handleClientError)
             .bodyToMono(String::class.java)
             .block()
         // FIXME Properly handle errors
@@ -142,10 +140,16 @@ class CoopSpaceService(
         return this.coopSpaceRepository.findAll()
     }
 
-    fun findCoopSpace(id: Long): CoopSpace {
+    fun findCoopSpaceById(id: Long): CoopSpace {
         return coopSpaceRepository
             .findById(id)
             .orElseThrow { BusinessException("CoopSpace with id $id does not exist.", ErrorType.NOT_FOUND) }
+    }
+
+    fun findCoopSpaceByName(name: String): CoopSpace {
+        return coopSpaceRepository
+            .findByName(name)
+            .orElseThrow { BusinessException("CoopSpace with name $name does not exist.", ErrorType.NOT_FOUND) }
     }
 
     fun removeUserFromKeycloakGroup(username: String, role: String, companyName: String, coopSpaceName: String) {
@@ -168,23 +172,18 @@ class CoopSpaceService(
      */
     fun addUsersToKeycloakGroup(memberList: List<Member> = ArrayList(), coopSpaceName: String) {
         for (member in memberList) {
-            addUserToKeycloakGroup(
-                member,
-                coopSpaceName,
-            )
+            val username = member.username ?: throw BusinessException("Member $member has no username", ErrorType.BAD_REQUEST)
+            val role = member.role ?: throw BusinessException("Member $member has no role", ErrorType.BAD_REQUEST)
+            val company = member.company ?: throw BusinessException("Member $member has no company", ErrorType.BAD_REQUEST)
+            addUserToKeycloakGroup(username, role, company, coopSpaceName)
         }
     }
 
     /**
      * add a single user to a Keycloak subgroup, this function gets called directly when changing the role of a user
      */
-    fun addUserToKeycloakGroup(member: Member, coopSpaceName: String) {
-            keycloakConnectorService.addUserToGroup(
-                member.username!!,
-                member.role!!.toString(),
-                coopSpaceName,
-                member.company!!
-            )
+    fun addUserToKeycloakGroup(username: String, role: CoopSpaceRole, company: String, coopSpaceName: String) {
+        keycloakConnectorService.addUserToGroup(username, role.toString(), coopSpaceName, company)
     }
 
     fun addUsersToDatabase(memberList: List<Member> = ArrayList(), coopSpace: CoopSpace) {
@@ -199,20 +198,11 @@ class CoopSpaceService(
     /**
      * change role in the database
      */
-    fun changeUserRoleInDatabase(member: Member, coopSpace: CoopSpace) {
-        val originalMember = coopSpace.members.find { it.username == member.username }
-            ?: throw BusinessException("originalMember not found", ErrorType.NOT_FOUND)
-
-        originalMember.role = member.role
-        originalMember.id = member.id
-
-        this.memberRepository.save(originalMember);
-    }
-
-    /**
-     * check whether a user has access to a certain coopspace by searching through its member list
-     */
-    fun hasAccessToCoopSpace(username: String, coopSpace: CoopSpace): Boolean {
-        return coopSpace.members.any { m: Member -> m.username == username }
+    fun changeUserRoleInDatabase(username: String, newRole: CoopSpaceRole, id: Long, coopSpace: CoopSpace) {
+        val member = coopSpace.members.find { it.username == username }
+            ?: throw BusinessException("Member with username $username not found in coopSpace", ErrorType.UNKNOWN)
+        member.role = newRole
+        member.id = id
+        this.memberRepository.save(member)
     }
 }

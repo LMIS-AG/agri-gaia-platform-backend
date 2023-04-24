@@ -41,6 +41,8 @@
             <option>all-open:annotation=javax.persistence.Entity</option>
             <option>all-open:annotation=javax.persistence.MappedSuperclass</option>
             <option>all-open:annotation=javax.persistence.Embeddable</option>
+<!--            TODO: This doesn't work.-->
+            <option>all-open:annotation=web.bind.annotation.RestController</option>
           </pluginOptions>
         </configuration>
         <dependencies>

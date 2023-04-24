@@ -8,23 +8,21 @@ import de.agrigaia.platform.business.errors.ErrorType
 import de.agrigaia.platform.business.keycloak.KeycloakService
 import de.agrigaia.platform.common.HasLogger
 import de.agrigaia.platform.integration.minio.MinioService
-import de.agrigaia.platform.model.coopspace.AddMemberRequest
-import de.agrigaia.platform.model.coopspace.ChangeMemberRoleRequest
-import de.agrigaia.platform.model.coopspace.CoopSpace
-import de.agrigaia.platform.model.coopspace.DeleteMemberRequest
+import de.agrigaia.platform.model.coopspace.*
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
+import org.springframework.security.access.prepost.PreAuthorize
+import org.springframework.security.core.Authentication
 import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken
 import org.springframework.web.bind.annotation.*
 import java.util.*
 
 
-// TODO Parse JWT and look for roles to see if the user has the rights for the coopspaces and buckets (local db and minio)
 @RestController
 @RequestMapping("/coopspaces")
-class CoopSpaceController @Autowired constructor(
+open class CoopSpaceController @Autowired constructor(
     private val coopSpaceService: CoopSpaceService,
     private val coopSpaceMapper: CoopSpaceMapper,
     private val minioService: MinioService,
@@ -33,164 +31,120 @@ class CoopSpaceController @Autowired constructor(
 ) : HasLogger, BaseController() {
 
     @GetMapping
-    fun getCoopSpaces(): ResponseEntity<List<CoopSpaceDto>> {
-
-        val jwtAuthenticationToken = SecurityContextHolder.getContext().authentication as JwtAuthenticationToken
-        val jwt = jwtAuthenticationToken.token.tokenValue
-
-        // Filter the list of coop spaces, only returning those for which the user has access to the associated bucket
-        val coopSpacesWithUserAccess = this.coopSpaceService.filterCoopSpacesByBucketAccess(
-            coopSpaces = this.coopSpaceService.findAll(),  // All coopSpaces.
-            buckets = this.minioService.listBuckets(jwt),  // Buckets with user access.
-        )
-
-        // Map the coop spaces to DTOs and return the result
+    open fun getCoopSpaces(authentication: Authentication): ResponseEntity<List<CoopSpaceDto>> {
+        val coopSpaceAuthorities = authentication.authorities.filter { it.authority.startsWith("coopspace-") }
+        val coopSpacesWithUserAccess = this.coopSpaceService.getCoopSpacesWithUserAccess(coopSpaceAuthorities)
         val coopSpaceDtos = this.coopSpaceMapper.mapToDtos(coopSpacesWithUserAccess)
         return ResponseEntity.ok(coopSpaceDtos)
     }
 
     @GetMapping("/companies")
-    fun getValidCompanyNames(): ResponseEntity<List<String>> {
-        val jwtAuthenticationToken = SecurityContextHolder.getContext().authentication as JwtAuthenticationToken
-        val userGroups = jwtAuthenticationToken.token.claims["usergroup"] as List<String>
-        val companyNames = userGroups.map { it.split("/")[1] }
-        return ResponseEntity.ok(companyNames.distinct())
+    open fun getValidCompanyNames(authentication: Authentication): ResponseEntity<List<String>> {
+        val validCompanyNames: List<String> = authentication.authorities
+            .map { it.authority }
+            .filter { it.contains("company-") }
+            .map { it.removePrefix("company-") }.distinct()
+        return ResponseEntity.ok(validCompanyNames)
     }
 
-    @GetMapping("{id}")
-    fun getCoopSpace(@PathVariable id: Long): ResponseEntity<CoopSpaceDto> {
-        val jwtAuthenticationToken = SecurityContextHolder.getContext().authentication as JwtAuthenticationToken
-        val username = jwtAuthenticationToken.token.claims["preferred_username"] as String
-        val coopSpace: CoopSpace = this.coopSpaceService.findCoopSpace(id)
-        val coopSpaceDto = this.coopSpaceMapper.map(coopSpace)
-
-        if (!this.coopSpaceService.hasAccessToCoopSpace(username, coopSpace)) {
-            return ResponseEntity(HttpStatus.UNAUTHORIZED)
-        }
+    // Bisschen haesslich, ich weiss.
+    @PreAuthorize("hasAnyAuthority('coopspace-'+#coopSpaceName+'-Guest', 'coopspace-'+#coopSpaceName+'-User', 'coopspace-'+#coopSpaceName+'-Admin')")
+    @GetMapping("{coopSpaceName}")
+    open fun getCoopSpaceByName(@PathVariable coopSpaceName: String): ResponseEntity<CoopSpaceDto> {
+        val coopSpace: CoopSpace = this.coopSpaceService.findCoopSpaceByName(coopSpaceName)
+        val coopSpaceDto: CoopSpaceDto = this.coopSpaceMapper.map(coopSpace)
         return ResponseEntity.ok(coopSpaceDto)
     }
 
-    @GetMapping("{id}/members")
-    fun getMembersOfCoopSpace(@PathVariable id: Long): ResponseEntity<List<MemberDto>> {
-        val jwtAuthenticationToken = SecurityContextHolder.getContext().authentication as JwtAuthenticationToken
-        val username = jwtAuthenticationToken.token.claims["preferred_username"] as String
-        val coopSpace: CoopSpace = this.coopSpaceService.findCoopSpace(id)
-
-        if (!this.coopSpaceService.hasAccessToCoopSpace(username, coopSpace)) {
-            return ResponseEntity(HttpStatus.UNAUTHORIZED)
-        }
+    @PreAuthorize("hasAnyAuthority('coopspace-'+#coopSpaceName+'-Guest', 'coopspace-'+#coopSpaceName+'-User', 'coopspace-'+#coopSpaceName+'-Admin')")
+    @GetMapping("{coopSpaceName}/members")
+    open fun getMembersOfCoopSpace(@PathVariable coopSpaceName: String): ResponseEntity<List<MemberDto>> {
+        val coopSpace: CoopSpace = this.coopSpaceService.findCoopSpaceByName(coopSpaceName)
         return ResponseEntity.ok(this.memberMapper.mapToDtos(coopSpace.members))
     }
 
     @GetMapping("/members")
-    fun getKeycloakUsers(): ResponseEntity<List<MemberDto>> {
-        // TODO: Kommentar von EBE.
-        // Arbeitsstand / Versuch Keycloak anzusprechen
-        // this.keycloakService.getUserResource("0e68593d-6604-4e7a-aa53-15b1af988c2d")
-
+    open fun getKeycloakUsers(): ResponseEntity<List<MemberDto>> {
         val jwtAuthenticationToken = SecurityContextHolder.getContext().authentication as JwtAuthenticationToken
-        val members = this.keycloakService.getKeycloakUsers().filter {
-            it.username != jwtAuthenticationToken.token.claims["preferred_username"]
-        }
-
+        val loggedInUserName: String = jwtAuthenticationToken.token.getClaimAsString("preferred_username")
+        val members = this.keycloakService.getKeycloakUsers().filter { it.username != loggedInUserName }
         val memberDtos = this.memberMapper.mapToDtos(members)
         return ResponseEntity.ok(memberDtos)
     }
 
+    @PreAuthorize("hasAuthority('company-'+#coopSpaceDto.company)")
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    fun createCoopSpace(@RequestBody coopSpaceDto: CoopSpaceDto): ResponseEntity<CoopSpaceDto> {
+    open fun createCoopSpace(@RequestBody coopSpaceDto: CoopSpaceDto): ResponseEntity<CoopSpaceDto> {
         val jwtAuthenticationToken = SecurityContextHolder.getContext().authentication as JwtAuthenticationToken
         val creator =
-            this.keycloakService.findKeycloakUserByMail(jwtAuthenticationToken.token.claims["email"] as String)
+            this.keycloakService.findKeycloakUserByMail(jwtAuthenticationToken.token.getClaimAsString("email"))
         val coopSpace: CoopSpace = coopSpaceDto.toEntity(this.coopSpaceMapper)
-        val createdCoopSpace : CoopSpace = this.coopSpaceService.createCoopSpace(coopSpace, creator)
-        val createdCoopSpaceDto = this.coopSpaceMapper.map(createdCoopSpace)
+        val createdCoopSpace: CoopSpace = this.coopSpaceService.createCoopSpace(coopSpace, creator)
+        val createdCoopSpaceDto: CoopSpaceDto = this.coopSpaceMapper.map(createdCoopSpace)
         return ResponseEntity.ok(createdCoopSpaceDto)
     }
 
-    @PostMapping("delete")
+    @PreAuthorize("hasAuthority('coopspace-'+#addMembersDto.coopSpaceName+'-Admin')")
+    @PostMapping("/addMembers")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    fun deleteCoopSpace(@RequestBody coopSpaceDto: CoopSpaceDto) {
-        val jwtAuthenticationToken = SecurityContextHolder.getContext().authentication as JwtAuthenticationToken
-        val jwt = jwtAuthenticationToken.token.tokenValue
-        val coopSpace: CoopSpace = coopSpaceDto.toEntity(this.coopSpaceMapper)
-        this.coopSpaceService.deleteCoopSpace(jwt, coopSpace)
-    }
-
-    @PostMapping("/deleteMember")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
-    fun removeUserFromCoopSpace(@RequestBody deleteMemberRequest: DeleteMemberRequest) {
-        // remove user from the CoopSpace by removing it both from the respective subgroup in Keycloak and the database
-        this.coopSpaceService.removeUserFromKeycloakGroup(
-            deleteMemberRequest.member.username!!,
-            deleteMemberRequest.member.role!!.toString(),
-            deleteMemberRequest.member.company!!,
-            deleteMemberRequest.coopSpaceName
-        )
-        this.coopSpaceService.removeUserFromDatabase(
-            deleteMemberRequest.member.id
-        )
-    }
-
-    @PostMapping("/addMember")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
-    fun addUserToCoopSpace(@RequestBody addMemberRequest: AddMemberRequest) {
-        val coopSpaceDto = this.coopSpaceMapper.map(this.coopSpaceService.findCoopSpace(addMemberRequest.coopSpaceId))
-        val coopSpace: CoopSpace = coopSpaceDto.toEntity(this.coopSpaceMapper)
-        val coopSpaceName = coopSpace.name ?: throw BusinessException("CoopSpaceName is null", ErrorType.NOT_FOUND)
+    open fun addMembersToCoopSpace(@RequestBody addMembersDto: AddMembersDto) {
+        val coopSpaceName =
+            addMembersDto.coopSpaceName ?: throw BusinessException("coopSpaceName is null", ErrorType.BAD_REQUEST)
+        val memberList =
+            addMembersDto.memberList ?: throw BusinessException("memberList is null", ErrorType.BAD_REQUEST)
+        // This maps the CoopSpace to a CoopSpaceDto and back to a CoopSpace, i.e. inelegantly creates a copy.
+        val coopSpace: CoopSpace = this.coopSpaceMapper.map(this.coopSpaceService.findCoopSpaceByName(coopSpaceName))
+            .toEntity(this.coopSpaceMapper)
 
         // add user to the CoopSpace by adding it both to the respective subgroup in Keycloak and the database
-        this.coopSpaceService.addUsersToKeycloakGroup(
-                addMemberRequest.member,
-                coopSpaceName
-        )
-        this.coopSpaceService.addUsersToDatabase(
-            addMemberRequest.member,
-            coopSpace
-        )
+        this.coopSpaceService.addUsersToKeycloakGroup(memberList, coopSpaceName)
+        this.coopSpaceService.addUsersToDatabase(memberList, coopSpace)
     }
+
+    /*
+    Change member role in coopspace by removing/adding to keycloak groups and updating the database.
+     */
+    @PreAuthorize("hasAuthority('coopspace-'+#changeMemberRoleDto.coopSpaceName+'-Admin')")
     @PostMapping("/changeMemberRole")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    fun changeMemberRoleInCoopSpace(@RequestBody changeMemberRoleRequest: ChangeMemberRoleRequest) {
-        val coopSpaceDto = this.coopSpaceMapper.map(this.coopSpaceService.findCoopSpace(changeMemberRoleRequest.coopSpaceId))
-        val coopSpace: CoopSpace = coopSpaceDto.toEntity(this.coopSpaceMapper)
-        val coopSpaceName = coopSpace.name ?: throw BusinessException("CoopSpaceName is null", ErrorType.NOT_FOUND)
+    open fun changeMemberRole(@RequestBody changeMemberRoleDto: ChangeMemberRoleDto) {
+        val username =
+            changeMemberRoleDto.username ?: throw BusinessException("No username given", ErrorType.BAD_REQUEST)
+        val id = changeMemberRoleDto.id ?: throw BusinessException("No member.id given", ErrorType.BAD_REQUEST)
+        val oldRole =
+            changeMemberRoleDto.oldRole ?: throw BusinessException("No originalRole given", ErrorType.BAD_REQUEST)
+        val newRole = changeMemberRoleDto.newRole ?: throw BusinessException("No role given", ErrorType.BAD_REQUEST)
+        val coopSpaceName = changeMemberRoleDto.coopSpaceName ?: throw BusinessException(
+            "No coopSpaceName given",
+            ErrorType.BAD_REQUEST
+        )
+        val company =
+            changeMemberRoleDto.company ?: throw BusinessException("No member.company given", ErrorType.BAD_REQUEST)
+        val coopSpace: CoopSpace = this.coopSpaceService.findCoopSpaceByName(coopSpaceName)
 
-        // change role of the user by removing it from its respective Keycloak subgroup (e.g. "...-User"), adding it to another subgroup (e.g. "...-Admin") and
-        // update his role in the database by updating the CoopSpace
-
-        this.coopSpaceService.removeUserFromKeycloakGroup(
-            changeMemberRoleRequest.member.username!!,
-            changeMemberRoleRequest.originalRole,
-            changeMemberRoleRequest.member.company!!,
-            coopSpaceName,
-        )
-        this.coopSpaceService.addUserToKeycloakGroup(
-            changeMemberRoleRequest.member,
-            coopSpaceName
-        )
-        this.coopSpaceService.changeUserRoleInDatabase(
-            changeMemberRoleRequest.member,
-            coopSpace
-        )
+        this.coopSpaceService.removeUserFromKeycloakGroup(username, oldRole, company, coopSpaceName)
+        this.coopSpaceService.addUserToKeycloakGroup(username, newRole, company, coopSpaceName)
+        this.coopSpaceService.changeUserRoleInDatabase(username, newRole, id, coopSpace)
 
     }
 
-    @GetMapping("{id}/{base64encodedFolderName}")
-    fun getAssetsForCoopSpace(@PathVariable id: Long, @PathVariable base64encodedFolderName: String): ResponseEntity<Any> {
-        val coopSpace = this.coopSpaceService.findCoopSpace(id)
-        val company = coopSpace.company?.lowercase()
-        val bucketName = coopSpace.name!!
+    @PreAuthorize("hasAnyAuthority('coopspace-'+#coopSpaceName+'-Guest', 'coopspace-'+#coopSpaceName+'-User', 'coopspace-'+#coopSpaceName+'-Admin')")
+    @GetMapping("{coopSpaceName}/{base64encodedFolderName}")
+    open fun getAssetsForCoopSpace(
+        @PathVariable coopSpaceName: String,
+        @PathVariable base64encodedFolderName: String
+    ): ResponseEntity<Any> {
+        val coopSpace = this.coopSpaceService.findCoopSpaceByName(coopSpaceName)
+        val company = coopSpace.company?.lowercase() ?: throw BusinessException("Company was null", ErrorType.NOT_FOUND)
+        val bucketName = coopSpace.name ?: throw BusinessException("BucketName was null", ErrorType.NOT_FOUND)
         val jwtAuthenticationToken = SecurityContextHolder.getContext().authentication as JwtAuthenticationToken
         val jwt = jwtAuthenticationToken.token.tokenValue
-        var folder = "/"
-        if (base64encodedFolderName != "default") {
-            folder = String(Base64.getDecoder().decode(base64encodedFolderName))
-        }
+        val folder = if (base64encodedFolderName == "default") "/" else
+            String(Base64.getDecoder().decode(base64encodedFolderName))
         return try {
             val assetsForBucket =
-                this.minioService.getAssetsForCoopspace(jwt, company!!, bucketName, folder).map { it.get() }.map {
+                this.minioService.getAssetsForCoopspace(jwt, company, bucketName, folder).map { it.get() }.map {
                     AssetDto(
                         it.objectName(),
                         it.lastModified().toString(),
@@ -198,7 +152,8 @@ class CoopSpaceController @Autowired constructor(
                         it.size().toString(),
                         "label",
                         bucketName,
-                    isPublished = false)
+                        isPublished = false
+                    )
                 }
             ResponseEntity.ok(assetsForBucket)
         } catch (e: Exception) {
@@ -207,8 +162,38 @@ class CoopSpaceController @Autowired constructor(
     }
 
     @GetMapping("existsbyname/{name}")
-    fun checkIfCoopSpaceAlreadyExistsByName(@PathVariable name: String): ResponseEntity<Boolean> {
+    open fun checkIfCoopSpaceAlreadyExistsByName(@PathVariable name: String): ResponseEntity<Boolean> {
         return ResponseEntity.ok(this.minioService.bucketExists(name))
+    }
+
+    // TODO: This should be a @DeleteMapping and only require an id.
+    @PreAuthorize("hasAuthority('coopspace-' + #coopSpaceDto.name + '-Admin')")
+    @PostMapping("delete")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    open fun deleteCoopSpace(@RequestBody coopSpaceDto: CoopSpaceDto) {
+        val jwtAuthenticationToken = SecurityContextHolder.getContext().authentication as JwtAuthenticationToken
+        val jwt = jwtAuthenticationToken.token.tokenValue
+        val coopSpace: CoopSpace = coopSpaceDto.toEntity(this.coopSpaceMapper)
+        this.coopSpaceService.deleteCoopSpace(jwt, coopSpace)
+    }
+
+    // TODO: This should be a @DeleteMapping.
+    /* Remove user from the CoopSpace by removing it both from the subgroup in Keycloak and the database. */
+    @PreAuthorize("hasAuthority('coopspace-' + #deleteMemberDto.coopSpaceName + '-Admin')")
+    @PostMapping("/deleteMember")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    open fun removeUserFromCoopSpace(@RequestBody deleteMemberDto: DeleteMemberDto) {
+        val username: String =
+            deleteMemberDto.member?.username ?: throw BusinessException("Username was null.", ErrorType.NOT_FOUND)
+        val role: String = deleteMemberDto.member?.role.toString()
+        val company: String =
+            deleteMemberDto.member?.company ?: throw BusinessException("Company was null.", ErrorType.NOT_FOUND)
+        val coopSpaceName: String =
+            deleteMemberDto.coopSpaceName ?: throw BusinessException("CoopSpaceName was null", ErrorType.NOT_FOUND)
+        val id: Long = deleteMemberDto.member?.id ?: throw BusinessException("ID was null", ErrorType.NOT_FOUND)
+
+        this.coopSpaceService.removeUserFromKeycloakGroup(username, role, company, coopSpaceName)
+        this.coopSpaceService.removeUserFromDatabase(id)
     }
 }
 

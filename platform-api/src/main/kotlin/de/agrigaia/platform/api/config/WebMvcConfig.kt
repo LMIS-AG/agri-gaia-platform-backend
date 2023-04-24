@@ -8,8 +8,10 @@ import org.springframework.context.annotation.Configuration
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpMethod
 import org.springframework.security.authentication.AbstractAuthenticationToken
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity
 import org.springframework.security.config.annotation.web.builders.HttpSecurity
 import org.springframework.security.config.http.SessionCreationPolicy
+import org.springframework.security.core.authority.SimpleGrantedAuthority
 import org.springframework.security.oauth2.jwt.Jwt
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken
 import org.springframework.security.web.SecurityFilterChain
@@ -17,19 +19,23 @@ import org.springframework.web.servlet.config.annotation.CorsRegistry
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer
 
 @Configuration
-open class WebSecurityConfig @Autowired constructor(private val applicationProperties: ApplicationProperties) : WebMvcConfigurer, HasLogger {
+@EnableMethodSecurity
+open class WebMvcConfig @Autowired constructor(private val applicationProperties: ApplicationProperties) :
+    WebMvcConfigurer, HasLogger {
 
-private val log = getLogger()
+    /*
+    Called once on application startup.
+     */
     @Bean
     open fun filterChain(http: HttpSecurity): SecurityFilterChain {
 
-        this.log.debug("Start filterChain")
+        this.getLogger().debug("Start filterChain")
 
         http.csrf().disable()
             .cors()
             .and()
 
-            .authorizeRequests()
+            .authorizeHttpRequests()
             .anyRequest().authenticated()
             .and()
 
@@ -41,7 +47,7 @@ private val log = getLogger()
             .jwt()
             .jwtAuthenticationConverter(this::extractAuthorities)
 
-        this.log.debug("End filterChain")
+        this.getLogger().debug("End filterChain")
 
         return http.build()
     }
@@ -49,31 +55,31 @@ private val log = getLogger()
     override fun addCorsMappings(registry: CorsRegistry) {
         registry.addMapping("/**")
             .allowedMethods(
-                HttpMethod.GET.name,
-                HttpMethod.POST.name,
-                HttpMethod.DELETE.name,
-                HttpMethod.PUT.name
+                HttpMethod.GET.name(),
+                HttpMethod.POST.name(),
+                HttpMethod.DELETE.name(),
+                HttpMethod.PUT.name()
             )
             .allowedOrigins(*this.applicationProperties.allowedOrigins)
             .exposedHeaders(HttpHeaders.LOCATION)
     }
 
     /**
-     * Extracts the groups from the JWT. Hierarchical subgroups are currently seperated by an underscore
+     * Extracts the KC groups from the JWT.
+     * Called with every incoming http request.
      */
     open fun extractAuthorities(jwt: Jwt): AbstractAuthenticationToken {
+        val userGroups = jwt.getClaim<List<String>>("usergroup")
 
-        this.log.debug("Trying to extract authorities")
-
-        /*val groups: List<String> = jwt.getClaim("groups")
-        val authorities = groups
-            .map { role: String -> "GROUP_" + role.removeRange(0,1).replace("/", "_").uppercase(Locale.getDefault()) }
-            .map { role: String? -> SimpleGrantedAuthority(role) }
-            .toList()*/
-        this.log.debug("DONE extracting authorities; authorities = hardcoded null")
-        val authorities = null // TODO adjust when keycloak roles and groups are configured
-
-        //this.log.debug("DONE extracting authorities")
+        val companyAuthorities  = userGroups
+            .map { it.split("/")[1] }
+            .map { role -> SimpleGrantedAuthority("company-$role") }
+            .distinct()
+        val coopSpaceAuthorities = userGroups
+            .filter { it.contains("Projects") }
+            .map { it.substringAfterLast("/") }
+            .map { role -> SimpleGrantedAuthority("coopspace-$role") }
+        val authorities = companyAuthorities + coopSpaceAuthorities
 
         return JwtAuthenticationToken(jwt, authorities)
     }

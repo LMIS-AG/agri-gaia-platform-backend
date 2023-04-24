@@ -1,7 +1,7 @@
 package de.agrigaia.platform.model.edc
 
 import de.agrigaia.platform.model.BaseEntity
-import javax.persistence.Entity
+import jakarta.persistence.Entity
 
 
 @Entity

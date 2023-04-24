@@ -1,15 +1,14 @@
 package de.agrigaia.platform.integration.fuseki
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import org.springframework.web.reactive.function.client.ClientResponse
-import reactor.core.publisher.Mono
 import de.agrigaia.platform.common.HasLogger
-import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
 import org.springframework.stereotype.Service
 import org.springframework.util.LinkedMultiValueMap
 import org.springframework.web.reactive.function.BodyInserters
+import org.springframework.web.reactive.function.client.ClientResponse
 import org.springframework.web.reactive.function.client.WebClient
+import reactor.core.publisher.Mono
 
 @Service
 class FusekiConnectorService (
@@ -32,7 +31,8 @@ class FusekiConnectorService (
                 Filter(LCASE(STR(?obj))=LCASE('${keyword}'))
             } LIMIT 10
        """.trimIndent()
-        return sendRequest(query, fusekiProperties.agrovocURL)
+        val agrovocUrl = fusekiProperties.agrovocUrl ?: throw Exception("No agrovoc URL found.")
+        return sendRequest(query, agrovocUrl)
     }
 
     private fun getConceptUriFromLabelUri(labelUri: String): String {
@@ -48,7 +48,8 @@ class FusekiConnectorService (
              }
            } LIMIT 10
        """.trimIndent()
-        return sendRequest(query, fusekiProperties.agrovocURL)
+        val agrovocUrl = fusekiProperties.agrovocUrl ?: throw Exception("No agrovoc URL found.")
+        return sendRequest(query, agrovocUrl)
     }
 
     fun getUriFromCoordinates(latitude: String, longitude: String): String {
@@ -62,11 +63,12 @@ class FusekiConnectorService (
                 ?sub geo:long '${longitude}' .
             } LIMIT 10
        """.trimIndent()
-        return sendRequest(query, fusekiProperties.geonamesURL)
+        val geonamesUrl = fusekiProperties.geonamesUrl ?: throw Exception("No geonames URL found.")
+        return sendRequest(query, geonamesUrl)
     }
 
 
-    private fun sendRequest(query: String, endpoint: String?): String {
+    private fun sendRequest(query: String, endpoint: String): String {
         val body = LinkedMultiValueMap<String, String>()
         body.add("query", query)
 
@@ -77,8 +79,8 @@ class FusekiConnectorService (
 
         val response: String = request
             .retrieve()
-            .onStatus(HttpStatus::is4xxClientError, ::handleClientError)
-            .onStatus(HttpStatus::is5xxServerError, ::handleServerError)
+            .onStatus({ it.is4xxClientError }, ::handleClientError)
+            .onStatus({ it.is5xxServerError }, ::handleServerError)
             .bodyToMono(String::class.java)
             .block() ?: throw Exception("Response from $endpoint was null.")
 
