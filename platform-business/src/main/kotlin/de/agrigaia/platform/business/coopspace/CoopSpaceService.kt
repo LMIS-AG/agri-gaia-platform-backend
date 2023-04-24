@@ -198,10 +198,10 @@ class CoopSpaceService(
     /**
      * change role in the database
      */
-    fun changeUserRoleInDatabase(username: String, role: CoopSpaceRole, id: Long, coopSpace: CoopSpace) {
+    fun changeUserRoleInDatabase(username: String, newRole: CoopSpaceRole, id: Long, coopSpace: CoopSpace) {
         val member = coopSpace.members.find { it.username == username }
             ?: throw BusinessException("Member with username $username not found in coopSpace", ErrorType.UNKNOWN)
-        member.role = role
+        member.role = newRole
         member.id = id
         this.memberRepository.save(member)
     }
