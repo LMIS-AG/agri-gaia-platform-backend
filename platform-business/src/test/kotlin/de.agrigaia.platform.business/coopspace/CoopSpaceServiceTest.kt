@@ -73,25 +73,29 @@ class CoopSpaceServiceTest {
     fun `Test changeUserRoleInDatabase`() {
         every { memberRepository.save(any()) } returns Member()
         val matchingUserName = "Some Holy User Name"
+        val oldRole = CoopSpaceRole.USER
+        val newRole = CoopSpaceRole.GUEST
 
         // Throw BusinessException(ErrorType.NOT_FOUND) if Member with matching `username` is not in CoopSpace.
-        val memberlessCoopspace = CoopSpace(members = listOf())
-        val passedMember = Member(
+        val emptyCoopSpace = CoopSpace(members = listOf())
+        val originalMember = Member(
             username = matchingUserName,
-            role = CoopSpaceRole.USER,
+            role = oldRole,
         )
-        passedMember.id = 43
+        originalMember.id = 43
         val exception =
             assertThrows<BusinessException>("Should throw `BusinessException` if no matching user is found.") {
                 coopSpaceService.changeUserRoleInDatabase(
-                    passedMember,
-                    memberlessCoopspace
+                    originalMember.username!!,
+                    newRole,
+                    originalMember.id,
+                    emptyCoopSpace,
                 )
             }
         assertEquals(
             exception.errorCode,
-            ErrorType.NOT_FOUND,
-            "Should have thrown BusinessException of type `NOT_FOUND`."
+            ErrorType.UNKNOWN,
+            "Should have thrown BusinessException of type `UNKNOWN`."
         )
 
         // Call memberRepository.save(), passing member object with field values from Member in CoopSpace, except `role` and `id`, which should have the value of the passed Member parameter.
@@ -100,8 +104,8 @@ class CoopSpaceServiceTest {
             name = "Some Name",
             company = "someCompany",
             email = "someEmail",
-            role = CoopSpaceRole.GUEST,
-            username = matchingUserName
+            role = oldRole,
+            username = matchingUserName,
         )
         coopSpaceMember.id = 42
         val dummyCoopSpace = CoopSpace(members = listOf(coopSpaceMember))
@@ -111,11 +115,11 @@ class CoopSpaceServiceTest {
             name = coopSpaceMember.name,
             company = coopSpaceMember.company,
             email = coopSpaceMember.email,
-            role = passedMember.role,
+            role = newRole,
             username = matchingUserName
         )
-        expectedSavedMember.id = passedMember.id
-        coopSpaceService.changeUserRoleInDatabase(passedMember, dummyCoopSpace)
+        expectedSavedMember.id = originalMember.id
+        coopSpaceService.changeUserRoleInDatabase(originalMember.username!!, newRole, originalMember.id, dummyCoopSpace)
         verify {
             memberRepository.save(match { actualSavedMember ->
                 actualSavedMember.name == expectedSavedMember.name &&
