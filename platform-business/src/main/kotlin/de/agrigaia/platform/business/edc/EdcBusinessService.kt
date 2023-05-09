@@ -105,40 +105,6 @@ class EdcBusinessService(
             }"""
     }
 
-    fun createPolicyJson(target: String, policyUUID: String): String = """{
-  "uid": "use-eu",
-  "id": "$policyUUID",
-  "policy": {
-    "permissions": [
-      {
-        "edctype": "dataspaceconnector:permission",
-        "uid": null,
-        "target": "$target",
-        "action": {
-          "type": "USE",
-          "includedIn": null,
-          "constraint": null
-        },
-        "assignee": null,
-        "assigner": null,
-        "constraints": [],
-        "duties": []
-      }
-    ],
-    "prohibitions": [],
-    "obligations": [],
-    "extensibleProperties": {},
-    "inheritsFrom": null,
-    "assigner": null,
-    "assignee": null,
-    "target": "",
-    "type": {
-      "type": "set"
-    }
-  }
-}
-    """
-
     fun createContractDefinitionJson(assetId: String, policyUUID: String, catalogUUID: String): String = """{
   "accessPolicyId": "$policyUUID",
   "contractPolicyId": "$policyUUID",
