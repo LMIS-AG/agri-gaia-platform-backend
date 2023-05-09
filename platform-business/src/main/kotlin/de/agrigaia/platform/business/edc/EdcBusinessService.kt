@@ -1,5 +1,7 @@
 package de.agrigaia.platform.business.edc
 
+import de.agrigaia.platform.business.errors.BusinessException
+import de.agrigaia.platform.business.errors.ErrorType
 import de.agrigaia.platform.integration.fuseki.FusekiConnectorService
 import de.agrigaia.platform.integration.minio.MinioService
 import io.minio.messages.Item
@@ -118,4 +120,13 @@ class EdcBusinessService(
   ]
 }
     """
+
+    /**
+     * Extract UUID from policy JSON.
+     */
+    fun extractUUIDfromPolicy(policyJson: String): String {
+        val uuidLine: String = policyJson.lines().firstOrNull { it.contains("\"id\": ") }
+            ?: throw BusinessException("Could not extract id from policy.", ErrorType.UNKNOWN)
+        return uuidLine.substringBeforeLast("\"").substringAfterLast("\"")
+    }
 }

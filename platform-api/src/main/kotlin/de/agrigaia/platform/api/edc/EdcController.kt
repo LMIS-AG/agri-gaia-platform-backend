@@ -53,13 +53,13 @@ class EdcController @Autowired constructor(
             assetJsonDto.dataAddressKeyName
         )
 
-        val policyUUID = UUID.randomUUID().toString()
-        val contractUUID = UUID.randomUUID().toString()
-
+//        val policyUUID = UUID.randomUUID().toString()
         val jwtAuthenticationToken = SecurityContextHolder.getContext().authentication as JwtAuthenticationToken
         val jwt = jwtAuthenticationToken.token.tokenValue
 
         val policyJson: String = this.edcBusinessService.getPolicy(jwt, bucketName, policyName, assetName)
+        val policyUUID: String = this.edcBusinessService.extractUUIDfromPolicy(policyJson)
+        val contractUUID = UUID.randomUUID().toString()
         val contractDefinitionJson =
             edcBusinessService.createContractDefinitionJson(assetPropId, policyUUID, contractUUID)
 
