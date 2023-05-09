@@ -108,7 +108,7 @@ class EdcController @Autowired constructor(
      * @return TODO
      */
     @PostMapping("policies/{bucketName}/{policyName}")
-    fun savePolicy(@PathVariable policyName: String, @RequestBody policyJson: String) {
+    fun savePolicy(@PathVariable bucketName: String, @PathVariable policyName: String, @RequestBody policyJson: String) {
         TODO("Not yet implemented")
     }
 
