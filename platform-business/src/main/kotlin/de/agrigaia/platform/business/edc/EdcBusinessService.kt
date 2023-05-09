@@ -5,26 +5,55 @@ import de.agrigaia.platform.integration.minio.MinioService
 import io.minio.messages.Item
 import org.springframework.stereotype.Service
 
+/**
+ * Service for EDC related actions not communicating with EDC directly.
+ */
 @Service
 class EdcBusinessService(
     private val fusekiConnectorService: FusekiConnectorService,
     private val minioService: MinioService,
 ) {
 
+    /**
+     * Return all policy `Item`s in a MinIO bucket.
+     * @param jwt JSON web token
+     * @param bucketName name of MinIO bucket
+     * @return List of policy `Item` objects.
+     */
     private fun getPolicyItems(jwt: String, bucketName: String): List<Item> {
         return this.minioService.getAssetsForBucket(jwt, bucketName, "policies").map { it.get() }
     }
 
+    /**
+     * Get names of policies in a MinIO bucket.
+     * @param jwt JSON web token
+     * @param bucketName name of MinIO bucket
+     * @return List of strings of policy names in MinIO bucket.
+     */
     fun getPolicyNames(jwt: String, bucketName: String): List<String> {
         return this.getPolicyItems(jwt, bucketName)
             .map { it.objectName().removePrefix("policies/").removeSuffix(".json") }
     }
 
+    /**
+     * Get policy from MinIO bucket with correct values for asset.
+     * @param jwt JSON web token
+     * @param bucketName name of MinIO bucket
+     * @param policyName name of policy
+     * @param assetName name of asset
+     * @return String containing the policy JSON with correct field values for asset.
+     */
     fun getPolicy(jwt: String, bucketName: String, policyName: String, assetName: String): String {
         val policyTemplate: String = this.minioService.getFileContent(jwt, bucketName, "policies/$policyName.json")
         return preparePolicyTemplate(policyTemplate, assetName)
     }
 
+    /**
+     * Substitute correct target value in policy template.
+     * @param policyTemplate policy JSON from MinIO with placeholder values
+     * @param target value to set target field to
+     * @return String containing the policy JSON with correct field values for asset.
+     */
     private fun preparePolicyTemplate(policyTemplate: String, target: String): String {
         return policyTemplate.replace("<TARGET>", target)
     }

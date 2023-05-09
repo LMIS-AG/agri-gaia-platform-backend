@@ -8,6 +8,9 @@ import org.springframework.web.reactive.function.client.WebClient
 import org.springframework.web.reactive.function.client.body
 import reactor.core.publisher.Mono
 
+/**
+ * Service communicating with EDC directly.
+ */
 @Service
 class EdcIntegrationService : HasLogger {
     private val webClient: WebClient = WebClient.create()
