@@ -25,11 +25,12 @@ class EdcController @Autowired constructor(
 ) : HasLogger, BaseController() {
 
 
-    @PostMapping("publish/{bucketName}/{assetName}")
+    @PostMapping("publish/{bucketName}/{assetName}/{policyName}")
     @ResponseStatus(HttpStatus.CREATED)
     fun publishAsset(
         @PathVariable bucketName: String,
         @PathVariable assetName: String,
+        @PathVariable policyName: String,
         @RequestBody assetJsonDto: AssetJsonDto,
     ) {
         val assetPropName: String =
@@ -55,7 +56,10 @@ class EdcController @Autowired constructor(
         val policyUUID = UUID.randomUUID().toString()
         val contractUUID = UUID.randomUUID().toString()
 
-        val policyJson = edcBusinessService.createPolicyJson(assetName, policyUUID)
+        val jwtAuthenticationToken = SecurityContextHolder.getContext().authentication as JwtAuthenticationToken
+        val jwt = jwtAuthenticationToken.token.tokenValue
+
+        val policyJson: String = this.edcBusinessService.getPolicy(jwt, bucketName, policyName, assetName)
         val contractDefinitionJson =
             edcBusinessService.createContractDefinitionJson(assetPropId, policyUUID, contractUUID)
 
