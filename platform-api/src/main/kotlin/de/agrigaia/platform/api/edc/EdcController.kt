@@ -73,15 +73,18 @@ class EdcController @Autowired constructor(
     @ResponseStatus(HttpStatus.NO_CONTENT)
     fun unpublishAsset(@PathVariable bucketName: String, @PathVariable assetName: String) {
 
-        val asset = assetRepository.findByBucketAndName(bucketName, assetName)
+        val asset: Asset = assetRepository.findByBucketAndName(bucketName, assetName)
+            ?: throw BusinessException("Asset was null", ErrorType.BAD_REQUEST)
 
-        val assetId = asset?.assetId
-        val policyId = asset?.policyId
-        val contractId = asset?.contractId
+        val assetId = asset.assetId
+            ?: throw BusinessException("assetId was null", ErrorType.BAD_REQUEST)
+        val policyId = asset.policyId
+            ?: throw BusinessException("policyId was null", ErrorType.BAD_REQUEST)
+        val contractId = asset.contractId
+            ?: throw BusinessException("contractId was null", ErrorType.BAD_REQUEST)
 
         assetRepository.delete(asset)
-        this.edcConnectorService.unpublishAsset(assetId!!, policyId!!, contractId!!)
-
+        this.edcConnectorService.unpublishAsset(assetId, policyId, contractId)
     }
 
 
