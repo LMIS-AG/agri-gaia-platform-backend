@@ -1,10 +1,24 @@
 package de.agrigaia.platform.business.edc
 
 import de.agrigaia.platform.integration.fuseki.FusekiConnectorService
+import de.agrigaia.platform.integration.minio.MinioService
+import io.minio.messages.Item
 import org.springframework.stereotype.Service
 
 @Service
-class EdcService(private val fusekiConnectorService: FusekiConnectorService) {
+class EdcService(
+    private val fusekiConnectorService: FusekiConnectorService,
+    private val minioService: MinioService,
+) {
+
+    private fun getPolicyItems(jwt: String, bucketName: String): List<Item> {
+        return this.minioService.getAssetsForBucket(jwt, bucketName, "policies").map { it.get() }
+    }
+
+    fun getPolicyNames(jwt: String, bucketName: String): List<String> {
+        return this.getPolicyItems(jwt, bucketName).map { it.objectName().removePrefix("policies/").removeSuffix(".json") }
+    }
+
     fun createAssetJson(
         assetPropName: String,
         assetPropId: String,
@@ -30,13 +44,13 @@ class EdcService(private val fusekiConnectorService: FusekiConnectorService) {
                 "properties": {
                   "asset:prop:name": "$assetPropName",
                   "asset:prop:byteSize": null,
-                  "asset:prop:description": "${assetPropDescription?:""}",
-                  "asset:prop:contenttype": "${assetPropContentType?:""}",
-                  "asset:prop:version": "${assetPropVersion?:""}",
+                  "asset:prop:description": "${assetPropDescription ?: ""}",
+                  "asset:prop:contenttype": "${assetPropContentType ?: ""}",
+                  "asset:prop:version": "${assetPropVersion ?: ""}",
                   "asset:prop:id": "$assetPropId",
-                  "theme": ${agrovocKeywords?.map { w -> "\"${this.fusekiConnectorService.getConceptUriFromKeyword(w)}\""}},
+                  "theme": ${agrovocKeywords?.map { w -> "\"${this.fusekiConnectorService.getConceptUriFromKeyword(w)}\"" }},
                   "spatial": ${spatial},
-                  "temporal": "${dateRange?:""}"
+                  "temporal": "${dateRange ?: ""}"
                 },
                 "id": "$assetPropId"
               },
@@ -46,7 +60,7 @@ class EdcService(private val fusekiConnectorService: FusekiConnectorService) {
                   "region": "us-east-1",
                   "bucketName": "$bucketName",
                   "assetName": "$assetName",
-                  "keyName": "${dataAddressKeyName?:""}"
+                  "keyName": "${dataAddressKeyName ?: ""}"
                 }
               }
             }"""
@@ -85,6 +99,7 @@ class EdcService(private val fusekiConnectorService: FusekiConnectorService) {
   }
 }
     """
+
     fun createContractDefinitionJson(assetId: String, policyUUID: String, catalogUUID: String): String = """{
   "accessPolicyId": "$policyUUID",
   "contractPolicyId": "$policyUUID",

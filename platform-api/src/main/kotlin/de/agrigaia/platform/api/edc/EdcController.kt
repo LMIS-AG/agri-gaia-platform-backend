@@ -6,7 +6,6 @@ import de.agrigaia.platform.business.errors.BusinessException
 import de.agrigaia.platform.business.errors.ErrorType
 import de.agrigaia.platform.common.HasLogger
 import de.agrigaia.platform.integration.edc.EdcConnectorService
-import de.agrigaia.platform.integration.minio.MinioService
 import de.agrigaia.platform.model.edc.Asset
 import de.agrigaia.platform.persistence.repository.AssetRepository
 import org.springframework.beans.factory.annotation.Autowired
@@ -23,7 +22,6 @@ class EdcController @Autowired constructor(
     private val businessEdcService: EdcService,
     private val edcConnectorService: EdcConnectorService,
     private val assetRepository: AssetRepository,
-    private val minioService: MinioService,
 ) : HasLogger, BaseController() {
 
 
@@ -103,8 +101,7 @@ class EdcController @Autowired constructor(
     fun getPolicyNames(@PathVariable bucketName: String): ResponseEntity<List<String>> {
         val jwtAuthenticationToken = SecurityContextHolder.getContext().authentication as JwtAuthenticationToken
         val jwt = jwtAuthenticationToken.token.tokenValue
-        val policyNames: List<String> = this.minioService.getAssetsForBucket(jwt, bucketName, "policies")
-            .map { it.get().objectName().removePrefix("policies/").removeSuffix(".json") }
+        val policyNames: List<String> = this.businessEdcService.getPolicyNames(jwt, bucketName)
         return ResponseEntity.ok(policyNames)
     }
 
