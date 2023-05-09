@@ -31,7 +31,7 @@ class BucketController @Autowired constructor(
     fun getBuckets(): ResponseEntity<List<BucketDto>> {
         val jwtAuthenticationToken = SecurityContextHolder.getContext().authentication as JwtAuthenticationToken
         val jwt = jwtAuthenticationToken.token.tokenValue
-        val buckets = minioService.listBuckets(jwt)
+        val buckets = minioService.listAllBuckets(jwt)
 
         val bucketDtos: MutableList<BucketDto> = buckets
             .filter { !it.name().startsWith("prj-") }
@@ -43,20 +43,20 @@ class BucketController @Autowired constructor(
     /*
     Returns assets in a given MinIO bucket. Currently returns empty list if bucket empty and 204 if user has no access.
      */
-    @GetMapping("{bucket}/{base64encodedFolderName}")
-    fun getBucketAssets(
-        @PathVariable bucket: String,
-        @PathVariable base64encodedFolderName: String
+    @GetMapping("{bucketName}/{base64encodedDirectoryName}")
+    fun getBucketAssetsInDirectory(
+        @PathVariable bucketName: String,
+        @PathVariable base64encodedDirectoryName: String
     ): ResponseEntity<List<AssetDto>> {
         val jwtAuthenticationToken = SecurityContextHolder.getContext().authentication as JwtAuthenticationToken
         val jwt = jwtAuthenticationToken.token.tokenValue
-        val folder = String(Base64.getDecoder().decode(base64encodedFolderName))
+        val folder = String(Base64.getDecoder().decode(base64encodedDirectoryName))
 
         // TODO: `minioService.getPublishableAssetsForBucket()` returns a non-nullable list.
         //  This should check if the `assetsForBucket` list is empty and, if so, return 204.
         //  If user has no access, return 403.
         try {
-            val assetsForBucket = this.minioService.getPublishableAssetsForBucket(jwt, bucket, folder)
+            val assetsForBucket = this.minioService.getAssetsForBucket(jwt, bucketName, folder)
                 .map { it.get() }
                 .map { asset ->
                     AssetDto(
@@ -65,8 +65,8 @@ class BucketController @Autowired constructor(
                         asset.lastModified().toString(),
                         asset.size().toString(),
                         "label",
-                        bucket,
-                        isPublished(bucket, asset.objectName().replace("assets/", ""))
+                        bucketName,
+                        isPublished(bucketName, asset.objectName().replace("assets/", ""))
                     )
                 }
             return ResponseEntity.ok(assetsForBucket)

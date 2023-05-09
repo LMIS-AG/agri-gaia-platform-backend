@@ -5,6 +5,7 @@ import io.minio.*
 import io.minio.credentials.Jwt
 import io.minio.credentials.WebIdentityProvider
 import io.minio.messages.*
+import jakarta.servlet.http.HttpServletResponse
 import org.apache.logging.log4j.LogManager.getLogger
 import org.jsoup.Jsoup
 import org.springframework.http.MediaType
@@ -18,8 +19,6 @@ import reactor.core.publisher.Mono
 import java.io.*
 import java.util.zip.ZipEntry
 import java.util.zip.ZipOutputStream
-import jakarta.servlet.http.HttpServletResponse
-import java.io.ByteArrayInputStream
 
 
 // TODO: Many of these need error handling.
@@ -27,16 +26,19 @@ import java.io.ByteArrayInputStream
 class MinioService(
     private val minioProperties: MinioProperties,
 ) {
-    fun listBuckets(jwt: String): MutableList<Bucket> {
+    fun listAllBuckets(jwt: String): MutableList<Bucket> {
         val minioClient = getMinioClient(jwt)
 
         return minioClient.listBuckets()
     }
 
-    fun bucketExists(name: String): Boolean {
+    /**
+     * Returns true if bucket `bucketName` exists in MinIO, false if not.
+     */
+    fun bucketExists(bucketName: String): Boolean {
         val minioClient = this.getMinioClientForTechnicalUser()
 
-        return minioClient.bucketExists(BucketExistsArgs.builder().bucket(name).build())
+        return minioClient.bucketExists(BucketExistsArgs.builder().bucket(bucketName).build())
     }
 
     fun getAssetsForCoopspace(jwt: String, company: String, bucketName: String, folder: String): List<Result<Item>> {
@@ -51,15 +53,19 @@ class MinioService(
         return minioClient.listObjects(bucketArgs).toList()
     }
 
-    fun getPublishableAssetsForBucket(jwt: String, bucketName: String, folder: String): List<Result<Item>> {
+    /**
+     * Returns list of assets (`Item`s) in a MinIObucket.
+     * @param jwt JSON web token
+     * @param bucketName name of MinIO bucket
+     * @param bucketDirectory if given, return only assets in this subdirectory
+     */
+    fun getAssetsForBucket(jwt: String, bucketName: String, bucketDirectory: String?): List<Result<Item>> {
         val minioClient = this.getMinioClient(jwt)
-
         val bucketArgs = ListObjectsArgs.builder()
             .bucket(bucketName)
             .recursive(true)
-            .prefix(folder)
+            .prefix(bucketDirectory)
             .build()
-
         return minioClient.listObjects(bucketArgs).toList()
     }
 
