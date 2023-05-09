@@ -170,16 +170,19 @@ class MinioService(
         "{" + assetJson.replace("\" ", " ").replace("\",", ",").replace("\"\n", "\n").replace("\"\"", "\"")
 
 
-    private fun getMinioClient(jwt: String): MinioClient = MinioClient.builder()
-        .credentialsProvider(
-            WebIdentityProvider(
-                { Jwt(jwt, 8600) },
-                this.minioProperties.url!!,
-                null, null, null, null, null
+    private fun getMinioClient(jwt: String): MinioClient {
+        val minioUrl = this.minioProperties.url ?: throw Exception("No url given in MinioProperties.")
+        return MinioClient.builder()
+            .credentialsProvider(
+                WebIdentityProvider(
+                    { Jwt(jwt, 8600) },
+                    minioUrl,
+                    null, null, null, null, null
+                )
             )
-        )
-        .endpoint(this.minioProperties.url)
-        .build()
+            .endpoint(this.minioProperties.url)
+            .build()
+    }
 
     private fun getMinioClientForTechnicalUser(): MinioClient = MinioClient.builder()
         .endpoint(this.minioProperties.url)
