@@ -21,11 +21,12 @@ class EdcController @Autowired constructor(
     private val assetRepository: AssetRepository,
 ) : HasLogger, BaseController() {
 
-    @PostMapping("publish/{bucket}/{name}")
+
+    @PostMapping("publish/{bucketName}/{assetName}")
     @ResponseStatus(HttpStatus.CREATED)
     fun publishAsset(
-        @PathVariable bucket: String,
-        @PathVariable name: String,
+        @PathVariable bucketName: String,
+        @PathVariable assetName: String,
         @RequestBody assetJsonDto: AssetJsonDto,
     ) {
         val assetPropName: String =
@@ -36,8 +37,8 @@ class EdcController @Autowired constructor(
         val assetJson = businessEdcService.createAssetJson(
             assetPropName,
             assetPropId,
-            bucket,
-            name,
+            bucketName,
+            assetName,
             assetJsonDto.assetPropDescription,
             assetJsonDto.assetPropContentType,
             assetJsonDto.assetPropVersion,
@@ -51,15 +52,16 @@ class EdcController @Autowired constructor(
         val policyUUID = UUID.randomUUID().toString()
         val contractUUID = UUID.randomUUID().toString()
 
-        val policyJson = businessEdcService.createPolicyJson(name, policyUUID)
-        val contractDefinitionJson = businessEdcService.createContractDefinitionJson(assetPropId, policyUUID, contractUUID)
+        val policyJson = businessEdcService.createPolicyJson(assetName, policyUUID)
+        val contractDefinitionJson =
+            businessEdcService.createContractDefinitionJson(assetPropId, policyUUID, contractUUID)
 
         this.edcConnectorService.publishAsset(assetJson, policyJson, contractDefinitionJson)
 
         val publishedAsset = Asset()
 
-        publishedAsset.bucket = bucket
-        publishedAsset.name = name
+        publishedAsset.bucket = bucketName
+        publishedAsset.name = assetName
         publishedAsset.assetId = assetPropId
         publishedAsset.policyId = policyUUID
         publishedAsset.contractId = contractUUID
@@ -67,11 +69,11 @@ class EdcController @Autowired constructor(
         assetRepository.save(publishedAsset)
     }
 
-    @DeleteMapping("unpublish/{bucket}/{name}")
+    @DeleteMapping("unpublish/{bucketName}/{assetName}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    fun unpublishAsset(@PathVariable bucket: String, @PathVariable name: String) {
+    fun unpublishAsset(@PathVariable bucketName: String, @PathVariable assetName: String) {
 
-        val asset = assetRepository.findByBucketAndName(bucket, name)
+        val asset = assetRepository.findByBucketAndName(bucketName, assetName)
 
         val assetId = asset?.assetId
         val policyId = asset?.policyId
