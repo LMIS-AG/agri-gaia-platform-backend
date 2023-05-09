@@ -24,7 +24,7 @@ class BucketController @Autowired constructor(
     private val assetRepository: AssetRepository,
 ) : BaseController() {
 
-    /*
+    /**
     Returns all non-coopspace buckets the user has access to.
      */
     @GetMapping
@@ -40,8 +40,11 @@ class BucketController @Autowired constructor(
         return ResponseEntity.ok(bucketDtos)
     }
 
-    /*
-    Returns assets in a given MinIO bucket. Currently returns empty list if bucket empty and 204 if user has no access.
+    /**
+     * Returns list of assets in a subdirectory of a MinIO bucket.
+     * @param bucketName name of MinIO bucket
+     * @param base64encodedDirectoryName name of directory, base 64 encoded
+     * @return List of `AssetDto`s, empty list if directory empty, TODO 204 if user has no access.
      */
     @GetMapping("{bucketName}/{base64encodedDirectoryName}")
     fun getBucketAssetsInDirectory(
