@@ -16,7 +16,8 @@ class EdcBusinessService(
     }
 
     fun getPolicyNames(jwt: String, bucketName: String): List<String> {
-        return this.getPolicyItems(jwt, bucketName).map { it.objectName().removePrefix("policies/").removeSuffix(".json") }
+        return this.getPolicyItems(jwt, bucketName)
+            .map { it.objectName().removePrefix("policies/").removeSuffix(".json") }
     }
 
     fun getPolicy(jwt: String, bucketName: String, policyName: String, assetName: String): String {
