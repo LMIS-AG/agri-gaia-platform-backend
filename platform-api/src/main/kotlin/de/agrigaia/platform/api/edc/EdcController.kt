@@ -6,10 +6,14 @@ import de.agrigaia.platform.business.errors.BusinessException
 import de.agrigaia.platform.business.errors.ErrorType
 import de.agrigaia.platform.common.HasLogger
 import de.agrigaia.platform.integration.edc.EdcConnectorService
+import de.agrigaia.platform.integration.minio.MinioService
 import de.agrigaia.platform.model.edc.Asset
 import de.agrigaia.platform.persistence.repository.AssetRepository
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.HttpStatus
+import org.springframework.http.ResponseEntity
+import org.springframework.security.core.context.SecurityContextHolder
+import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken
 import org.springframework.web.bind.annotation.*
 import java.util.*
 
@@ -19,6 +23,7 @@ class EdcController @Autowired constructor(
     private val businessEdcService: EdcService,
     private val edcConnectorService: EdcConnectorService,
     private val assetRepository: AssetRepository,
+    private val minioService: MinioService,
 ) : HasLogger, BaseController() {
 
 
@@ -95,8 +100,12 @@ class EdcController @Autowired constructor(
      * @return list of names of the policies in MinIO bucket `bucketName`
      */
     @GetMapping("policies/{bucketName}")
-    fun getPolicyNames(@PathVariable bucketName: String) {
-        TODO("Not yet implemented")
+    fun getPolicyNames(@PathVariable bucketName: String): ResponseEntity<List<String>> {
+        val jwtAuthenticationToken = SecurityContextHolder.getContext().authentication as JwtAuthenticationToken
+        val jwt = jwtAuthenticationToken.token.tokenValue
+        val policyNames: List<String> = this.minioService.getAssetsForBucket(jwt, bucketName, "policies")
+            .map { it.get().objectName().removePrefix("policies/").removeSuffix(".json") }
+        return ResponseEntity.ok(policyNames)
     }
 
 
