@@ -6,7 +6,7 @@ import io.minio.messages.Item
 import org.springframework.stereotype.Service
 
 @Service
-class EdcService(
+class EdcBusinessService(
     private val fusekiConnectorService: FusekiConnectorService,
     private val minioService: MinioService,
 ) {

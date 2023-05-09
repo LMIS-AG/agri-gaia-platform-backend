@@ -1,11 +1,11 @@
 package de.agrigaia.platform.api.edc
 
 import de.agrigaia.platform.api.BaseController
-import de.agrigaia.platform.business.edc.EdcService
+import de.agrigaia.platform.business.edc.EdcBusinessService
 import de.agrigaia.platform.business.errors.BusinessException
 import de.agrigaia.platform.business.errors.ErrorType
 import de.agrigaia.platform.common.HasLogger
-import de.agrigaia.platform.integration.edc.EdcConnectorService
+import de.agrigaia.platform.integration.edc.EdcIntegrationService
 import de.agrigaia.platform.model.edc.Asset
 import de.agrigaia.platform.persistence.repository.AssetRepository
 import org.springframework.beans.factory.annotation.Autowired
@@ -19,8 +19,8 @@ import java.util.*
 @RestController
 @RequestMapping("/assets")
 class EdcController @Autowired constructor(
-    private val businessEdcService: EdcService,
-    private val edcConnectorService: EdcConnectorService,
+    private val edcBusinessService: EdcBusinessService,
+    private val edcIntegrationService: EdcIntegrationService,
     private val assetRepository: AssetRepository,
 ) : HasLogger, BaseController() {
 
@@ -37,7 +37,7 @@ class EdcController @Autowired constructor(
         val assetPropId: String =
             assetJsonDto.assetPropId ?: throw BusinessException("No asset id in AssetJsonDto.", ErrorType.NOT_FOUND)
 
-        val assetJson = businessEdcService.createAssetJson(
+        val assetJson = edcBusinessService.createAssetJson(
             assetPropName,
             assetPropId,
             bucketName,
@@ -55,11 +55,11 @@ class EdcController @Autowired constructor(
         val policyUUID = UUID.randomUUID().toString()
         val contractUUID = UUID.randomUUID().toString()
 
-        val policyJson = businessEdcService.createPolicyJson(assetName, policyUUID)
+        val policyJson = edcBusinessService.createPolicyJson(assetName, policyUUID)
         val contractDefinitionJson =
-            businessEdcService.createContractDefinitionJson(assetPropId, policyUUID, contractUUID)
+            edcBusinessService.createContractDefinitionJson(assetPropId, policyUUID, contractUUID)
 
-        this.edcConnectorService.publishAsset(assetJson, policyJson, contractDefinitionJson)
+        this.edcIntegrationService.publishAsset(assetJson, policyJson, contractDefinitionJson)
 
         val publishedAsset = Asset()
 
@@ -87,7 +87,7 @@ class EdcController @Autowired constructor(
             ?: throw BusinessException("contractId was null", ErrorType.BAD_REQUEST)
 
         assetRepository.delete(asset)
-        this.edcConnectorService.unpublishAsset(assetId, policyId, contractId)
+        this.edcIntegrationService.unpublishAsset(assetId, policyId, contractId)
     }
 
 
@@ -101,7 +101,7 @@ class EdcController @Autowired constructor(
     fun getPolicyNames(@PathVariable bucketName: String): ResponseEntity<List<String>> {
         val jwtAuthenticationToken = SecurityContextHolder.getContext().authentication as JwtAuthenticationToken
         val jwt = jwtAuthenticationToken.token.tokenValue
-        val policyNames: List<String> = this.businessEdcService.getPolicyNames(jwt, bucketName)
+        val policyNames: List<String> = this.edcBusinessService.getPolicyNames(jwt, bucketName)
         return ResponseEntity.ok(policyNames)
     }
 
