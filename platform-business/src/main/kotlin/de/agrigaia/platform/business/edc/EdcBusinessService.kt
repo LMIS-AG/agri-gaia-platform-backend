@@ -19,6 +19,15 @@ class EdcBusinessService(
         return this.getPolicyItems(jwt, bucketName).map { it.objectName().removePrefix("policies/").removeSuffix(".json") }
     }
 
+    fun getPolicy(jwt: String, bucketName: String, policyName: String, assetName: String): String {
+        val policyTemplate: String = this.minioService.getFileContent(jwt, bucketName, "policies/$policyName.json")
+        return preparePolicyTemplate(policyTemplate, assetName)
+    }
+
+    private fun preparePolicyTemplate(policyTemplate: String, target: String): String {
+        return policyTemplate.replace("<TARGET>", target)
+    }
+
     fun createAssetJson(
         assetPropName: String,
         assetPropId: String,
