@@ -53,10 +53,7 @@ class EdcController @Autowired constructor(
             assetJsonDto.dataAddressKeyName
         )
 
-//        val policyUUID = UUID.randomUUID().toString()
-        val jwtAuthenticationToken = SecurityContextHolder.getContext().authentication as JwtAuthenticationToken
-        val jwt = jwtAuthenticationToken.token.tokenValue
-
+        val jwt = getJwt()
         val policyJson: String = this.edcBusinessService.getPolicy(jwt, bucketName, policyName, assetName)
         val policyUUID: String = this.edcBusinessService.extractIdfromPolicy(policyJson)
         val contractUUID = UUID.randomUUID().toString()
@@ -103,8 +100,7 @@ class EdcController @Autowired constructor(
      */
     @GetMapping("policies/{bucketName}")
     fun getPolicyNames(@PathVariable bucketName: String): ResponseEntity<List<String>> {
-        val jwtAuthenticationToken = SecurityContextHolder.getContext().authentication as JwtAuthenticationToken
-        val jwt = jwtAuthenticationToken.token.tokenValue
+        val jwt = getJwt()
         val policyNames: List<String> = this.edcBusinessService.getPolicyNames(jwt, bucketName)
         return ResponseEntity.ok(policyNames)
     }
@@ -118,7 +114,7 @@ class EdcController @Autowired constructor(
      * @return TODO
      */
     @PostMapping("policies/{bucketName}/{policyName}")
-    fun savePolicy(@PathVariable bucketName: String, @PathVariable policyName: String, @RequestBody policyJson: String) {
+    fun addPolicy(@PathVariable bucketName: String, @PathVariable policyName: String, @RequestBody policyJson: String) {
         TODO("Not yet implemented")
     }
 
@@ -146,5 +142,10 @@ class EdcController @Autowired constructor(
     @GetMapping("policies/{bucketName}/{policyName}")
     fun getPolicy(@PathVariable bucketName: String, @PathVariable policyName: String) {
         TODO("Not yet implemented")
+    }
+
+    private fun getJwt(): String {
+        val jwtAuthenticationToken = SecurityContextHolder.getContext().authentication as JwtAuthenticationToken
+        return jwtAuthenticationToken.token.tokenValue
     }
 }
