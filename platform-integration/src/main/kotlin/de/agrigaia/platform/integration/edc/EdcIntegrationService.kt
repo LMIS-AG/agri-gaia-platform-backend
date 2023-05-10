@@ -8,8 +8,11 @@ import org.springframework.web.reactive.function.client.WebClient
 import org.springframework.web.reactive.function.client.body
 import reactor.core.publisher.Mono
 
+/**
+ * Service communicating with EDC directly.
+ */
 @Service
-class EdcConnectorService : HasLogger {
+class EdcIntegrationService : HasLogger {
     private val webClient: WebClient = WebClient.create()
     private val connectorEndpoint = "https://connector-consumer-9192.platform.agri-gaia.com/api/v1/data"
 

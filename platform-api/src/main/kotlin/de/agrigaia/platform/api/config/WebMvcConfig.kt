@@ -23,7 +23,7 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer
 open class WebMvcConfig @Autowired constructor(private val applicationProperties: ApplicationProperties) :
     WebMvcConfigurer, HasLogger {
 
-    /*
+    /**
     Called once on application startup.
      */
     @Bean

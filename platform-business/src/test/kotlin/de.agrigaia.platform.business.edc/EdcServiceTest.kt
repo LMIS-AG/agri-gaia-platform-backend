@@ -1,6 +1,7 @@
 package de.agrigaia.platform.business.edc
 
 import de.agrigaia.platform.integration.fuseki.FusekiConnectorService
+import de.agrigaia.platform.integration.minio.MinioService
 import io.mockk.every
 import io.mockk.mockk
 import org.junit.jupiter.api.Test
@@ -11,7 +12,8 @@ class EdcServiceTest {
     @Test
     fun `Test createAssetJson`() {
         val fusekiConnectorService: FusekiConnectorService = mockk()
-        val edcService = EdcService(fusekiConnectorService)
+        val minioService: MinioService = mockk()
+        val edcBusinessService = EdcBusinessService(fusekiConnectorService, minioService)
         every { fusekiConnectorService.getConceptUriFromKeyword(any()) } returns "someAgrovocUri"
         every { fusekiConnectorService.getUriFromCoordinates(any(), any()) } returns "someGeoNamesUri"
 
@@ -54,7 +56,7 @@ class EdcServiceTest {
             }
           }
         }"""
-        val actual = edcService.createAssetJson(
+        val actual = edcBusinessService.createAssetJson(
             assetPropName,
             assetPropId,
             bucketName,

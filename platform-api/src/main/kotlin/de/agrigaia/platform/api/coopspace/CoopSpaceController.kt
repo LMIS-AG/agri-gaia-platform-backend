@@ -102,7 +102,7 @@ open class CoopSpaceController @Autowired constructor(
         this.coopSpaceService.addUsersToDatabase(memberList, coopSpace)
     }
 
-    /*
+    /**
     Change member role in coopspace by removing/adding to keycloak groups and updating the database.
      */
     @PreAuthorize("hasAuthority('coopspace-'+#changeMemberRoleDto.coopSpaceName+'-Admin')")
