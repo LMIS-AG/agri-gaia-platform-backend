@@ -124,9 +124,9 @@ class EdcBusinessService(
     /**
      * Extract UUID from policy JSON.
      */
-    fun extractUUIDfromPolicy(policyJson: String): String {
-        val uuidLine: String = policyJson.lines().firstOrNull { it.contains("\"id\": ") }
+    fun extractIdfromPolicy(policyJson: String): String {
+        val idLine: String = policyJson.lines().firstOrNull { it.contains("\"id\": ") }
             ?: throw BusinessException("Could not extract id from policy.", ErrorType.UNKNOWN)
-        return uuidLine.substringBeforeLast("\"").substringAfterLast("\"")
+        return idLine.substringBeforeLast("\"").substringAfterLast("\"")
     }
 }
