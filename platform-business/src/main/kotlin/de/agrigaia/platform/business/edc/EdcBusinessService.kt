@@ -2,6 +2,7 @@ package de.agrigaia.platform.business.edc
 
 import de.agrigaia.platform.business.errors.BusinessException
 import de.agrigaia.platform.business.errors.ErrorType
+import de.agrigaia.platform.common.HasLogger
 import de.agrigaia.platform.integration.fuseki.FusekiConnectorService
 import de.agrigaia.platform.integration.minio.MinioService
 import org.springframework.stereotype.Service
@@ -13,7 +14,7 @@ import org.springframework.stereotype.Service
 class EdcBusinessService(
     private val fusekiConnectorService: FusekiConnectorService,
     private val minioService: MinioService,
-) {
+) : HasLogger {
 
     /**
      * Return all policies in a MinIO bucket.
