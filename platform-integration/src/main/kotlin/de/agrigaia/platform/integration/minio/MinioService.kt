@@ -81,6 +81,23 @@ class MinioService(
         BufferedReader(InputStreamReader(stream)).use { reader -> return reader.readText() }
     }
 
+    fun uploadTextFileContent(jwt: String, bucketName: String, filePath: String, textFile: String) {
+        val minioClient = this.getMinioClient(jwt)
+
+        val fileByteArray: ByteArray = textFile.toByteArray()
+        val size = fileByteArray.size.toLong()
+        val inputStream = ByteArrayInputStream(fileByteArray)
+
+        minioClient.putObject(
+            PutObjectArgs.builder()
+                .bucket(bucketName)
+                .`object`(filePath)
+                .stream(inputStream, size, -1)
+                .build()
+        )
+
+    }
+
     fun uploadAssets(jwt: String, bucketName: String, currentRoot: String, files: Array<MultipartFile>) {
         val minioClient = this.getMinioClient(jwt)
 
