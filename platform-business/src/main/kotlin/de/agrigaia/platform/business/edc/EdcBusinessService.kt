@@ -25,7 +25,7 @@ class EdcBusinessService(
     fun getAllPolicies(jwt: String, bucketName: String): List<String> {
         return this.minioService.getAssetsForBucket(jwt, bucketName, "policies")
             .map {
-                minioService.getFileContent(jwt, bucketName, it.get().objectName())
+                minioService.getTextFileContent(jwt, bucketName, it.get().objectName())
                     ?: throw BusinessException("Policy $it not found in bucket $bucketName", ErrorType.NOT_FOUND)
             }
     }
@@ -38,7 +38,7 @@ class EdcBusinessService(
      * @return String containing the policy JSON.
      */
     fun getPolicy(jwt: String, bucketName: String, policyName: String): String {
-        return this.minioService.getFileContent(jwt, bucketName, "policies/$policyName.json")
+        return this.minioService.getTextFileContent(jwt, bucketName, "policies/$policyName.json")
             ?: throw BusinessException("Policy $policyName not found in bucket $bucketName", ErrorType.NOT_FOUND)
     }
 

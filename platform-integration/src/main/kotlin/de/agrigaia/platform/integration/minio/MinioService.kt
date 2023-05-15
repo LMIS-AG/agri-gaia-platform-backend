@@ -4,7 +4,8 @@ import de.agrigaia.platform.model.buckets.STSDto
 import io.minio.*
 import io.minio.credentials.Jwt
 import io.minio.credentials.WebIdentityProvider
-import io.minio.messages.*
+import io.minio.messages.Bucket
+import io.minio.messages.Item
 import jakarta.servlet.http.HttpServletResponse
 import org.apache.logging.log4j.LogManager.getLogger
 import org.jsoup.Jsoup
@@ -69,29 +70,15 @@ class MinioService(
         return minioClient.listObjects(bucketArgs).toList()
     }
 
-    fun getFileContent(jwt: String, bucketName: String, filePath: String): String? {
+    fun getTextFileContent(jwt: String, bucketName: String, filePath: String): String {
         val minioClient = this.getMinioClient(jwt)
-
-        val sqlExpression = "select * from S3Object"
-        val iss = InputSerialization(null, false, null, null, FileHeaderInfo.USE, null, null, null)
-        val os = OutputSerialization(null, null, null, QuoteFields.ASNEEDED, null)
-
-        val getObjectArgs = SelectObjectContentArgs.builder()
-            .bucket(bucketName)
-            .`object`(filePath)
-            .sqlExpression(sqlExpression)
-            .inputSerialization(iss)
-            .outputSerialization(os)
-            .requestProgress(true)
-            .build()
-
-        val selectObjectContent: SelectResponseStream
-        try {
-            selectObjectContent = minioClient.selectObjectContent(getObjectArgs)
-        } catch (_: Error) { return null }
-        val text = selectObjectContent.bufferedReader().use(BufferedReader::readText)
-
-        return fixString(text)
+        val stream: GetObjectResponse = minioClient.getObject(
+            GetObjectArgs.builder()
+                .bucket(bucketName)
+                .`object`(filePath)
+                .build()
+        )
+        BufferedReader(InputStreamReader(stream)).use { reader -> return reader.readText() }
     }
 
     fun uploadAssets(jwt: String, bucketName: String, currentRoot: String, files: Array<MultipartFile>) {
