@@ -155,10 +155,6 @@ class MinioService(
         minioClient.removeObject(RemoveObjectArgs.builder().bucket(bucket).`object`(fileName).build())
     }
 
-    // TODO Please fix this, it's so bad
-    private fun fixString(assetJson: String) =
-        "{" + assetJson.replace("\" ", " ").replace("\",", ",").replace("\"\n", "\n").replace("\"\"", "\"")
-
 
     private fun getMinioClient(jwt: String): MinioClient {
         val minioUrl = this.minioProperties.url ?: throw Exception("No url given in MinioProperties.")
