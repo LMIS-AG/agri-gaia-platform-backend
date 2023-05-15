@@ -121,11 +121,13 @@ class EdcController @Autowired constructor(
      * Delete a policy from the user's MinIO bucket.
      *
      * @param policyName name of the policy
-     * @return TODO
+     * @return 200, even if file did not exist (MinIO is dumb)
      */
     @DeleteMapping("policies/{policyName}")
     fun deletePolicy(@PathVariable policyName: String) {
-        TODO("Not yet implemented")
+        val jwtTokenValue = getJwtToken().tokenValue
+        val bucketName = getBucketName()
+        edcBusinessService.deletePolicy(jwtTokenValue, bucketName, policyName)
     }
 
 

@@ -54,6 +54,18 @@ class EdcBusinessService(
     }
 
     /**
+     * Delete a policy from the user's MinIO bucket.
+     *
+     * @param jwtTokenValue JSON web token
+     * @param bucketName name of MinIO bucket
+     * @param policyName name of the policy
+     * @return 200, even if file did not exist (MinIO is dumb)
+     */
+    fun deletePolicy(jwtTokenValue: String, bucketName: String, policyName: String) {
+        this.minioService.deleteAsset(jwtTokenValue, bucketName, "policies/$policyName.json")
+    }
+
+    /**
      * Get policy with field values for a certain asset
      * @param jwt JSON web token
      * @param bucketName name of MinIO bucket
@@ -100,6 +112,7 @@ class EdcBusinessService(
         // Upload policy to user's bucket.
         minioService.uploadTextFile(jwtTokenValue, bucketName, "policies/$policyName.json", policyJson)
     }
+
 
     // TODO: This can be moved to a more central place.
     private fun isValidJson(json: String): Boolean {

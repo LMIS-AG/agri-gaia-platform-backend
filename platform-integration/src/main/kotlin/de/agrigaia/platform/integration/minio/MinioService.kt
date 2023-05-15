@@ -167,11 +167,8 @@ class MinioService(
     }
 
     fun deleteAsset(jwt: String, bucket: String, fileName: String) {
-        val minioClient = this.getMinioClient(jwt)
-
-        minioClient.removeObject(RemoveObjectArgs.builder().bucket(bucket).`object`(fileName).build())
+        this.getMinioClient(jwt).removeObject(RemoveObjectArgs.builder().bucket(bucket).`object`(fileName).build())
     }
-
 
     private fun getMinioClient(jwt: String): MinioClient {
         val minioUrl = this.minioProperties.url ?: throw Exception("No url given in MinioProperties.")
