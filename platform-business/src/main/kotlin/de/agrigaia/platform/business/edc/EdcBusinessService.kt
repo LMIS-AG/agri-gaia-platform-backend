@@ -27,17 +27,6 @@ class EdcBusinessService(
     }
 
     /**
-     * Get names of policies in a MinIO bucket.
-     * @param jwt JSON web token
-     * @param bucketName name of MinIO bucket
-     * @return List of strings of policy names in MinIO bucket.
-     */
-    fun getPolicyNames(jwt: String, bucketName: String): List<String> {
-        return this.getPolicyItems(jwt, bucketName)
-            .map { it.objectName().removePrefix("policies/").removeSuffix(".json") }
-    }
-
-    /**
      * Get policy from MinIO bucket with correct values for asset.
      * @param jwt JSON web token
      * @param bucketName name of MinIO bucket
