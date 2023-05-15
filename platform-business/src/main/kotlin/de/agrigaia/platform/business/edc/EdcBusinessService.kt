@@ -47,7 +47,7 @@ class EdcBusinessService(
      */
     fun getPolicy(jwt: String, bucketName: String, policyName: String, assetName: String): String {
         val policyTemplate: String = this.minioService.getFileContent(jwt, bucketName, "policies/$policyName.json")
-        return preparePolicyTemplate(policyTemplate, assetName)
+        return fillInPolicyTemplate(policyTemplate, assetName)
     }
 
     /**
@@ -56,7 +56,7 @@ class EdcBusinessService(
      * @param target value to set target field to
      * @return String containing the policy JSON with correct field values for asset.
      */
-    private fun preparePolicyTemplate(policyTemplate: String, target: String): String {
+    private fun fillInPolicyTemplate(policyTemplate: String, target: String): String {
         return policyTemplate.replace("<TARGET>", target)
     }
 
