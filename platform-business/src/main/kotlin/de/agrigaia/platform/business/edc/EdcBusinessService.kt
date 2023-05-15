@@ -4,7 +4,6 @@ import de.agrigaia.platform.business.errors.BusinessException
 import de.agrigaia.platform.business.errors.ErrorType
 import de.agrigaia.platform.integration.fuseki.FusekiConnectorService
 import de.agrigaia.platform.integration.minio.MinioService
-import io.minio.messages.Item
 import org.springframework.stereotype.Service
 
 /**
@@ -17,13 +16,14 @@ class EdcBusinessService(
 ) {
 
     /**
-     * Return all policy `Item`s in a MinIO bucket.
+     * Return all policies in a MinIO bucket.
      * @param jwt JSON web token
      * @param bucketName name of MinIO bucket
-     * @return List of policy `Item` objects.
+     * @return list of policies
      */
-    private fun getPolicyItems(jwt: String, bucketName: String): List<Item> {
-        return this.minioService.getAssetsForBucket(jwt, bucketName, "policies").map { it.get() }
+    fun getAllPolicies(jwt: String, bucketName: String): List<String> {
+        return this.minioService.getAssetsForBucket(jwt, bucketName, "policies")
+            .map { minioService.getFileContent(jwt, bucketName, it.get().objectName()) }
     }
 
     /**
