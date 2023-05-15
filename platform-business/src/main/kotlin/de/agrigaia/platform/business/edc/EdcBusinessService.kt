@@ -1,5 +1,8 @@
 package de.agrigaia.platform.business.edc
 
+import com.fasterxml.jackson.core.JacksonException
+import com.fasterxml.jackson.databind.DeserializationFeature
+import com.fasterxml.jackson.databind.ObjectMapper
 import de.agrigaia.platform.business.errors.BusinessException
 import de.agrigaia.platform.business.errors.ErrorType
 import de.agrigaia.platform.common.HasLogger
@@ -71,6 +74,49 @@ class EdcBusinessService(
      */
     private fun fillInPolicyTemplate(policyTemplate: String, target: String): String {
         return policyTemplate.replace("<TARGET>", target)
+    }
+
+    /**
+     * Add policy to user's bucket
+     * @param jwtTokenValue JSON web token
+     * @param bucketName name of MinIO bucket
+     * @param policyName name of policy
+     * @policyJson policy as JSON
+     * @return TODO
+     */
+    fun addPolicy(jwtTokenValue: String, bucketName: String, policyName: String, policyJson: String) {
+        val policyNameExists: Boolean = getPolicyNames(jwtTokenValue, bucketName).contains(policyName)
+        if (policyNameExists) {
+            throw BusinessException(
+                "Policy with name $policyName already exists in bucket $bucketName.",
+                ErrorType.BAD_REQUEST
+            )
+        }
+        if (!isValidJson(policyJson)) {
+            throw BusinessException("Request body is not valid JSON.", ErrorType.BAD_REQUEST)
+        }
+        // TODO: Policy must be valid (only EDC can really verify).
+
+        // Upload policy to user's bucket.
+        minioService.uploadTextFile(jwtTokenValue, bucketName, "policies/$policyName.json", policyJson)
+    }
+
+    // TODO: This can be moved to a more central place.
+    private fun isValidJson(json: String): Boolean {
+        val mapper: ObjectMapper = ObjectMapper()
+            .enable(DeserializationFeature.FAIL_ON_TRAILING_TOKENS)
+        try {
+            mapper.readTree(json)
+        } catch (e: JacksonException) {
+            return false
+        }
+        return true
+    }
+
+
+    private fun getPolicyNames(jwtTokenValue: String, bucketName: String): List<String> {
+        return this.minioService.getAssetsForBucket(jwtTokenValue, bucketName, "policies")
+            .map { it.get().objectName().removePrefix("policies/").removeSuffix(".json") }
     }
 
     fun createAssetJson(

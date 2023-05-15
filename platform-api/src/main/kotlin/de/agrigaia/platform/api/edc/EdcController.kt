@@ -107,11 +107,13 @@ class EdcController @Autowired constructor(
      * Add a policy to the user's MinioBucket.
      *
      * @param policyName name of the policy
-     * @return TODO
+     * @policyJson request body, json of the policy
      */
     @PostMapping("policies/{policyName}")
     fun addPolicy(@PathVariable policyName: String, @RequestBody policyJson: String) {
-        TODO("Not yet implemented")
+        val jwtTokenValue = getJwtToken().tokenValue
+        val bucketName = getBucketName()
+        edcBusinessService.addPolicy(jwtTokenValue, bucketName, policyName, policyJson)
     }
 
 
