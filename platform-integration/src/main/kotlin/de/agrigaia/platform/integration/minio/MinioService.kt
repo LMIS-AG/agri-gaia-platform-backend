@@ -125,7 +125,7 @@ class MinioService(
         response.setHeader("Content-Disposition", "attachment; filename=$fileName")
 
         val outputStream = response.outputStream
-            inputStream.use { input -> outputStream.use { output -> input.copyTo(output) } }
+        inputStream.use { input -> outputStream.use { output -> input.copyTo(output) } }
     }
 
     fun downloadFolder(jwt: String, bucketName: String, folderName: String, response: HttpServletResponse) {
@@ -137,7 +137,7 @@ class MinioService(
             .recursive(true)
             .build()
 
-        val objectList = minioClient.listObjects(listObjectsArgs).toList().map{ it.get() }
+        val objectList = minioClient.listObjects(listObjectsArgs).toList().map { it.get() }
 
         val baseName = File(folderName).name
         response.contentType = "application/zip"
@@ -209,8 +209,8 @@ class MinioService(
 
         val response: String = request
             .retrieve()
-            .onStatus({ it.is4xxClientError}, ::handleClientError)
-            .onStatus({ it.is5xxServerError}, ::handleServerError)
+            .onStatus({ it.is4xxClientError }, ::handleClientError)
+            .onStatus({ it.is5xxServerError }, ::handleServerError)
             .bodyToMono(String::class.java)
             .block() ?: throw Exception("Response from Minio was null.")
 
