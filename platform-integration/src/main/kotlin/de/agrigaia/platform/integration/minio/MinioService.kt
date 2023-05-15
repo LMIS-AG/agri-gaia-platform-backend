@@ -73,11 +73,11 @@ class MinioService(
     fun getTextFileContent(jwt: String, bucketName: String, filePath: String): String {
         val minioClient = this.getMinioClient(jwt)
         val stream: GetObjectResponse = minioClient.getObject(
-                GetObjectArgs.builder()
-                    .bucket(bucketName)
-                    .`object`(filePath)
-                    .build()
-            )
+            GetObjectArgs.builder()
+                .bucket(bucketName)
+                .`object`(filePath)
+                .build()
+        )
         BufferedReader(InputStreamReader(stream)).use { reader -> return reader.readText() }
     }
 
