@@ -28,7 +28,7 @@ class EdcBusinessService(
             .map { it.get().objectName() }
             .map {
                 try {
-                    minioService.getTextFileContent(jwt, bucketName, it)
+                    minioService.downloadTextFile(jwt, bucketName, it)
                 } catch (e: ErrorResponseException) {
                     throw BusinessException("Policy $it not found in bucket $bucketName", ErrorType.NOT_FOUND)
                 }
@@ -44,7 +44,7 @@ class EdcBusinessService(
      */
     fun getPolicy(jwt: String, bucketName: String, policyName: String): String {
         try {
-            return this.minioService.getTextFileContent(jwt, bucketName, "policies/$policyName.json")
+            return this.minioService.downloadTextFile(jwt, bucketName, "policies/$policyName.json")
         } catch (e: ErrorResponseException) {
             throw BusinessException("Policy $policyName not found in bucket $bucketName", ErrorType.NOT_FOUND)
         }

@@ -70,7 +70,7 @@ class MinioService(
         return minioClient.listObjects(bucketArgs).toList()
     }
 
-    fun getTextFileContent(jwt: String, bucketName: String, filePath: String): String {
+    fun downloadTextFile(jwt: String, bucketName: String, filePath: String): String {
         val minioClient = this.getMinioClient(jwt)
         val stream: GetObjectResponse = minioClient.getObject(
             GetObjectArgs.builder()
@@ -81,7 +81,7 @@ class MinioService(
         BufferedReader(InputStreamReader(stream)).use { reader -> return reader.readText() }
     }
 
-    fun uploadTextFileContent(jwt: String, bucketName: String, filePath: String, textFile: String) {
+    fun uploadTextFile(jwt: String, bucketName: String, filePath: String, textFile: String) {
         val minioClient = this.getMinioClient(jwt)
 
         val fileByteArray: ByteArray = textFile.toByteArray()
