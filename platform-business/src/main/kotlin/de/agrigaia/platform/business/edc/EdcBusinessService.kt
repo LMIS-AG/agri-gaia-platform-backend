@@ -5,6 +5,7 @@ import de.agrigaia.platform.business.errors.ErrorType
 import de.agrigaia.platform.common.HasLogger
 import de.agrigaia.platform.integration.fuseki.FusekiConnectorService
 import de.agrigaia.platform.integration.minio.MinioService
+import io.minio.errors.ErrorResponseException
 import org.springframework.stereotype.Service
 
 /**
@@ -24,9 +25,13 @@ class EdcBusinessService(
      */
     fun getAllPolicies(jwt: String, bucketName: String): List<String> {
         return this.minioService.getAssetsForBucket(jwt, bucketName, "policies")
+            .map { it.get().objectName() }
             .map {
-                minioService.getTextFileContent(jwt, bucketName, it.get().objectName())
-                    ?: throw BusinessException("Policy $it not found in bucket $bucketName", ErrorType.NOT_FOUND)
+                try {
+                    minioService.getTextFileContent(jwt, bucketName, it)
+                } catch (e: ErrorResponseException) {
+                    throw BusinessException("Policy $it not found in bucket $bucketName", ErrorType.NOT_FOUND)
+                }
             }
     }
 
@@ -38,8 +43,11 @@ class EdcBusinessService(
      * @return String containing the policy JSON.
      */
     fun getPolicy(jwt: String, bucketName: String, policyName: String): String {
-        return this.minioService.getTextFileContent(jwt, bucketName, "policies/$policyName.json")
-            ?: throw BusinessException("Policy $policyName not found in bucket $bucketName", ErrorType.NOT_FOUND)
+        try {
+            return this.minioService.getTextFileContent(jwt, bucketName, "policies/$policyName.json")
+        } catch (e: ErrorResponseException) {
+            throw BusinessException("Policy $policyName not found in bucket $bucketName", ErrorType.NOT_FOUND)
+        }
     }
 
     /**
