@@ -69,7 +69,7 @@ class MinioService(
         return minioClient.listObjects(bucketArgs).toList()
     }
 
-    fun getFileContent(jwt: String, bucketName: String, fileName: String): String {
+    fun getFileContent(jwt: String, bucketName: String, filePath: String): String {
         val minioClient = this.getMinioClient(jwt)
 
         val sqlExpression = "select * from S3Object"
@@ -78,7 +78,7 @@ class MinioService(
 
         val getObjectArgs = SelectObjectContentArgs.builder()
             .bucket(bucketName)
-            .`object`(fileName)
+            .`object`(filePath)
             .sqlExpression(sqlExpression)
             .inputSerialization(iss)
             .outputSerialization(os)
