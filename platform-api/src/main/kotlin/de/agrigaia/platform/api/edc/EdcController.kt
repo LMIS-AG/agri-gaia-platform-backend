@@ -81,7 +81,7 @@ class EdcController @Autowired constructor(
     fun getAllPolicies(): ResponseEntity<List<String>> {
         val jwt = getJwtToken().tokenValue
         val bucketName = getBucketName()
-        // TODO: Returned JSON badly formatted.
+        // TODO: Returned JSON badly formatted, see MinioService.kt getFileContent()
         // ["{    \"uid\": \"use-eu\",\n    \"id\": \"3a75736e-001d-4364-8bd4-9888490edb59\",\n    \"policy\": {\n        \"permissions\": [\n            {\n                \"edctype\": \"dataspaceconnector:permission\",\n                \"uid\": null,\n                \"target\": \"<TARGET>\",\n                \"action\": {\n                    \"type\": \"USE\",\n                    \"includedIn\": null,\n                    \"constraint\": null\n                },\n                \"assignee\": null,\n                \"assigner\": null,\n                \"co
         val allPolicies = edcBusinessService.getAllPolicies(jwt, bucketName)
         getLogger().error(allPolicies.toString())
@@ -96,8 +96,11 @@ class EdcController @Autowired constructor(
      * @return TODO
      */
     @GetMapping("policies/{policyName}")
-    fun getPolicy(@PathVariable policyName: String) {
-        TODO("Not yet implemented")
+    fun getPolicy(@PathVariable policyName: String): ResponseEntity<String> {
+        val jwt = getJwtToken().tokenValue
+        val bucketName = getBucketName()
+        val policy = edcBusinessService.getPolicy(jwt, bucketName, policyName)
+        return ResponseEntity.ok(policy)
     }
 
     /**
@@ -218,7 +221,7 @@ class EdcController @Autowired constructor(
         )
 
         val jwtToken = getJwtToken().tokenValue
-        val policyJson: String = this.edcBusinessService.getPolicy(jwtToken, bucketName, policyName, assetName)
+        val policyJson: String = this.edcBusinessService.getPolicyforAsset(jwtToken, bucketName, policyName, assetName)
         val policyUUID: String = this.edcBusinessService.extractIdfromPolicy(policyJson)
         val contractUUID = UUID.randomUUID().toString()
         val contractDefinitionJson =

@@ -23,19 +23,34 @@ class EdcBusinessService(
      */
     fun getAllPolicies(jwt: String, bucketName: String): List<String> {
         return this.minioService.getAssetsForBucket(jwt, bucketName, "policies")
-            .map { minioService.getFileContent(jwt, bucketName, it.get().objectName()) }
+            .map {
+                minioService.getFileContent(jwt, bucketName, it.get().objectName())
+                    ?: throw BusinessException("Policy $it not found in bucket $bucketName", ErrorType.NOT_FOUND)
+            }
     }
 
     /**
-     * Get policy from MinIO bucket with correct values for asset.
+     * Get policy from MinIO bucket.
+     * @param jwt JSON web token
+     * @param bucketName name of MinIO bucket
+     * @param policyName name of policy
+     * @return String containing the policy JSON.
+     */
+    fun getPolicy(jwt: String, bucketName: String, policyName: String): String {
+        return this.minioService.getFileContent(jwt, bucketName, "policies/$policyName.json")
+            ?: throw BusinessException("Policy $policyName not found in bucket $bucketName", ErrorType.NOT_FOUND)
+    }
+
+    /**
+     * Get policy with field values for a certain asset
      * @param jwt JSON web token
      * @param bucketName name of MinIO bucket
      * @param policyName name of policy
      * @param assetName name of asset
      * @return String containing the policy JSON with correct field values for asset.
      */
-    fun getPolicy(jwt: String, bucketName: String, policyName: String, assetName: String): String {
-        val policyTemplate: String = this.minioService.getFileContent(jwt, bucketName, "policies/$policyName.json")
+    fun getPolicyforAsset(jwt: String, bucketName: String, policyName: String, assetName: String): String {
+        val policyTemplate: String = getPolicy(jwt, bucketName, policyName)
         return fillInPolicyTemplate(policyTemplate, assetName)
     }
 
@@ -118,4 +133,6 @@ class EdcBusinessService(
             ?: throw BusinessException("Could not extract id from policy.", ErrorType.UNKNOWN)
         return idLine.substringBeforeLast("\"").substringAfterLast("\"")
     }
+
+
 }
