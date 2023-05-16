@@ -91,7 +91,6 @@ class EdcIntegrationService(private val minioService: MinioService) : HasLogger 
      * @param bucketName name of MinIO bucket
      * @param policyName name of policy
      * @policyJson policy as JSON
-     * @return TODO
      */
     fun addPolicy(jwtTokenValue: String, bucketName: String, policyName: String, policyJson: String) {
         val policyNameExists: Boolean = getPolicyNames(jwtTokenValue, bucketName).contains(policyName)
