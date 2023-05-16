@@ -97,9 +97,7 @@ class EdcIntegrationService(private val minioService: MinioService) : HasLogger 
         if (policyNameExists) {
             throw Exception("Policy with name $policyName already exists in bucket $bucketName.")
         }
-        if (!isValidJson(policyJson)) {
-            throw Exception("Request body is not valid JSON.")
-        }
+        if (!isValidJson(policyJson)) throw Exception("Request body is not valid JSON.")
         // TODO: Policy must be valid (only EDC can really verify so what the heck).
 
         // Upload policy to user's bucket.
