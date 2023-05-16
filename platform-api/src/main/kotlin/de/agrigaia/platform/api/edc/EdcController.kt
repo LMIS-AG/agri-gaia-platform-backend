@@ -7,6 +7,7 @@ import de.agrigaia.platform.business.errors.ErrorType
 import de.agrigaia.platform.common.HasLogger
 import de.agrigaia.platform.integration.edc.EdcIntegrationService
 import de.agrigaia.platform.model.edc.Asset
+import de.agrigaia.platform.model.edc.PolicyDto
 import de.agrigaia.platform.persistence.repository.AssetRepository
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.HttpStatus
@@ -78,12 +79,12 @@ class EdcController @Autowired constructor(
      * @return list of policies in MinIO user's bucket
      */
     @GetMapping("policies")
-    fun getAllPolicies(): ResponseEntity<List<String>> {
+    fun getAllPolicies(): ResponseEntity<List<PolicyDto>> {
         val jwt = getJwtToken().tokenValue
         val bucketName = getBucketName()
         // TODO: Returned JSON badly formatted.
         // ["{    \"uid\": \"use-eu\",\n    \"id\": \"3a75736e-001d-4364-8bd4-9888490edb59\",\n    \"policy\": {\n        \"permissions\": [\n            {\n                \"edctype\": \"dataspaceconnector:permission\",\n                \"uid\": null,\n                \"target\": \"<TARGET>\",\n                \"action\": {\n                    \"type\": \"USE\",\n                    \"includedIn\": null,\n                    \"constraint\": null\n                },\n                \"assignee\": null,\n                \"assigner\": null,\n                \"co
-        val allPolicies = edcBusinessService.getAllPolicies(jwt, bucketName)
+        val allPolicies = edcIntegrationService.getAllPolicies(jwt, bucketName)
 //        getLogger().debug(allPolicies.toString())
         return ResponseEntity.ok(allPolicies)
     }
@@ -99,7 +100,7 @@ class EdcController @Autowired constructor(
     fun getPolicy(@PathVariable policyName: String): ResponseEntity<String> {
         val jwt = getJwtToken().tokenValue
         val bucketName = getBucketName()
-        val policy = edcBusinessService.getPolicy(jwt, bucketName, policyName)
+        val policy = edcIntegrationService.getPolicy(jwt, bucketName, policyName)
         return ResponseEntity.ok(policy)
     }
 
@@ -113,7 +114,7 @@ class EdcController @Autowired constructor(
     fun addPolicy(@PathVariable policyName: String, @RequestBody policyJson: String) {
         val jwtTokenValue = getJwtToken().tokenValue
         val bucketName = getBucketName()
-        edcBusinessService.addPolicy(jwtTokenValue, bucketName, policyName, policyJson)
+        edcIntegrationService.addPolicy(jwtTokenValue, bucketName, policyName, policyJson)
     }
 
 
@@ -127,7 +128,7 @@ class EdcController @Autowired constructor(
     fun deletePolicy(@PathVariable policyName: String) {
         val jwtTokenValue = getJwtToken().tokenValue
         val bucketName = getBucketName()
-        edcBusinessService.deletePolicy(jwtTokenValue, bucketName, policyName)
+        edcIntegrationService.deletePolicy(jwtTokenValue, bucketName, policyName)
     }
 
 
@@ -225,7 +226,7 @@ class EdcController @Autowired constructor(
         )
 
         val jwtToken = getJwtToken().tokenValue
-        val policyJson: String = this.edcBusinessService.getPolicyforAsset(jwtToken, bucketName, policyName, assetName)
+        val policyJson: String = this.edcIntegrationService.getPolicyforAsset(jwtToken, bucketName, policyName, assetName)
         val policyUUID: String = this.edcBusinessService.extractIdfromPolicy(policyJson)
         val contractUUID = UUID.randomUUID().toString()
         val contractDefinitionJson =
