@@ -96,7 +96,7 @@ class EdcController @Autowired constructor(
     fun getPolicy(@PathVariable policyName: String): ResponseEntity<String> {
         val jwt = getJwtToken().tokenValue
         val bucketName = getBucketName()
-        val policy = edcIntegrationService.getPolicy(jwt, bucketName, policyName)
+        val policy = edcIntegrationService.getPolicyJson(jwt, bucketName, policyName)
         return ResponseEntity.ok(policy)
     }
 
@@ -173,7 +173,6 @@ class EdcController @Autowired constructor(
         TODO("Not yet implemented")
     }
 
-
     @DeleteMapping("unpublish/{bucketName}/{assetName}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     fun unpublishAsset(@PathVariable bucketName: String, @PathVariable assetName: String) {
@@ -221,7 +220,8 @@ class EdcController @Autowired constructor(
         )
 
         val jwtToken = getJwtToken().tokenValue
-        val policyJson: String = this.edcIntegrationService.getPolicyforAsset(jwtToken, bucketName, policyName, assetName)
+        val policyJson: String =
+            this.edcIntegrationService.getPolicyforAsset(jwtToken, bucketName, policyName, assetName)
         val policyUUID: String = this.edcBusinessService.extractIdfromPolicy(policyJson)
         val contractUUID = UUID.randomUUID().toString()
         val contractDefinitionJson =
@@ -253,24 +253,6 @@ class EdcController @Autowired constructor(
             )
         }
     }
-        
-    @DeleteMapping("unpublish/{bucketName}/{assetName}")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
-    fun unpublishAsset(@PathVariable bucketName: String, @PathVariable assetName: String) {
-
-        val asset: Asset = assetRepository.findByBucketAndName(bucketName, assetName)
-            ?: throw BusinessException("Asset was null", ErrorType.BAD_REQUEST)
-
-        val assetId = asset.assetId
-            ?: throw BusinessException("assetId was null", ErrorType.BAD_REQUEST)
-        val policyId = asset.policyId
-            ?: throw BusinessException("policyId was null", ErrorType.BAD_REQUEST)
-        val contractId = asset.contractId
-            ?: throw BusinessException("contractId was null", ErrorType.BAD_REQUEST)
-
-        assetRepository.delete(asset)
-        this.edcIntegrationService.unpublishAsset(assetId, policyId, contractId)
-    }
 
 
     /**
@@ -282,7 +264,7 @@ class EdcController @Autowired constructor(
     @GetMapping("policies/{bucketName}")
     fun getPolicyNames(@PathVariable bucketName: String): ResponseEntity<List<String>> {
         val jwt = getJwt()
-        val policyNames: List<String> = this.edcBusinessService.getPolicyNames(jwt, bucketName)
+        val policyNames: List<String> = this.edcIntegrationService.getAllPolicyNames(jwt, bucketName)
         return ResponseEntity.ok(policyNames)
     }
 
