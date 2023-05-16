@@ -82,10 +82,7 @@ class EdcController @Autowired constructor(
     fun getAllPolicies(): ResponseEntity<List<PolicyDto>> {
         val jwt = getJwtToken().tokenValue
         val bucketName = getBucketName()
-        // TODO: Returned JSON badly formatted.
-        // ["{    \"uid\": \"use-eu\",\n    \"id\": \"3a75736e-001d-4364-8bd4-9888490edb59\",\n    \"policy\": {\n        \"permissions\": [\n            {\n                \"edctype\": \"dataspaceconnector:permission\",\n                \"uid\": null,\n                \"target\": \"<TARGET>\",\n                \"action\": {\n                    \"type\": \"USE\",\n                    \"includedIn\": null,\n                    \"constraint\": null\n                },\n                \"assignee\": null,\n                \"assigner\": null,\n                \"co
         val allPolicies = edcIntegrationService.getAllPolicies(jwt, bucketName)
-//        getLogger().debug(allPolicies.toString())
         return ResponseEntity.ok(allPolicies)
     }
 
