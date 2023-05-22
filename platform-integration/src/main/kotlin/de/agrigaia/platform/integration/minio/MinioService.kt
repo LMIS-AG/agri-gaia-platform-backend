@@ -4,7 +4,8 @@ import de.agrigaia.platform.model.buckets.STSDto
 import io.minio.*
 import io.minio.credentials.Jwt
 import io.minio.credentials.WebIdentityProvider
-import io.minio.messages.*
+import io.minio.messages.Bucket
+import io.minio.messages.Item
 import jakarta.servlet.http.HttpServletResponse
 import org.apache.logging.log4j.LogManager.getLogger
 import org.jsoup.Jsoup
@@ -69,26 +70,32 @@ class MinioService(
         return minioClient.listObjects(bucketArgs).toList()
     }
 
-    fun getFileContent(jwt: String, bucketName: String, fileName: String): String {
+    fun downloadTextFile(jwt: String, bucketName: String, filePath: String): String {
+        val minioClient = this.getMinioClient(jwt)
+        val stream: GetObjectResponse = minioClient.getObject(
+            GetObjectArgs.builder()
+                .bucket(bucketName)
+                .`object`(filePath)
+                .build()
+        )
+        BufferedReader(InputStreamReader(stream)).use { reader -> return reader.readText() }
+    }
+
+    fun uploadTextFile(jwt: String, bucketName: String, filePath: String, textFile: String) {
         val minioClient = this.getMinioClient(jwt)
 
-        val sqlExpression = "select * from S3Object"
-        val iss = InputSerialization(null, false, null, null, FileHeaderInfo.USE, null, null, null)
-        val os = OutputSerialization(null, null, null, QuoteFields.ASNEEDED, null)
+        val fileByteArray: ByteArray = textFile.toByteArray()
+        val size = fileByteArray.size.toLong()
+        val inputStream = ByteArrayInputStream(fileByteArray)
 
-        val getObjectArgs = SelectObjectContentArgs.builder()
-            .bucket(bucketName)
-            .`object`(fileName)
-            .sqlExpression(sqlExpression)
-            .inputSerialization(iss)
-            .outputSerialization(os)
-            .requestProgress(true)
-            .build()
+        minioClient.putObject(
+            PutObjectArgs.builder()
+                .bucket(bucketName)
+                .`object`(filePath)
+                .stream(inputStream, size, -1)
+                .build()
+        )
 
-        val selectObjectContent = minioClient.selectObjectContent(getObjectArgs)
-        val text = selectObjectContent.bufferedReader().use(BufferedReader::readText)
-
-        return fixString(text)
     }
 
     fun uploadAssets(jwt: String, bucketName: String, currentRoot: String, files: Array<MultipartFile>) {
@@ -122,7 +129,7 @@ class MinioService(
         response.setHeader("Content-Disposition", "attachment; filename=$fileName")
 
         val outputStream = response.outputStream
-            inputStream.use { input -> outputStream.use { output -> input.copyTo(output) } }
+        inputStream.use { input -> outputStream.use { output -> input.copyTo(output) } }
     }
 
     fun downloadFolder(jwt: String, bucketName: String, folderName: String, response: HttpServletResponse) {
@@ -134,7 +141,7 @@ class MinioService(
             .recursive(true)
             .build()
 
-        val objectList = minioClient.listObjects(listObjectsArgs).toList().map{ it.get() }
+        val objectList = minioClient.listObjects(listObjectsArgs).toList().map { it.get() }
 
         val baseName = File(folderName).name
         response.contentType = "application/zip"
@@ -160,15 +167,8 @@ class MinioService(
     }
 
     fun deleteAsset(jwt: String, bucket: String, fileName: String) {
-        val minioClient = this.getMinioClient(jwt)
-
-        minioClient.removeObject(RemoveObjectArgs.builder().bucket(bucket).`object`(fileName).build())
+        this.getMinioClient(jwt).removeObject(RemoveObjectArgs.builder().bucket(bucket).`object`(fileName).build())
     }
-
-    // TODO Please fix this, it's so bad
-    private fun fixString(assetJson: String) =
-        "{" + assetJson.replace("\" ", " ").replace("\",", ",").replace("\"\n", "\n").replace("\"\"", "\"")
-
 
     private fun getMinioClient(jwt: String): MinioClient {
         val minioUrl = this.minioProperties.url ?: throw Exception("No url given in MinioProperties.")
@@ -206,8 +206,8 @@ class MinioService(
 
         val response: String = request
             .retrieve()
-            .onStatus({ it.is4xxClientError}, ::handleClientError)
-            .onStatus({ it.is5xxServerError}, ::handleServerError)
+            .onStatus({ it.is4xxClientError }, ::handleClientError)
+            .onStatus({ it.is5xxServerError }, ::handleServerError)
             .bodyToMono(String::class.java)
             .block() ?: throw Exception("Response from Minio was null.")
 

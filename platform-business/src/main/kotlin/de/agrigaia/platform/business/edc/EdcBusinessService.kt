@@ -2,9 +2,8 @@ package de.agrigaia.platform.business.edc
 
 import de.agrigaia.platform.business.errors.BusinessException
 import de.agrigaia.platform.business.errors.ErrorType
+import de.agrigaia.platform.common.HasLogger
 import de.agrigaia.platform.integration.fuseki.FusekiConnectorService
-import de.agrigaia.platform.integration.minio.MinioService
-import io.minio.messages.Item
 import org.springframework.stereotype.Service
 
 /**
@@ -13,42 +12,7 @@ import org.springframework.stereotype.Service
 @Service
 class EdcBusinessService(
     private val fusekiConnectorService: FusekiConnectorService,
-    private val minioService: MinioService,
-) {
-
-    /**
-     * Return all policy `Item`s in a MinIO bucket.
-     * @param jwt JSON web token
-     * @param bucketName name of MinIO bucket
-     * @return List of policy `Item` objects.
-     */
-    private fun getPolicyItems(jwt: String, bucketName: String): List<Item> {
-        return this.minioService.getAssetsForBucket(jwt, bucketName, "policies").map { it.get() }
-    }
-
-    /**
-     * Get names of policies in a MinIO bucket.
-     * @param jwt JSON web token
-     * @param bucketName name of MinIO bucket
-     * @return List of strings of policy names in MinIO bucket.
-     */
-    fun getPolicyNames(jwt: String, bucketName: String): List<String> {
-        return this.getPolicyItems(jwt, bucketName)
-            .map { it.objectName().removePrefix("policies/").removeSuffix(".json") }
-    }
-
-    /**
-     * Get policy from MinIO bucket with correct values for asset.
-     * @param jwt JSON web token
-     * @param bucketName name of MinIO bucket
-     * @param policyName name of policy
-     * @param assetName name of asset
-     * @return String containing the policy JSON with correct field values for asset.
-     */
-    fun getPolicy(jwt: String, bucketName: String, policyName: String, assetName: String): String {
-        val policyTemplate: String = this.minioService.getFileContent(jwt, bucketName, "policies/$policyName.json")
-        return preparePolicyTemplate(policyTemplate, assetName)
-    }
+) : HasLogger {
 
     /**
      * Substitute correct target value in policy template.
