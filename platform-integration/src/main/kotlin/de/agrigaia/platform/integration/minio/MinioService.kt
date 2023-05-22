@@ -42,6 +42,7 @@ class MinioService(
         return minioClient.bucketExists(BucketExistsArgs.builder().bucket(bucketName).build())
     }
 
+    // TODO: `getAssetsForCoopspace()` and `getAssetsForBucket()` are virtually identical.
     fun getAssetsForCoopspace(jwt: String, company: String, bucketName: String, folder: String): List<Result<Item>> {
         val minioClient = this.getMinioClient(jwt)
 
