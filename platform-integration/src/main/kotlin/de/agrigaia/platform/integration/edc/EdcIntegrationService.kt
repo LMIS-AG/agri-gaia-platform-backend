@@ -41,9 +41,13 @@ class EdcIntegrationService(private val minioService: MinioService) : HasLogger 
      * @return list of policies
      */
     fun getAllPolicies(jwtTokenValue: String, bucketName: String): List<PolicyDto> {
-        return this.minioService.getAssetsForBucket(jwtTokenValue, bucketName, "policies")
+        val accessPolicies = minioService.getAssetsForBucket(jwtTokenValue, bucketName, "policies/access")
             .map { PolicyDto(policyPathToName(it.get().objectName()), PolicyType.ACCESS) }
+        val contractPolicies = minioService.getAssetsForBucket(jwtTokenValue, bucketName, "policies/contract")
+            .map { PolicyDto(policyPathToName(it.get().objectName()), PolicyType.CONTRACT) }
+        return accessPolicies + contractPolicies
     }
+
 
     /**
      * Returns raw policy JSON.
@@ -128,7 +132,7 @@ class EdcIntegrationService(private val minioService: MinioService) : HasLogger 
     }
 
     private fun policyPathToName(policyPath: String): String {
-        return policyPath.removePrefix("policies/").removeSuffix(".json")
+        return policyPath.substringAfterLast('/').removeSuffix(".json")
     }
 
     fun publishAsset(assetJson: String, policyJson: String, contractDefinitionJson: String) {
