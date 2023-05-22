@@ -29,7 +29,7 @@ class EdcIntegrationService(private val minioService: MinioService) : HasLogger 
      * @param bucketName name of MinIO bucket
      * @return List of strings of policy names in MinIO bucket.
      */
-    fun getAllPolicyNames(jwt: String, bucketName: String): List<String> {
+    private fun getAllPolicyNames(jwt: String, bucketName: String): List<String> {
         return this.minioService.getAssetsForBucket(jwt, bucketName, "policies")
             .map { policyPathToName(it.get().objectName()) }
     }

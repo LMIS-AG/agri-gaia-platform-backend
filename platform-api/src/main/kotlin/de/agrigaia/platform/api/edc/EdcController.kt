@@ -254,21 +254,6 @@ class EdcController @Autowired constructor(
         }
     }
 
-
-    /**
-     * Returns a list of policy names from a Minio bucket.
-     *
-     * @param bucketName name of the MinIO bucket
-     * @return list of names of the policies in MinIO bucket `bucketName`
-     */
-    @GetMapping("policies/{bucketName}")
-    fun getPolicyNames(@PathVariable bucketName: String): ResponseEntity<List<String>> {
-        val jwt = getJwt()
-        val policyNames: List<String> = this.edcIntegrationService.getAllPolicyNames(jwt, bucketName)
-        return ResponseEntity.ok(policyNames)
-    }
-
-
     /**
      * Save a policy to a MinioBucket.
      *
