@@ -255,19 +255,6 @@ class EdcController @Autowired constructor(
     }
 
     /**
-     * Save a policy to a MinioBucket.
-     *
-     * @param bucketName name of the MinIO bucket
-     * @param policyName name of the policy
-     * @return TODO
-     */
-    @PostMapping("policies/{bucketName}/{policyName}")
-    fun addPolicy(@PathVariable bucketName: String, @PathVariable policyName: String, @RequestBody policyJson: String) {
-        TODO("Not yet implemented")
-    }
-
-
-    /**
      * Delete a policy from a MinIO bucket.
      *
      * @param bucketName name of the MinIO bucket
