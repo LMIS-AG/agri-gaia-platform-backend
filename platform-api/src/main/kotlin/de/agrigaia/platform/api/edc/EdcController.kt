@@ -8,6 +8,7 @@ import de.agrigaia.platform.common.HasLogger
 import de.agrigaia.platform.integration.edc.EdcIntegrationService
 import de.agrigaia.platform.model.edc.Asset
 import de.agrigaia.platform.model.edc.PolicyDto
+import de.agrigaia.platform.model.edc.PolicyType
 import de.agrigaia.platform.persistence.repository.AssetRepository
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.HttpStatus
@@ -102,15 +103,18 @@ class EdcController @Autowired constructor(
 
     /**
      * Add a policy to the user's MinioBucket.
-     *
-     * @param policyName name of the policy
-     * @policyJson request body, json of the policy
+     * @policyDto request body, policyDto
      */
-    @PostMapping("policies/{policyName}")
-    fun addPolicy(@PathVariable policyName: String, @RequestBody policyJson: String) {
+    @PostMapping("policies")
+    fun addPolicy(@RequestBody policyDto: PolicyDto) {
+        val name: String = policyDto.name ?: throw BusinessException("name was null", ErrorType.BAD_REQUEST)
+        val policyType: PolicyType = policyDto.policyType ?: throw BusinessException("policyType was null", ErrorType.BAD_REQUEST)
+        val rawJson: String = policyDto.rawJson ?: throw BusinessException("rawJson was null", ErrorType.BAD_REQUEST)
+
         val jwtTokenValue = getJwtToken().tokenValue
         val bucketName = getBucketName()
-        edcIntegrationService.addPolicy(jwtTokenValue, bucketName, policyName, policyJson)
+
+        edcIntegrationService.addPolicy(jwtTokenValue, bucketName, name, rawJson, policyType)
     }
 
 

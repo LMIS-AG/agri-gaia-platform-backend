@@ -42,9 +42,13 @@ class EdcIntegrationService(private val minioService: MinioService) : HasLogger 
      */
     fun getAllPolicies(jwtTokenValue: String, bucketName: String): List<PolicyDto> {
         val accessPolicies = minioService.getAssetsForBucket(jwtTokenValue, bucketName, "policies/access")
-            .map { PolicyDto(policyPathToName(it.get().objectName()), PolicyType.ACCESS) }
+            .map {
+                PolicyDto(policyPathToName(it.get().objectName()), PolicyType.ACCESS, null)
+            }
         val contractPolicies = minioService.getAssetsForBucket(jwtTokenValue, bucketName, "policies/contract")
-            .map { PolicyDto(policyPathToName(it.get().objectName()), PolicyType.CONTRACT) }
+            .map {
+                PolicyDto(policyPathToName(it.get().objectName()), PolicyType.CONTRACT, null)
+            }
         return accessPolicies + contractPolicies
     }
 
@@ -96,7 +100,13 @@ class EdcIntegrationService(private val minioService: MinioService) : HasLogger 
      * @param policyName name of policy
      * @policyJson policy as JSON
      */
-    fun addPolicy(jwtTokenValue: String, bucketName: String, policyName: String, policyJson: String) {
+    fun addPolicy(
+        jwtTokenValue: String,
+        bucketName: String,
+        policyName: String,
+        policyJson: String,
+        policyType: PolicyType
+    ) {
         val policyNameExists: Boolean = getAllPolicyNames(jwtTokenValue, bucketName).contains(policyName)
         if (policyNameExists) {
             throw Exception("Policy with name $policyName already exists in bucket $bucketName.")
@@ -105,7 +115,13 @@ class EdcIntegrationService(private val minioService: MinioService) : HasLogger 
         // TODO: Policy must be valid (only EDC can really verify so what the heck).
 
         // Upload policy to user's bucket.
-        minioService.uploadTextFile(jwtTokenValue, bucketName, "policies/$policyName.json", policyJson)
+        val filePath = "policies/${if (policyType == PolicyType.ACCESS) "access/" else "contracts/"}$policyName.json"
+        minioService.uploadTextFile(
+            jwtTokenValue,
+            bucketName,
+            filePath,
+            policyJson
+        )
     }
 
     /**
