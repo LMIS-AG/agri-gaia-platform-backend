@@ -283,8 +283,4 @@ class EdcController @Autowired constructor(
         TODO("Not yet implemented")
     }
 
-    private fun getJwt(): String {
-        val jwtAuthenticationToken = SecurityContextHolder.getContext().authentication as JwtAuthenticationToken
-        return jwtAuthenticationToken.token.tokenValue
-    }
 }
