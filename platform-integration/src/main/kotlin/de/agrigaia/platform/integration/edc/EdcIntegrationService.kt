@@ -42,14 +42,16 @@ class EdcIntegrationService(private val minioService: MinioService) : HasLogger 
      * @return list of policies
      */
     fun getAllPolicies(jwtTokenValue: String, bucketName: String): List<PolicyDto> {
-        val accessPolicies = minioService.getAssetsForBucket(jwtTokenValue, bucketName, "policies/access")
-            .map {
-                PolicyDto(policyPathToName(it.get().objectName()), PolicyType.ACCESS, null)
-            }
-        val contractPolicies = minioService.getAssetsForBucket(jwtTokenValue, bucketName, "policies/contract")
-            .map {
-                PolicyDto(policyPathToName(it.get().objectName()), PolicyType.CONTRACT, null)
-            }
+        val accessPolicies = minioService.getAssetsForBucket(
+            jwtTokenValue,
+            bucketName,
+            "policies/access",
+        ).map { PolicyDto(policyPathToName(it.get().objectName()), PolicyType.ACCESS, null) }
+        val contractPolicies = minioService.getAssetsForBucket(
+            jwtTokenValue,
+            bucketName,
+            "policies/contract",
+        ).map { PolicyDto(policyPathToName(it.get().objectName()), PolicyType.CONTRACT, null) }
         return accessPolicies + contractPolicies
     }
 
