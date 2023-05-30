@@ -1,9 +1,6 @@
 package de.agrigaia.platform.integration.edc
 
-import com.fasterxml.jackson.core.JacksonException
-import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.databind.JsonNode
-import com.fasterxml.jackson.databind.ObjectMapper
 import de.agrigaia.platform.common.HasLogger
 import de.agrigaia.platform.integration.minio.MinioService
 import de.agrigaia.platform.model.edc.PolicyDto
@@ -93,7 +90,12 @@ class EdcIntegrationService(private val minioService: MinioService) : HasLogger 
      */
     fun deletePolicy(jwtTokenValue: String, bucketName: String, policyName: String) {
         for (p in PolicyType.values()) {
-            this.minioService.deleteAsset(jwtTokenValue, bucketName, "policies/${policyTypeToDir(p)}/$policyName.json")
+            val policyDir = policyTypeToDir(p)
+            this.minioService.deleteAsset(
+                jwtTokenValue,
+                bucketName,
+                "policies/$policyDir/$policyName.json",
+            )
         }
     }
 
@@ -116,7 +118,6 @@ class EdcIntegrationService(private val minioService: MinioService) : HasLogger 
         if (policyNameExists) {
             throw Exception("Policy with name $policyName already exists in bucket $bucketName.")
         }
-        if (!isValidJson(policyJson.toString())) throw Exception("Policy content is not valid JSON.")
         // TODO: Policy must be valid (only EDC can really verify so what the heck).
 
         // Upload policy to user's bucket.
@@ -204,17 +205,6 @@ class EdcIntegrationService(private val minioService: MinioService) : HasLogger 
     }
 
     // TODO: These can all be moved to a more central place.
-    private fun isValidJson(json: String): Boolean {
-        val mapper: ObjectMapper = ObjectMapper()
-            .enable(DeserializationFeature.FAIL_ON_TRAILING_TOKENS)
-        try {
-            mapper.readTree(json)
-        } catch (e: JacksonException) {
-            return false
-        }
-        return true
-    }
-
     /**
      * Substitute correct target value in policy template.
      * @param policyTemplate policy JSON from MinIO with placeholder values
