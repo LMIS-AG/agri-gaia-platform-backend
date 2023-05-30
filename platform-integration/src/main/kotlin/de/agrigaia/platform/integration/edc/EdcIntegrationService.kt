@@ -45,7 +45,10 @@ class EdcIntegrationService(private val minioService: MinioService) : HasLogger 
                 jwtTokenValue,
                 bucketName,
                 "policies/${policyTypeToDir(policyType)}",
-            ).map { PolicyDto(policyPathToName(it.get().objectName()), policyType, null) }
+            ).map {
+                val policyName = policyPathToName(it.get().objectName())
+                PolicyDto(policyName, policyType, null)
+            }
             policies.addAll(p)
         }
         return policies
