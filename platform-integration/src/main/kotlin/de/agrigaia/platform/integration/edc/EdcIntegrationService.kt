@@ -44,7 +44,7 @@ class EdcIntegrationService(private val minioService: MinioService) : HasLogger 
             val p = minioService.getAssetsForBucket(
                 jwtTokenValue,
                 bucketName,
-                "policies/${policyType.toString().lowercase()}",
+                "policies/${policyTypeToDir(policyType)}",
             ).map { PolicyDto(policyPathToName(it.get().objectName()), policyType, null) }
             policies.addAll(p)
         }
@@ -219,10 +219,5 @@ class EdcIntegrationService(private val minioService: MinioService) : HasLogger 
         return policyPath.substringAfterLast('/').removeSuffix(".json")
     }
 
-    private fun policyTypeToDir(p: PolicyType): String {
-        return when (p) {
-            PolicyType.ACCESS -> "access"
-            PolicyType.CONTRACT -> "contract"
-        }
-    }
+    private fun policyTypeToDir(p: PolicyType): String = p.toString().lowercase()
 }
