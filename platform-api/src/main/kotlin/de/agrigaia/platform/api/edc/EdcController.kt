@@ -1,5 +1,6 @@
 package de.agrigaia.platform.api.edc
 
+import com.fasterxml.jackson.databind.JsonNode
 import de.agrigaia.platform.api.BaseController
 import de.agrigaia.platform.business.edc.EdcBusinessService
 import de.agrigaia.platform.business.errors.BusinessException
@@ -107,14 +108,14 @@ class EdcController @Autowired constructor(
      */
     @PostMapping("policies")
     fun addPolicy(@RequestBody policyDto: PolicyDto) {
-        val name: String = policyDto.name ?: throw BusinessException("name was null", ErrorType.BAD_REQUEST)
+        val policyName: String = policyDto.name ?: throw BusinessException("name was null", ErrorType.BAD_REQUEST)
         val policyType: PolicyType = policyDto.policyType ?: throw BusinessException("policyType was null", ErrorType.BAD_REQUEST)
-        val rawJson: String = policyDto.rawJson ?: throw BusinessException("rawJson was null", ErrorType.BAD_REQUEST)
+        val rawJson: JsonNode = policyDto.rawJson ?: throw BusinessException("rawJson was null", ErrorType.BAD_REQUEST)
 
         val jwtTokenValue = getJwtToken().tokenValue
         val bucketName = getBucketName()
 
-        edcIntegrationService.addPolicy(jwtTokenValue, bucketName, name, rawJson, policyType)
+        edcIntegrationService.addPolicy(jwtTokenValue, bucketName, policyName, rawJson, policyType)
     }
 
 

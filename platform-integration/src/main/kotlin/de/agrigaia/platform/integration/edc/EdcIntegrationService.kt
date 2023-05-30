@@ -2,6 +2,7 @@ package de.agrigaia.platform.integration.edc
 
 import com.fasterxml.jackson.core.JacksonException
 import com.fasterxml.jackson.databind.DeserializationFeature
+import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import de.agrigaia.platform.common.HasLogger
 import de.agrigaia.platform.integration.minio.MinioService
@@ -90,7 +91,9 @@ class EdcIntegrationService(private val minioService: MinioService) : HasLogger 
      * @return 200, even if file did not exist (MinIO is dumb)
      */
     fun deletePolicy(jwtTokenValue: String, bucketName: String, policyName: String) {
-        this.minioService.deleteAsset(jwtTokenValue, bucketName, "policies/$policyName.json")
+        for (p in PolicyType.values()) {
+            this.minioService.deleteAsset(jwtTokenValue, bucketName, "policies/${policyTypeToDir(p)}/$policyName.json")
+        }
     }
 
     /**
@@ -104,51 +107,25 @@ class EdcIntegrationService(private val minioService: MinioService) : HasLogger 
         jwtTokenValue: String,
         bucketName: String,
         policyName: String,
-        policyJson: String,
+        policyJson: JsonNode,
         policyType: PolicyType
     ) {
         val policyNameExists: Boolean = getAllPolicyNames(jwtTokenValue, bucketName).contains(policyName)
+        // TODO: Generic exceptions send 500 with useless error message.
         if (policyNameExists) {
             throw Exception("Policy with name $policyName already exists in bucket $bucketName.")
         }
-        if (!isValidJson(policyJson)) throw Exception("Request body is not valid JSON.")
+        if (!isValidJson(policyJson.toString())) throw Exception("Policy content is not valid JSON.")
         // TODO: Policy must be valid (only EDC can really verify so what the heck).
 
         // Upload policy to user's bucket.
-        val filePath = "policies/${if (policyType == PolicyType.ACCESS) "access/" else "contracts/"}$policyName.json"
+        val filePath = "policies/${policyTypeToDir(policyType)}/$policyName.json"
         minioService.uploadTextFile(
             jwtTokenValue,
             bucketName,
             filePath,
-            policyJson
+            policyJson.toString(),
         )
-    }
-
-    /**
-     * Substitute correct target value in policy template.
-     * @param policyTemplate policy JSON from MinIO with placeholder values
-     * @param target value to set target field to
-     * @return String containing the policy JSON with correct field values for asset.
-     */
-    private fun fillInPolicyTemplate(policyTemplate: String, target: String): String {
-        return policyTemplate.replace("<TARGET>", target)
-    }
-
-
-    // TODO: This can be moved to a more central place.
-    private fun isValidJson(json: String): Boolean {
-        val mapper: ObjectMapper = ObjectMapper()
-            .enable(DeserializationFeature.FAIL_ON_TRAILING_TOKENS)
-        try {
-            mapper.readTree(json)
-        } catch (e: JacksonException) {
-            return false
-        }
-        return true
-    }
-
-    private fun policyPathToName(policyPath: String): String {
-        return policyPath.substringAfterLast('/').removeSuffix(".json")
     }
 
     fun publishAsset(assetJson: String, policyJson: String, contractDefinitionJson: String) {
@@ -223,5 +200,38 @@ class EdcIntegrationService(private val minioService: MinioService) : HasLogger 
             .retrieve()
             .bodyToMono(String::class.java)
             .block()
+    }
+
+    // TODO: These can all be moved to a more central place.
+    private fun isValidJson(json: String): Boolean {
+        val mapper: ObjectMapper = ObjectMapper()
+            .enable(DeserializationFeature.FAIL_ON_TRAILING_TOKENS)
+        try {
+            mapper.readTree(json)
+        } catch (e: JacksonException) {
+            return false
+        }
+        return true
+    }
+
+    /**
+     * Substitute correct target value in policy template.
+     * @param policyTemplate policy JSON from MinIO with placeholder values
+     * @param target value to set target field to
+     * @return String containing the policy JSON with correct field values for asset.
+     */
+    private fun fillInPolicyTemplate(policyTemplate: String, target: String): String {
+        return policyTemplate.replace("<TARGET>", target)
+    }
+
+    private fun policyPathToName(policyPath: String): String {
+        return policyPath.substringAfterLast('/').removeSuffix(".json")
+    }
+
+    private fun policyTypeToDir(p: PolicyType): String {
+        return when (p) {
+            PolicyType.ACCESS -> "access"
+            PolicyType.CONTRACT -> "contract"
+        }
     }
 }
