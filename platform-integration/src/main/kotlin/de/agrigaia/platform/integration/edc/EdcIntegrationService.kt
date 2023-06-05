@@ -207,7 +207,6 @@ class EdcIntegrationService(private val minioService: MinioService) : HasLogger 
             .block()
     }
 
-    // TODO: These can all be moved to a more central place.
     /**
      * Substitute correct target value in policy template.
      * @param policyTemplate policy JSON from MinIO with placeholder values
