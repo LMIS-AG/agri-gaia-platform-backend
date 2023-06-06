@@ -33,8 +33,8 @@ class EdcController @Autowired constructor(
      *
      * @return list of assets in MinIO user's bucket
      */
-    @GetMapping("assets")
-    fun getAllAssets(): ResponseEntity<List<String>> {
+    @GetMapping("assetjsons")
+    fun getAllAssetjsons(): ResponseEntity<List<String>> {
         TODO("Not yet implemented")
     }
 
@@ -46,7 +46,7 @@ class EdcController @Autowired constructor(
      * @return TODO
      */
     @GetMapping("assets/{assetName}")
-    fun getAsset(@PathVariable assetName: String) {
+    fun getAssetjson(@PathVariable assetName: String) {
         TODO("Not yet implemented")
     }
 
@@ -57,7 +57,7 @@ class EdcController @Autowired constructor(
      * @return TODO
      */
     @PostMapping("assets/{assetName}")
-    fun addAsset(@PathVariable assetName: String, @RequestBody assetJson: String) {
+    fun addAssetjson(@PathVariable assetName: String, @RequestBody assetJson: String) {
         TODO("Not yet implemented")
     }
 
@@ -69,7 +69,7 @@ class EdcController @Autowired constructor(
      * @return TODO
      */
     @DeleteMapping("assets/{assetName}")
-    fun deleteAsset(@PathVariable assetName: String) {
+    fun deleteAssetjson(@PathVariable assetName: String) {
         TODO("Not yet implemented")
     }
 
