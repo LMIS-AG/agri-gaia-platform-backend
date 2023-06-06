@@ -69,7 +69,8 @@ class BucketController @Autowired constructor(
                         asset.size().toString(),
                         "label",
                         bucketName,
-                        isPublished(bucketName, asset.objectName().replace("assets/", ""))
+                        isPublished(bucketName, asset.objectName().substringAfterLast('/')),
+                        false,
                     )
                 }
             return ResponseEntity.ok(assetsForBucket)

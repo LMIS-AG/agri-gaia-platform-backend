@@ -152,7 +152,9 @@ open class CoopSpaceController @Autowired constructor(
                         it.size().toString(),
                         "label",
                         bucketName,
-                        isPublished = false
+                        // CoopSpaces don't support EDC shenanigans, so these two are undefined.
+                        isPublished = null,
+                        hasAssetjson = null,
                     )
                 }
             ResponseEntity.ok(assetsForBucket)
