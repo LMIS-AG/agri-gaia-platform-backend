@@ -22,6 +22,24 @@ class EdcIntegrationService(private val minioService: MinioService) : HasLogger 
     private val connectorEndpoint = "https://connector-consumer-9192.platform.agri-gaia.com/api/v1/data"
 
     /**
+     * Upload assetjson to MinIO.
+     */
+    fun addAssetjson(
+        jwtTokenValue: String,
+        bucketName: String,
+        assetjsonName: String,
+        assetJson: String,
+    ) {
+        // Upload policy to user's bucket.
+        val filePath = "assetjsons/$assetjsonName.json"
+        minioService.uploadTextFile(
+            jwtTokenValue,
+            bucketName,
+            filePath,
+            assetJson,
+        )
+    }
+    /**
      * Get names of policies in a MinIO bucket.
      * @param jwt JSON web token
      * @param bucketName name of MinIO bucket
