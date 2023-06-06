@@ -1,8 +1,6 @@
 package de.agrigaia.platform.integration.edc
 
-import com.fasterxml.jackson.core.JacksonException
-import com.fasterxml.jackson.databind.DeserializationFeature
-import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.databind.JsonNode
 import de.agrigaia.platform.common.HasLogger
 import de.agrigaia.platform.integration.minio.MinioService
 import de.agrigaia.platform.model.edc.PolicyDto
@@ -29,7 +27,7 @@ class EdcIntegrationService(private val minioService: MinioService) : HasLogger 
      * @param bucketName name of MinIO bucket
      * @return List of strings of policy names in MinIO bucket.
      */
-    fun getAllPolicyNames(jwt: String, bucketName: String): List<String> {
+    private fun getAllPolicyNames(jwt: String, bucketName: String): List<String> {
         return this.minioService.getAssetsForBucket(jwt, bucketName, "policies")
             .map { policyPathToName(it.get().objectName()) }
     }
@@ -41,9 +39,21 @@ class EdcIntegrationService(private val minioService: MinioService) : HasLogger 
      * @return list of policies
      */
     fun getAllPolicies(jwtTokenValue: String, bucketName: String): List<PolicyDto> {
-        return this.minioService.getAssetsForBucket(jwtTokenValue, bucketName, "policies")
-            .map { PolicyDto(policyPathToName(it.get().objectName()), PolicyType.ACCESS) }
+        val policies: MutableList<PolicyDto> = mutableListOf()
+        for (policyType in PolicyType.values()) {
+            val p = minioService.getAssetsForBucket(
+                jwtTokenValue,
+                bucketName,
+                "policies/${policyTypeToDir(policyType)}",
+            ).map {
+                val policyName = policyPathToName(it.get().objectName())
+                PolicyDto(policyName, policyType, null)
+            }
+            policies.addAll(p)
+        }
+        return policies
     }
+
 
     /**
      * Returns raw policy JSON.
@@ -82,7 +92,14 @@ class EdcIntegrationService(private val minioService: MinioService) : HasLogger 
      * @return 200, even if file did not exist (MinIO is dumb)
      */
     fun deletePolicy(jwtTokenValue: String, bucketName: String, policyName: String) {
-        this.minioService.deleteAsset(jwtTokenValue, bucketName, "policies/$policyName.json")
+        for (p in PolicyType.values()) {
+            val policyDir = policyTypeToDir(p)
+            this.minioService.deleteAsset(
+                jwtTokenValue,
+                bucketName,
+                "policies/$policyDir/$policyName.json",
+            )
+        }
     }
 
     /**
@@ -92,43 +109,28 @@ class EdcIntegrationService(private val minioService: MinioService) : HasLogger 
      * @param policyName name of policy
      * @policyJson policy as JSON
      */
-    fun addPolicy(jwtTokenValue: String, bucketName: String, policyName: String, policyJson: String) {
+    fun addPolicy(
+        jwtTokenValue: String,
+        bucketName: String,
+        policyName: String,
+        policyJson: JsonNode,
+        policyType: PolicyType
+    ) {
         val policyNameExists: Boolean = getAllPolicyNames(jwtTokenValue, bucketName).contains(policyName)
+        // TODO: Generic exceptions send 500 with useless error message.
         if (policyNameExists) {
             throw Exception("Policy with name $policyName already exists in bucket $bucketName.")
         }
-        if (!isValidJson(policyJson)) throw Exception("Request body is not valid JSON.")
         // TODO: Policy must be valid (only EDC can really verify so what the heck).
 
         // Upload policy to user's bucket.
-        minioService.uploadTextFile(jwtTokenValue, bucketName, "policies/$policyName.json", policyJson)
-    }
-
-    /**
-     * Substitute correct target value in policy template.
-     * @param policyTemplate policy JSON from MinIO with placeholder values
-     * @param target value to set target field to
-     * @return String containing the policy JSON with correct field values for asset.
-     */
-    private fun fillInPolicyTemplate(policyTemplate: String, target: String): String {
-        return policyTemplate.replace("<TARGET>", target)
-    }
-
-
-    // TODO: This can be moved to a more central place.
-    private fun isValidJson(json: String): Boolean {
-        val mapper: ObjectMapper = ObjectMapper()
-            .enable(DeserializationFeature.FAIL_ON_TRAILING_TOKENS)
-        try {
-            mapper.readTree(json)
-        } catch (e: JacksonException) {
-            return false
-        }
-        return true
-    }
-
-    private fun policyPathToName(policyPath: String): String {
-        return policyPath.removePrefix("policies/").removeSuffix(".json")
+        val filePath = "policies/${policyTypeToDir(policyType)}/$policyName.json"
+        minioService.uploadTextFile(
+            jwtTokenValue,
+            bucketName,
+            filePath,
+            policyJson.toString(),
+        )
     }
 
     fun publishAsset(assetJson: String, policyJson: String, contractDefinitionJson: String) {
@@ -204,4 +206,20 @@ class EdcIntegrationService(private val minioService: MinioService) : HasLogger 
             .bodyToMono(String::class.java)
             .block()
     }
+
+    /**
+     * Substitute correct target value in policy template.
+     * @param policyTemplate policy JSON from MinIO with placeholder values
+     * @param target value to set target field to
+     * @return String containing the policy JSON with correct field values for asset.
+     */
+    private fun fillInPolicyTemplate(policyTemplate: String, target: String): String {
+        return policyTemplate.replace("<TARGET>", target)
+    }
+
+    private fun policyPathToName(policyPath: String): String {
+        return policyPath.substringAfterLast('/').removeSuffix(".json")
+    }
+
+    private fun policyTypeToDir(p: PolicyType): String = p.toString().lowercase()
 }

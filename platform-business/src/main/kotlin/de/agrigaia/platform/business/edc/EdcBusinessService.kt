@@ -14,16 +14,6 @@ class EdcBusinessService(
     private val fusekiConnectorService: FusekiConnectorService,
 ) : HasLogger {
 
-    /**
-     * Substitute correct target value in policy template.
-     * @param policyTemplate policy JSON from MinIO with placeholder values
-     * @param target value to set target field to
-     * @return String containing the policy JSON with correct field values for asset.
-     */
-    private fun preparePolicyTemplate(policyTemplate: String, target: String): String {
-        return policyTemplate.replace("<TARGET>", target)
-    }
-
     fun createAssetJson(
         assetPropName: String,
         assetPropId: String,

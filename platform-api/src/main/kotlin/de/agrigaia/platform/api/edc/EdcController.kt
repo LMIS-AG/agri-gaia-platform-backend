@@ -1,5 +1,6 @@
 package de.agrigaia.platform.api.edc
 
+import com.fasterxml.jackson.databind.JsonNode
 import de.agrigaia.platform.api.BaseController
 import de.agrigaia.platform.business.edc.EdcBusinessService
 import de.agrigaia.platform.business.errors.BusinessException
@@ -8,6 +9,7 @@ import de.agrigaia.platform.common.HasLogger
 import de.agrigaia.platform.integration.edc.EdcIntegrationService
 import de.agrigaia.platform.model.edc.Asset
 import de.agrigaia.platform.model.edc.PolicyDto
+import de.agrigaia.platform.model.edc.PolicyType
 import de.agrigaia.platform.persistence.repository.AssetRepository
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.HttpStatus
@@ -102,15 +104,18 @@ class EdcController @Autowired constructor(
 
     /**
      * Add a policy to the user's MinioBucket.
-     *
-     * @param policyName name of the policy
-     * @policyJson request body, json of the policy
+     * @policyDto request body, policyDto
      */
-    @PostMapping("policies/{policyName}")
-    fun addPolicy(@PathVariable policyName: String, @RequestBody policyJson: String) {
+    @PostMapping("policies")
+    fun addPolicy(@RequestBody policyDto: PolicyDto) {
+        val policyName: String = policyDto.name ?: throw BusinessException("name was null", ErrorType.BAD_REQUEST)
+        val policyType: PolicyType = policyDto.policyType ?: throw BusinessException("policyType was null", ErrorType.BAD_REQUEST)
+        val rawJson: JsonNode = policyDto.rawJson ?: throw BusinessException("rawJson was null", ErrorType.BAD_REQUEST)
+
         val jwtTokenValue = getJwtToken().tokenValue
         val bucketName = getBucketName()
-        edcIntegrationService.addPolicy(jwtTokenValue, bucketName, policyName, policyJson)
+
+        edcIntegrationService.addPolicy(jwtTokenValue, bucketName, policyName, rawJson, policyType)
     }
 
 
@@ -254,34 +259,6 @@ class EdcController @Autowired constructor(
         }
     }
 
-
-    /**
-     * Returns a list of policy names from a Minio bucket.
-     *
-     * @param bucketName name of the MinIO bucket
-     * @return list of names of the policies in MinIO bucket `bucketName`
-     */
-    @GetMapping("policies/{bucketName}")
-    fun getPolicyNames(@PathVariable bucketName: String): ResponseEntity<List<String>> {
-        val jwt = getJwt()
-        val policyNames: List<String> = this.edcIntegrationService.getAllPolicyNames(jwt, bucketName)
-        return ResponseEntity.ok(policyNames)
-    }
-
-
-    /**
-     * Save a policy to a MinioBucket.
-     *
-     * @param bucketName name of the MinIO bucket
-     * @param policyName name of the policy
-     * @return TODO
-     */
-    @PostMapping("policies/{bucketName}/{policyName}")
-    fun addPolicy(@PathVariable bucketName: String, @PathVariable policyName: String, @RequestBody policyJson: String) {
-        TODO("Not yet implemented")
-    }
-
-
     /**
      * Delete a policy from a MinIO bucket.
      *
@@ -307,8 +284,4 @@ class EdcController @Autowired constructor(
         TODO("Not yet implemented")
     }
 
-    private fun getJwt(): String {
-        val jwtAuthenticationToken = SecurityContextHolder.getContext().authentication as JwtAuthenticationToken
-        return jwtAuthenticationToken.token.tokenValue
-    }
 }
