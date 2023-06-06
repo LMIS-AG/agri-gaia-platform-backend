@@ -40,7 +40,7 @@ class EdcController @Autowired constructor(
 
 
     /**
-     * Get an asset from the user's MinIO bucket.
+     * Get an assetjson from the user's MinIO bucket.
      *
      * @param assetName name of the policy
      * @return TODO
@@ -51,19 +51,43 @@ class EdcController @Autowired constructor(
     }
 
     /**
-     * Add an asset to the user's MinioBucket.
+     * Add an assetjson to the user's MinioBucket.
      *
      * @param assetName name of the asset
      * @return TODO
      */
     @PostMapping("assets/{assetName}")
-    fun addAssetjson(@PathVariable assetName: String, @RequestBody assetJson: String) {
+    fun addAssetjson(@PathVariable assetName: String, @RequestBody assetJsonDto: AssetJsonDto) {
+        val assetPropName: String =
+            assetJsonDto.assetPropName ?: throw BusinessException("No asset name in AssetJsonDto.", ErrorType.NOT_FOUND)
+        val assetPropId: String =
+            assetJsonDto.assetPropId ?: throw BusinessException("No asset id in AssetJsonDto.", ErrorType.NOT_FOUND)
+        val jwtTokenValue = getJwtToken().tokenValue
+        val bucketName = getBucketName()
+
+        val assetJson = edcBusinessService.createAssetJson(
+            assetPropName,
+            assetPropId,
+            bucketName,
+            assetName,
+            assetJsonDto.assetPropDescription,
+            assetJsonDto.assetPropContentType,
+            assetJsonDto.assetPropVersion,
+            assetJsonDto.agrovocKeywords,
+            assetJsonDto.latitude,
+            assetJsonDto.longitude,
+            assetJsonDto.dateRange,
+            assetJsonDto.dataAddressKeyName
+        )
+
+        edcIntegrationService.addAssetjson(jwtTokenValue, bucketName, assetName, assetJson)
+
         TODO("Not yet implemented")
     }
 
 
     /**
-     * Delete an asset from the user's MinIO bucket.
+     * Delete an assetjson from the user's MinIO bucket.
      *
      * @param assetName name of the policy
      * @return TODO
