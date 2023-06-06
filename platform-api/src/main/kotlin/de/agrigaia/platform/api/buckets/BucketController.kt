@@ -47,7 +47,7 @@ class BucketController @Autowired constructor(
      * @return List of `AssetDto`s, empty list if directory empty, TODO 204 if user has no access.
      */
     @GetMapping("{bucketName}/{base64encodedDirectoryName}")
-    fun getBucketAssetsInDirectory(
+    fun getAssetsInDirectory(
         @PathVariable bucketName: String,
         @PathVariable base64encodedDirectoryName: String
     ): ResponseEntity<List<AssetDto>> {
