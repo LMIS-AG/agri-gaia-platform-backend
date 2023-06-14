@@ -6,8 +6,12 @@ import de.agrigaia.platform.integration.minio.MinioService
 import de.agrigaia.platform.model.edc.PolicyDto
 import de.agrigaia.platform.model.edc.PolicyType
 import io.minio.errors.ErrorResponseException
+import okhttp3.internal.concurrent.TaskRunner.Companion.logger
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.http.HttpMethod
 import org.springframework.http.MediaType
+import org.springframework.security.core.context.SecurityContextHolder
+import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken
 import org.springframework.stereotype.Service
 import org.springframework.web.reactive.function.client.WebClient
 import org.springframework.web.reactive.function.client.body
@@ -19,7 +23,30 @@ import reactor.core.publisher.Mono
 @Service
 class EdcIntegrationService(private val minioService: MinioService) : HasLogger {
     private val webClient: WebClient = WebClient.create()
-    private val connectorEndpoint = "https://connector-consumer-9192.platform.agri-gaia.com/api/v1/data"
+
+    /**
+     * this would be cleaner but is not working yet since the authentication service throws an error
+      */
+//    private val connectorEndpoint: String
+//
+//    init {
+//        connectorEndpoint = setConnectorEndpoint()
+//    }
+
+    private fun setConnectorEndpoint(): String {
+        val jwtAuthenticationToken = SecurityContextHolder.getContext().authentication as JwtAuthenticationToken
+        val jwt = jwtAuthenticationToken.token
+        val userGroups = listOf(jwt.claims["usergroup"])
+        val actualGroup = userGroups.filterNot { group -> group == "AgriGaia" }.toString()
+
+        val connectorEndpoint = if (actualGroup == "AgBrain") {
+            "https://connector-agbrain-8182.platform.agri-gaia.com/api/v1/data"
+        } else {
+            "https://connector-consumer-9192.platform.agri-gaia.com/api/v1/data"
+        }
+
+        return connectorEndpoint
+    }
 
     /**
      * Get names of policies in a MinIO bucket.
@@ -146,6 +173,8 @@ class EdcIntegrationService(private val minioService: MinioService) : HasLogger 
     }
 
     private fun sendAssetRequest(assetJson: String) {
+        val connectorEndpoint = setConnectorEndpoint()
+
         this.webClient.post()
             .uri("$connectorEndpoint/assets")
             .contentType(MediaType.APPLICATION_JSON)
@@ -157,6 +186,8 @@ class EdcIntegrationService(private val minioService: MinioService) : HasLogger 
     }
 
     private fun sendPolicyRequest(policyJson: String) {
+        val connectorEndpoint = setConnectorEndpoint()
+
         this.webClient.post()
             .uri("$connectorEndpoint/policydefinitions")
             .contentType(MediaType.APPLICATION_JSON)
@@ -168,6 +199,8 @@ class EdcIntegrationService(private val minioService: MinioService) : HasLogger 
     }
 
     private fun sendContractDefinitionRequest(contractDefinitionJson: String) {
+        val connectorEndpoint = setConnectorEndpoint()
+
         this.webClient.post()
             .uri("$connectorEndpoint/contractdefinitions")
             .contentType(MediaType.APPLICATION_JSON)
@@ -179,6 +212,8 @@ class EdcIntegrationService(private val minioService: MinioService) : HasLogger 
     }
 
     private fun sendContractDefinitionDeleteRequest(contractDefinitionJson: String) {
+        val connectorEndpoint = setConnectorEndpoint()
+
         this.webClient.method(HttpMethod.DELETE)
             .uri("$connectorEndpoint/contractdefinitions/$contractDefinitionJson")
             .contentType(MediaType.APPLICATION_JSON)
@@ -189,6 +224,8 @@ class EdcIntegrationService(private val minioService: MinioService) : HasLogger 
     }
 
     private fun sendPolicyDeleteRequest(policyJson: String) {
+        val connectorEndpoint = setConnectorEndpoint()
+
         this.webClient.method(HttpMethod.DELETE)
             .uri("$connectorEndpoint/policydefinitions/$policyJson")
             .contentType(MediaType.APPLICATION_JSON)
@@ -199,6 +236,8 @@ class EdcIntegrationService(private val minioService: MinioService) : HasLogger 
     }
 
     private fun sendAssetDeleteRequest(assetJson: String) {
+        val connectorEndpoint = setConnectorEndpoint()
+
         this.webClient.method(HttpMethod.DELETE)
             .uri("$connectorEndpoint/assets/$assetJson")
             .header("X-Api-Key", "password")
