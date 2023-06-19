@@ -2,12 +2,11 @@ package de.agrigaia.platform.integration.edc
 
 import com.fasterxml.jackson.databind.JsonNode
 import de.agrigaia.platform.common.HasLogger
+import de.agrigaia.platform.integration.fuseki.FusekiProperties
 import de.agrigaia.platform.integration.minio.MinioService
 import de.agrigaia.platform.model.edc.PolicyDto
 import de.agrigaia.platform.model.edc.PolicyType
 import io.minio.errors.ErrorResponseException
-import okhttp3.internal.concurrent.TaskRunner.Companion.logger
-import org.springframework.beans.factory.annotation.Value
 import org.springframework.http.HttpMethod
 import org.springframework.http.MediaType
 import org.springframework.security.core.context.SecurityContextHolder
@@ -21,19 +20,22 @@ import reactor.core.publisher.Mono
  * Service communicating with EDC directly.
  */
 @Service
-class EdcIntegrationService(private val minioService: MinioService) : HasLogger {
+class EdcIntegrationService(
+    private val minioService: MinioService,
+    private val edcProperties: EdcProperties
+    ) : HasLogger {
     private val webClient: WebClient = WebClient.create()
 
-    private fun setConnectorEndpoint(): String {
+    private fun setConnectorEndpoint(): String? {
         val jwtAuthenticationToken = SecurityContextHolder.getContext().authentication as JwtAuthenticationToken
         val jwt = jwtAuthenticationToken.token
         val userGroups = listOf(jwt.claims["usergroup"])
         val actualGroup = userGroups.filterNot { group -> group == "AgriGaia" }.toString()
 
         val connectorEndpoint = if (actualGroup == "AgBrain") {
-            "https://connector-agbrain-8182.platform.agri-gaia.com/api/v1/data"
+            edcProperties.agbrainConnectorUrl
         } else {
-            "https://connector-consumer-9192.platform.agri-gaia.com/api/v1/data"
+            edcProperties.lmisConnectorUrl
         }
 
         return connectorEndpoint
