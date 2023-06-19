@@ -2,7 +2,6 @@ package de.agrigaia.platform.integration.edc
 
 import com.fasterxml.jackson.databind.JsonNode
 import de.agrigaia.platform.common.HasLogger
-import de.agrigaia.platform.integration.fuseki.FusekiProperties
 import de.agrigaia.platform.integration.minio.MinioService
 import de.agrigaia.platform.model.edc.PolicyDto
 import de.agrigaia.platform.model.edc.PolicyType
