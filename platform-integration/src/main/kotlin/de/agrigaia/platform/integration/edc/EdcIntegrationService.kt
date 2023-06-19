@@ -24,15 +24,6 @@ import reactor.core.publisher.Mono
 class EdcIntegrationService(private val minioService: MinioService) : HasLogger {
     private val webClient: WebClient = WebClient.create()
 
-    /**
-     * this would be cleaner but is not working yet since the authentication service throws an error
-      */
-//    private val connectorEndpoint: String
-//
-//    init {
-//        connectorEndpoint = setConnectorEndpoint()
-//    }
-
     private fun setConnectorEndpoint(): String {
         val jwtAuthenticationToken = SecurityContextHolder.getContext().authentication as JwtAuthenticationToken
         val jwt = jwtAuthenticationToken.token
