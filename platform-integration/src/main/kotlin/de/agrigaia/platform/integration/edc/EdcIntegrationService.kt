@@ -26,6 +26,10 @@ class EdcIntegrationService(
     ) : HasLogger {
     private val webClient: WebClient = WebClient.create()
 
+    /**
+     * Set Connector endpoint dynamically, depending on the logged-in user and its organisation
+     * @return Connector endpoint as string
+     */
     private fun setConnectorEndpoint(): String? {
         val jwtAuthenticationToken = SecurityContextHolder.getContext().authentication as JwtAuthenticationToken
         val jwt = jwtAuthenticationToken.token
