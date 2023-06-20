@@ -1,6 +1,5 @@
 package de.agrigaia.platform.integration.edc
 
-import com.fasterxml.jackson.databind.JsonNode
 import de.agrigaia.platform.common.HasLogger
 import de.agrigaia.platform.integration.minio.MinioService
 import de.agrigaia.platform.model.edc.PolicyDto
@@ -131,7 +130,7 @@ class EdcIntegrationService(private val minioService: MinioService) : HasLogger 
         jwtTokenValue: String,
         bucketName: String,
         policyName: String,
-        policyJson: JsonNode,
+        policyJson: String,
         policyType: PolicyType
     ) {
         val policyNameExists: Boolean = getAllPolicyNames(jwtTokenValue, bucketName).contains(policyName)
@@ -147,7 +146,7 @@ class EdcIntegrationService(private val minioService: MinioService) : HasLogger 
             jwtTokenValue,
             bucketName,
             filePath,
-            policyJson.toString(),
+            policyJson,
         )
     }
 
