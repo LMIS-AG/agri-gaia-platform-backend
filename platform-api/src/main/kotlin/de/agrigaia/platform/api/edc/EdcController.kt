@@ -133,7 +133,6 @@ class EdcController @Autowired constructor(
         val policyName: String = policyDto.name ?: throw BusinessException("name was null", ErrorType.BAD_REQUEST)
         val policyType: PolicyType = policyDto.policyType ?: throw BusinessException("policyType was null", ErrorType.BAD_REQUEST)
         val permissions: List<ConstraintDto> = policyDto.permissions ?: throw BusinessException("permissions was null", ErrorType.BAD_REQUEST)
-        if (permissions.isEmpty()) throw BusinessException("Policy needs at least one permission, obligation, or duty.", ErrorType.BAD_REQUEST)
 
         val policyJson: String = edcBusinessService.createPolicyJson(permissions)
         val jwtTokenValue = getJwtToken().tokenValue

@@ -18,7 +18,11 @@ class EdcBusinessService(
     fun createPolicyJson(
         permissions: List<ConstraintDto>,
     ): String {
-        val permissionJsons = permissions.joinToString(",\n") { constraintDtoToJson(it) }
+        val permissionJsons: String = if (permissions.isEmpty()) {
+            ""
+        } else {
+            permissions.joinToString(",\n") { constraintDtoToJson(it) }
+        }
         return """
             {
                 "uid": "use-eu",
