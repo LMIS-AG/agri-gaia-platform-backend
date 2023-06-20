@@ -5,6 +5,7 @@ import de.agrigaia.platform.business.errors.ErrorType
 import de.agrigaia.platform.common.HasLogger
 import de.agrigaia.platform.integration.fuseki.FusekiConnectorService
 import de.agrigaia.platform.model.edc.ConstraintDto
+import de.agrigaia.platform.model.edc.PolicyDto
 import org.springframework.stereotype.Service
 
 /**
@@ -16,8 +17,12 @@ class EdcBusinessService(
 ) : HasLogger {
 
     fun createPolicyJson(
-        permissions: List<ConstraintDto>,
+        policyDto: PolicyDto
     ): String {
+        val permissions: List<ConstraintDto> = policyDto.permissions ?: throw BusinessException(
+            "PolicyDto permissions must not be null.",
+            ErrorType.BAD_REQUEST,
+        )
         val permissionJsons: String = if (permissions.isEmpty()) {
             ""
         } else {
@@ -26,7 +31,7 @@ class EdcBusinessService(
         return """
             {
                 "uid": "use-eu",
-                "id": "3a75736e-001d-4364-8bd4-9888490edb59",
+                "id": "${policyDto.name}",
                 "policy": {
                     "permissions": [
                         {

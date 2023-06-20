@@ -7,7 +7,6 @@ import de.agrigaia.platform.business.errors.ErrorType
 import de.agrigaia.platform.common.HasLogger
 import de.agrigaia.platform.integration.edc.EdcIntegrationService
 import de.agrigaia.platform.model.edc.Asset
-import de.agrigaia.platform.model.edc.ConstraintDto
 import de.agrigaia.platform.model.edc.PolicyDto
 import de.agrigaia.platform.model.edc.PolicyType
 import de.agrigaia.platform.persistence.repository.AssetRepository
@@ -132,9 +131,7 @@ class EdcController @Autowired constructor(
     fun addPolicy(@RequestBody policyDto: PolicyDto) {
         val policyName: String = policyDto.name ?: throw BusinessException("name was null", ErrorType.BAD_REQUEST)
         val policyType: PolicyType = policyDto.policyType ?: throw BusinessException("policyType was null", ErrorType.BAD_REQUEST)
-        val permissions: List<ConstraintDto> = policyDto.permissions ?: throw BusinessException("permissions was null", ErrorType.BAD_REQUEST)
-
-        val policyJson: String = edcBusinessService.createPolicyJson(permissions)
+        val policyJson: String = edcBusinessService.createPolicyJson(policyDto)
         val jwtTokenValue = getJwtToken().tokenValue
         val bucketName = getBucketName()
 
