@@ -36,13 +36,13 @@ class EdcBusinessService(
                             },
                             "assignee": null,
                             "assigner": null,
-                            "constraints": [],
+                            "constraints": [
+                            $permissionJsons
+                            ],
                             "duties": []
                         }
                     ],
-                    "prohibitions": [
-                        $permissionJsons
-                    ],
+                    "prohibitions": [],
                     "obligations": [],
                     "extensibleProperties": {},
                     "inheritsFrom": null,
