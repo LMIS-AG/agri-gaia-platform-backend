@@ -38,6 +38,7 @@ class EdcIntegrationService(private val minioService: MinioService) : HasLogger 
             assetJson,
         )
     }
+
     /**
      * Get names of policies in a MinIO bucket.
      * @param jwt JSON web token
@@ -80,11 +81,26 @@ class EdcIntegrationService(private val minioService: MinioService) : HasLogger 
      * @return String containing the policy JSON.
      */
     fun getPolicyJson(jwtTokenValue: String, bucketName: String, policyName: String): String {
-        try {
-            return this.minioService.downloadTextFile(jwtTokenValue, bucketName, "policies/$policyName.json")
-        } catch (e: ErrorResponseException) {
-            throw Exception("Policy $policyName not found in bucket $bucketName")
+        var policyJson: String
+        for (p in PolicyType.values()) {
+            val policyDir = policyTypeToDir(p)
+            try {
+                policyJson = this.minioService.downloadTextFile(
+                    jwtTokenValue,
+                    bucketName,
+                    "policies/$policyDir/$policyName.json"
+                )
+                return policyJson
+            } catch (e: ErrorResponseException) {
+                continue
+            }
         }
+        throw Exception("Policy $policyName not found in bucket $bucketName")
+//        try {
+//            return this.minioService.downloadTextFile(jwtTokenValue, bucketName, "policies/$policyName.json")
+//        } catch (e: ErrorResponseException) {
+//            throw Exception("Policy $policyName not found in bucket $bucketName")
+//        }
     }
 
     /**
