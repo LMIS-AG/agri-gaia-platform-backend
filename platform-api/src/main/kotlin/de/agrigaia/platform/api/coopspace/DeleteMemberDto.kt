@@ -5,5 +5,6 @@ import de.agrigaia.platform.model.coopspace.Member
 
 data class DeleteMemberDto(
     val coopSpaceName: String?,
+    val companyName: String?,
     val member: Member?,
 ) : BaseDto()
