@@ -6,6 +6,7 @@ import de.agrigaia.platform.integration.minio.MinioService
 import de.agrigaia.platform.model.buckets.STSDto
 import de.agrigaia.platform.persistence.repository.AssetRepository
 import io.minio.messages.Bucket
+import io.minio.messages.Item
 import jakarta.servlet.http.HttpServletResponse
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.HttpStatus
@@ -47,7 +48,7 @@ class BucketController @Autowired constructor(
      * @return List of `AssetDto`s, empty list if directory empty, TODO 204 if user has no access.
      */
     @GetMapping("{bucketName}/{base64encodedDirectoryName}")
-    fun getBucketAssetsInDirectory(
+    fun getAssetsInDirectory(
         @PathVariable bucketName: String,
         @PathVariable base64encodedDirectoryName: String
     ): ResponseEntity<List<AssetDto>> {
@@ -55,21 +56,25 @@ class BucketController @Autowired constructor(
         val jwt = jwtAuthenticationToken.token.tokenValue
         val folder = String(Base64.getDecoder().decode(base64encodedDirectoryName))
 
-        // TODO: `minioService.getPublishableAssetsForBucket()` returns a non-nullable list.
+        // TODO: `minioService.getAssetsForBucket()` returns a non-nullable list.
         //  This should check if the `assetsForBucket` list is empty and, if so, return 204.
         //  If user has no access, return 403.
         try {
+            val assetJsonNames: List<String> = this.minioService.getAssetsForBucket(jwt, bucketName, "assetjsons")
+                .map { it.get().objectName().substringAfterLast('/') }
             val assetsForBucket = this.minioService.getAssetsForBucket(jwt, bucketName, folder)
                 .map { it.get() }
-                .map { asset ->
+                .map { asset: Item ->
+                    val name = asset.objectName().substringAfterLast('/')
                     AssetDto(
-                        asset.objectName().replace("assets/", ""),
+                        name,
                         asset.lastModified().toString(),
                         asset.lastModified().toString(),
                         asset.size().toString(),
                         "label",
                         bucketName,
-                        isPublished(bucketName, asset.objectName().replace("assets/", ""))
+                        isPublished(bucketName, asset.objectName().substringAfterLast('/')),
+                        assetJsonNames.contains(name)
                     )
                 }
             return ResponseEntity.ok(assetsForBucket)

@@ -1,6 +1,5 @@
 package de.agrigaia.platform.integration.edc
 
-import com.fasterxml.jackson.databind.JsonNode
 import de.agrigaia.platform.common.HasLogger
 import de.agrigaia.platform.integration.minio.MinioService
 import de.agrigaia.platform.model.edc.PolicyDto
@@ -20,6 +19,25 @@ import reactor.core.publisher.Mono
 class EdcIntegrationService(private val minioService: MinioService) : HasLogger {
     private val webClient: WebClient = WebClient.create()
     private val connectorEndpoint = "https://connector-consumer-9192.platform.agri-gaia.com/api/v1/data"
+
+    /**
+     * Upload assetjson to MinIO.
+     */
+    fun addAssetjson(
+        jwtTokenValue: String,
+        bucketName: String,
+        assetjsonName: String,
+        assetJson: String,
+    ) {
+        // Upload policy to user's bucket.
+        val filePath = "assetjsons/$assetjsonName.json"
+        minioService.uploadTextFile(
+            jwtTokenValue,
+            bucketName,
+            filePath,
+            assetJson,
+        )
+    }
 
     /**
      * Get names of policies in a MinIO bucket.
@@ -63,11 +81,21 @@ class EdcIntegrationService(private val minioService: MinioService) : HasLogger 
      * @return String containing the policy JSON.
      */
     fun getPolicyJson(jwtTokenValue: String, bucketName: String, policyName: String): String {
-        try {
-            return this.minioService.downloadTextFile(jwtTokenValue, bucketName, "policies/$policyName.json")
-        } catch (e: ErrorResponseException) {
-            throw Exception("Policy $policyName not found in bucket $bucketName")
+        var policyJson: String
+        for (p in PolicyType.values()) {
+            val policyDir = policyTypeToDir(p)
+            try {
+                policyJson = this.minioService.downloadTextFile(
+                    jwtTokenValue,
+                    bucketName,
+                    "policies/$policyDir/$policyName.json"
+                )
+                return policyJson
+            } catch (e: ErrorResponseException) {
+                continue
+            }
         }
+        throw Exception("Policy $policyName not found in bucket $bucketName")
     }
 
     /**
@@ -113,7 +141,7 @@ class EdcIntegrationService(private val minioService: MinioService) : HasLogger 
         jwtTokenValue: String,
         bucketName: String,
         policyName: String,
-        policyJson: JsonNode,
+        policyJson: String,
         policyType: PolicyType
     ) {
         val policyNameExists: Boolean = getAllPolicyNames(jwtTokenValue, bucketName).contains(policyName)
@@ -129,7 +157,7 @@ class EdcIntegrationService(private val minioService: MinioService) : HasLogger 
             jwtTokenValue,
             bucketName,
             filePath,
-            policyJson.toString(),
+            policyJson,
         )
     }
 
