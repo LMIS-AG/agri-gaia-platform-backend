@@ -19,7 +19,7 @@ class EdcBusinessService(
         permissions: List<ConstraintDto>,
     ): String {
         val permissionJsons = permissions.joinToString(",\n") { constraintDtoToJson(it) }
-        val policyJson = """
+        return """
             {
                 "uid": "use-eu",
                 "id": "3a75736e-001d-4364-8bd4-9888490edb59",
@@ -55,12 +55,9 @@ class EdcBusinessService(
                 }
             }
         """.trimIndent()
-
-//        getLogger().warn("PolicyJson:\n\n\n$policyJson")
-        return policyJson
     }
 
-    fun constraintDtoToJson(constraintDto: ConstraintDto): String {
+    private fun constraintDtoToJson(constraintDto: ConstraintDto): String {
         val leftExpression: String = constraintDto.leftExpression ?: throw BusinessException(
             "ConstraintDto leftExpression must not be null.",
             ErrorType.BAD_REQUEST,
@@ -136,19 +133,21 @@ class EdcBusinessService(
             }"""
     }
 
-    fun createContractDefinitionJson(assetId: String, policyUUID: String, catalogUUID: String): String = """{
-  "accessPolicyId": "$policyUUID",
-  "contractPolicyId": "$policyUUID",
-  "id": "$catalogUUID",
-  "criteria": [
-    {
-      "operandLeft": "asset:prop:id",
-      "operator": "=",
-      "operandRight": "$assetId"
-    }
-  ]
-}
-    """
+    fun createContractDefinitionJson(assetId: String, policyUUID: String, catalogUUID: String): String =
+        """
+        {
+          "accessPolicyId": "$policyUUID",
+          "contractPolicyId": "$policyUUID",
+          "id": "$catalogUUID",
+          "criteria": [
+            {
+              "operandLeft": "asset:prop:id",
+              "operator": "=",
+              "operandRight": "$assetId"
+            }
+          ]
+        }
+        """
 
     /**
      * Extract UUID from policy JSON.

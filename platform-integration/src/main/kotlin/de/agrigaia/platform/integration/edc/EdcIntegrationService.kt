@@ -96,11 +96,6 @@ class EdcIntegrationService(private val minioService: MinioService) : HasLogger 
             }
         }
         throw Exception("Policy $policyName not found in bucket $bucketName")
-//        try {
-//            return this.minioService.downloadTextFile(jwtTokenValue, bucketName, "policies/$policyName.json")
-//        } catch (e: ErrorResponseException) {
-//            throw Exception("Policy $policyName not found in bucket $bucketName")
-//        }
     }
 
     /**
