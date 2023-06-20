@@ -96,9 +96,10 @@ open class CoopSpaceController @Autowired constructor(
         // This maps the CoopSpace to a CoopSpaceDto and back to a CoopSpace, i.e. inelegantly creates a copy.
         val coopSpace: CoopSpace = this.coopSpaceMapper.map(this.coopSpaceService.findCoopSpaceByName(coopSpaceName))
             .toEntity(this.coopSpaceMapper)
+        val companyName = coopSpace.company.toString()
 
         // add user to the CoopSpace by adding it both to the respective subgroup in Keycloak and the database
-        this.coopSpaceService.addUsersToKeycloakGroup(memberList, coopSpaceName)
+        this.coopSpaceService.addUsersToKeycloakGroup(memberList, coopSpaceName, companyName)
         this.coopSpaceService.addUsersToDatabase(memberList, coopSpace)
     }
 
@@ -119,9 +120,8 @@ open class CoopSpaceController @Autowired constructor(
             "No coopSpaceName given",
             ErrorType.BAD_REQUEST
         )
-        val company =
-            changeMemberRoleDto.company ?: throw BusinessException("No member.company given", ErrorType.BAD_REQUEST)
         val coopSpace: CoopSpace = this.coopSpaceService.findCoopSpaceByName(coopSpaceName)
+        val company = coopSpace.company.toString()
 
         this.coopSpaceService.removeUserFromKeycloakGroup(username, oldRole, company, coopSpaceName)
         this.coopSpaceService.addUserToKeycloakGroup(username, newRole, company, coopSpaceName)
@@ -186,13 +186,13 @@ open class CoopSpaceController @Autowired constructor(
         val username: String =
             deleteMemberDto.member?.username ?: throw BusinessException("Username was null.", ErrorType.NOT_FOUND)
         val role: String = deleteMemberDto.member?.role.toString()
-        val company: String =
-            deleteMemberDto.member?.company ?: throw BusinessException("Company was null.", ErrorType.NOT_FOUND)
+        val companyName: String =
+            deleteMemberDto.companyName ?: throw BusinessException("Company was null.", ErrorType.NOT_FOUND)
         val coopSpaceName: String =
             deleteMemberDto.coopSpaceName ?: throw BusinessException("CoopSpaceName was null", ErrorType.NOT_FOUND)
         val id: Long = deleteMemberDto.member?.id ?: throw BusinessException("ID was null", ErrorType.NOT_FOUND)
 
-        this.coopSpaceService.removeUserFromKeycloakGroup(username, role, company, coopSpaceName)
+        this.coopSpaceService.removeUserFromKeycloakGroup(username, role, companyName, coopSpaceName)
         this.coopSpaceService.removeUserFromDatabase(id)
     }
 }
