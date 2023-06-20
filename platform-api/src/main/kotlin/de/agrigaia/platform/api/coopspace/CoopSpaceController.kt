@@ -193,7 +193,7 @@ open class CoopSpaceController @Autowired constructor(
             deleteMemberDto.coopSpaceName ?: throw BusinessException("CoopSpaceName was null", ErrorType.NOT_FOUND)
         val id: Long = member.id
 
-        this.coopSpaceService.removeUserFromKeycloakGroup(username, role, companyName, coopSpaceName)
+        this.coopSpaceService.removeUserFromKeycloakGroup(username, role, company, coopSpaceName)
         this.coopSpaceService.removeUserFromDatabase(id)
     }
 }
