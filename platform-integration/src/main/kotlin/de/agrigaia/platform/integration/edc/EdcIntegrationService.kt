@@ -31,10 +31,11 @@ class EdcIntegrationService(
     private fun setConnectorEndpoint(): String? {
         val jwtAuthenticationToken = SecurityContextHolder.getContext().authentication as JwtAuthenticationToken
         val jwt = jwtAuthenticationToken.token
-        val userGroups = listOf(jwt.claims["usergroup"])
-        val actualGroup = userGroups.filterNot { group -> group == "AgriGaia" }.toString()
+        val userGroups = jwt.claims["usergroup"] as? List<String>
 
-        val connectorEndpoint = if (actualGroup == "AgBrain") {
+        val isAgBrainMember = userGroups?.contains("/AgBrain/Users") ?: false
+
+        val connectorEndpoint = if (isAgBrainMember) {
             edcProperties.agbrainConnectorUrl
         } else {
             edcProperties.lmisConnectorUrl
