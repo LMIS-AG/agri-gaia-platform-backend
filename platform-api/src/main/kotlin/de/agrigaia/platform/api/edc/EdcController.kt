@@ -207,21 +207,24 @@ class EdcController @Autowired constructor(
 
         val assetId = asset.assetId
             ?: throw BusinessException("assetId was null", ErrorType.BAD_REQUEST)
-        val policyId = asset.policyId
-            ?: throw BusinessException("policyId was null", ErrorType.BAD_REQUEST)
+        val accessPolicyId = asset.accessPolicyId
+            ?: throw BusinessException("accessPolicyId was null", ErrorType.BAD_REQUEST)
+        val contractPolicyId = asset.contractPolicyId
+            ?: throw BusinessException("contractPolicyId was null", ErrorType.BAD_REQUEST)
         val contractId = asset.contractId
             ?: throw BusinessException("contractId was null", ErrorType.BAD_REQUEST)
 
         assetRepository.delete(asset)
-        this.edcIntegrationService.unpublishAsset(assetId, policyId, contractId)
+        this.edcIntegrationService.unpublishAsset(assetId, accessPolicyId, contractPolicyId, contractId)
     }
 
-    @PostMapping("publish/{bucketName}/{assetName}/{policyName}")
+    @PostMapping("publish/{bucketName}/{assetName}/{accessPolicyName}/{contractPolicyName}")
     @ResponseStatus(HttpStatus.CREATED)
     fun publishAsset(
         @PathVariable bucketName: String,
         @PathVariable assetName: String,
-        @PathVariable policyName: String,
+        @PathVariable accessPolicyName: String,
+        @PathVariable contractPolicyName: String,
         @RequestBody assetJsonDto: AssetJsonDto,
     ) {
         val assetPropName: String =
@@ -245,21 +248,25 @@ class EdcController @Autowired constructor(
         )
 
         val jwtToken = getJwtToken().tokenValue
-        val policyJson: String =
-            this.edcIntegrationService.getPolicyforAsset(jwtToken, bucketName, policyName, assetName)
-        val policyUUID: String = this.edcBusinessService.extractIdfromPolicy(policyJson)
+        val accessPolicyJson: String =
+            this.edcIntegrationService.getPolicyforAsset(jwtToken, bucketName, accessPolicyName, assetName)
+        val contractPolicyJson: String =
+            this.edcIntegrationService.getPolicyforAsset(jwtToken, bucketName, contractPolicyName, assetName)
+        val accessPolicyUUID: String = this.edcBusinessService.extractIdfromPolicy(accessPolicyJson)
+        val contractPolicyUUID: String = this.edcBusinessService.extractIdfromPolicy(contractPolicyJson)
         val contractUUID = UUID.randomUUID().toString()
         val contractDefinitionJson =
-            edcBusinessService.createContractDefinitionJson(assetPropId, policyUUID, contractUUID)
+            edcBusinessService.createContractDefinitionJson(assetPropId, accessPolicyUUID, contractPolicyUUID, contractUUID)
 
-        this.edcIntegrationService.publishAsset(assetJson, policyJson, contractDefinitionJson)
+        this.edcIntegrationService.publishAsset(assetJson, accessPolicyJson, contractPolicyJson, contractDefinitionJson)
 
         val publishedAsset = Asset()
 
         publishedAsset.bucket = bucketName
         publishedAsset.name = assetName
         publishedAsset.assetId = assetPropId
-        publishedAsset.policyId = policyUUID
+        publishedAsset.accessPolicyId = accessPolicyUUID
+        publishedAsset.contractPolicyId = contractPolicyUUID
         publishedAsset.contractId = contractUUID
 
         assetRepository.save(publishedAsset)
