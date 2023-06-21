@@ -170,12 +170,11 @@ class CoopSpaceService(
      * add a list of users or a list containing a single user to a Keycloak subgroup by calling the "addUserToKeycloakGroup"
      * as often as necessary
      */
-    fun addUsersToKeycloakGroup(memberList: List<Member> = ArrayList(), coopSpaceName: String) {
+    fun addUsersToKeycloakGroup(memberList: List<Member> = ArrayList(), coopSpaceName: String, companyName: String) {
         for (member in memberList) {
             val username = member.username ?: throw BusinessException("Member $member has no username", ErrorType.BAD_REQUEST)
             val role = member.role ?: throw BusinessException("Member $member has no role", ErrorType.BAD_REQUEST)
-            val company = member.company ?: throw BusinessException("Member $member has no company", ErrorType.BAD_REQUEST)
-            addUserToKeycloakGroup(username, role, company, coopSpaceName)
+            addUserToKeycloakGroup(username, role, companyName, coopSpaceName)
         }
     }
 

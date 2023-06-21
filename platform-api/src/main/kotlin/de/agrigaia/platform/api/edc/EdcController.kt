@@ -1,6 +1,5 @@
 package de.agrigaia.platform.api.edc
 
-import com.fasterxml.jackson.databind.JsonNode
 import de.agrigaia.platform.api.BaseController
 import de.agrigaia.platform.business.edc.EdcBusinessService
 import de.agrigaia.platform.business.errors.BusinessException
@@ -28,48 +27,70 @@ class EdcController @Autowired constructor(
     private val assetRepository: AssetRepository,
 ) : HasLogger, BaseController() {
 
-    /**
-     * Return a list of all assets from the user's Minio bucket.
-     *
-     * @return list of assets in MinIO user's bucket
-     */
-    @GetMapping("assets")
-    fun getAllAssets(): ResponseEntity<List<String>> {
-        TODO("Not yet implemented")
-    }
+//    /**
+//     * Return a list of all assets from the user's Minio bucket.
+//     *
+//     * @return list of assets in MinIO user's bucket
+//     */
+//    @GetMapping("assetjsons")
+//    fun getAllAssetjsons(): ResponseEntity<List<String>> {
+//        TODO("Not yet implemented")
+//    }
 
 
     /**
-     * Get an asset from the user's MinIO bucket.
+     * Get an assetjson from the user's MinIO bucket.
      *
      * @param assetName name of the policy
      * @return TODO
      */
-    @GetMapping("assets/{assetName}")
-    fun getAsset(@PathVariable assetName: String) {
+    @GetMapping("assetjsons/{assetName}")
+    fun getAssetjson(@PathVariable assetName: String) {
         TODO("Not yet implemented")
     }
 
     /**
-     * Add an asset to the user's MinioBucket.
+     * Add an assetjson to the user's MinioBucket.
      *
      * @param assetName name of the asset
      * @return TODO
      */
-    @PostMapping("assets/{assetName}")
-    fun addAsset(@PathVariable assetName: String, @RequestBody assetJson: String) {
-        TODO("Not yet implemented")
+    @PostMapping("assetjsons/{assetName}")
+    fun addAssetjson(@PathVariable assetName: String, @RequestBody assetJsonDto: AssetJsonDto) {
+        val assetPropName: String =
+            assetJsonDto.assetPropName ?: throw BusinessException("No asset name in AssetJsonDto.", ErrorType.NOT_FOUND)
+        val assetPropId: String =
+            assetJsonDto.assetPropId ?: throw BusinessException("No asset id in AssetJsonDto.", ErrorType.NOT_FOUND)
+        val jwtTokenValue = getJwtToken().tokenValue
+        val bucketName = getBucketName()
+
+        val assetJson = edcBusinessService.createAssetJson(
+            assetPropName,
+            assetPropId,
+            bucketName,
+            assetName,
+            assetJsonDto.assetPropDescription,
+            assetJsonDto.assetPropContentType,
+            assetJsonDto.assetPropVersion,
+            assetJsonDto.agrovocKeywords,
+            assetJsonDto.latitude,
+            assetJsonDto.longitude,
+            assetJsonDto.dateRange,
+            assetJsonDto.dataAddressKeyName
+        )
+
+        edcIntegrationService.addAssetjson(jwtTokenValue, bucketName, assetName, assetJson)
     }
 
 
     /**
-     * Delete an asset from the user's MinIO bucket.
+     * Delete an assetjson from the user's MinIO bucket.
      *
      * @param assetName name of the policy
      * @return TODO
      */
-    @DeleteMapping("assets/{assetName}")
-    fun deleteAsset(@PathVariable assetName: String) {
+    @DeleteMapping("assetjsons/{assetName}")
+    fun deleteAssetjson(@PathVariable assetName: String) {
         TODO("Not yet implemented")
     }
 
@@ -110,12 +131,11 @@ class EdcController @Autowired constructor(
     fun addPolicy(@RequestBody policyDto: PolicyDto) {
         val policyName: String = policyDto.name ?: throw BusinessException("name was null", ErrorType.BAD_REQUEST)
         val policyType: PolicyType = policyDto.policyType ?: throw BusinessException("policyType was null", ErrorType.BAD_REQUEST)
-        val rawJson: JsonNode = policyDto.rawJson ?: throw BusinessException("rawJson was null", ErrorType.BAD_REQUEST)
-
+        val policyJson: String = edcBusinessService.createPolicyJson(policyDto)
         val jwtTokenValue = getJwtToken().tokenValue
         val bucketName = getBucketName()
 
-        edcIntegrationService.addPolicy(jwtTokenValue, bucketName, policyName, rawJson, policyType)
+        edcIntegrationService.addPolicy(jwtTokenValue, bucketName, policyName, policyJson, policyType)
     }
 
 
