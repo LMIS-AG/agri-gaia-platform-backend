@@ -9,7 +9,8 @@ class Asset (
     var name: String? = null,
     var bucket: String? = null,
     var assetId: String? = null,
-    var policyId: String? = null,
+    var accessPolicyId: String? = null,
+    var contractPolicyId: String? = null,
     var contractId: String? = null
 
 ) : BaseEntity()

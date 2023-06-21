@@ -161,15 +161,17 @@ class EdcIntegrationService(private val minioService: MinioService) : HasLogger 
         )
     }
 
-    fun publishAsset(assetJson: String, policyJson: String, contractDefinitionJson: String) {
+    fun publishAsset(assetJson: String, accessPolicyJson: String, contractPolicyJson: String, contractDefinitionJson: String) {
         this.sendAssetRequest(assetJson)
-        this.sendPolicyRequest(policyJson)
+        this.sendPolicyRequest(accessPolicyJson)
+        this.sendPolicyRequest(contractPolicyJson)
         this.sendContractDefinitionRequest(contractDefinitionJson)
     }
 
-    fun unpublishAsset(assetJson: String, policyJson: String, contractDefinitionJson: String) {
+    fun unpublishAsset(assetJson: String, accessPolicyJson: String, contractPolicyJson: String, contractDefinitionJson: String) {
         this.sendContractDefinitionDeleteRequest(contractDefinitionJson)
-        this.sendPolicyDeleteRequest(policyJson)
+        this.sendPolicyDeleteRequest(accessPolicyJson)
+        this.sendPolicyDeleteRequest(contractPolicyJson)
         this.sendAssetDeleteRequest(assetJson)
     }
 

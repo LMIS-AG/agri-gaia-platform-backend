@@ -142,11 +142,11 @@ class EdcBusinessService(
             }"""
     }
 
-    fun createContractDefinitionJson(assetId: String, policyUUID: String, catalogUUID: String): String =
+    fun createContractDefinitionJson(assetId: String, accessPolicyUUID: String, contractPolicyUUID: String, catalogUUID: String): String =
         """
         {
-          "accessPolicyId": "$policyUUID",
-          "contractPolicyId": "$policyUUID",
+          "accessPolicyId": "$accessPolicyUUID",
+          "contractPolicyId": "$contractPolicyUUID",
           "id": "$catalogUUID",
           "criteria": [
             {
