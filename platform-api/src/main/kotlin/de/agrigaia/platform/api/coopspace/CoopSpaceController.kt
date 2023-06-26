@@ -188,7 +188,7 @@ open class CoopSpaceController @Autowired constructor(
         val member = deleteMemberDto.member ?: throw BusinessException("Member was null.", ErrorType.NOT_FOUND)
         val username: String = member.username ?: throw BusinessException("Username was null.", ErrorType.NOT_FOUND)
         val role: String = member.role.toString()
-        val company: String = member.company ?: throw BusinessException("Company was null.", ErrorType.NOT_FOUND)
+        val company: String = deleteMemberDto.companyName ?: throw BusinessException("Company was null.", ErrorType.NOT_FOUND)
         val coopSpaceName: String =
             deleteMemberDto.coopSpaceName ?: throw BusinessException("CoopSpaceName was null", ErrorType.NOT_FOUND)
         val id: Long = member.id
