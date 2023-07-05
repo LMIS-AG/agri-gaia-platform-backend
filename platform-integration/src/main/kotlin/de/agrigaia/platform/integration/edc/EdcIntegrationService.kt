@@ -16,9 +16,11 @@ import reactor.core.publisher.Mono
  * Service communicating with EDC directly.
  */
 @Service
-class EdcIntegrationService(private val minioService: MinioService) : HasLogger {
+class EdcIntegrationService(
+    private val minioService: MinioService,
+    private val edcProperties: EdcProperties,
+    ) : HasLogger {
     private val webClient: WebClient = WebClient.create()
-    private val connectorEndpoint = "https://connector-consumer-9192.platform.agri-gaia.com/api/v1/data"
 
     /**
      * Upload assetjson to MinIO.
@@ -161,21 +163,23 @@ class EdcIntegrationService(private val minioService: MinioService) : HasLogger 
         )
     }
 
-    fun publishAsset(assetJson: String, policyJson: String, contractDefinitionJson: String) {
+    fun publishAsset(assetJson: String, accessPolicyJson: String, contractPolicyJson: String, contractDefinitionJson: String) {
         this.sendAssetRequest(assetJson)
-        this.sendPolicyRequest(policyJson)
+        this.sendPolicyRequest(accessPolicyJson)
+        this.sendPolicyRequest(contractPolicyJson)
         this.sendContractDefinitionRequest(contractDefinitionJson)
     }
 
-    fun unpublishAsset(assetJson: String, policyJson: String, contractDefinitionJson: String) {
+    fun unpublishAsset(assetJson: String, accessPolicyJson: String, contractPolicyJson: String, contractDefinitionJson: String) {
         this.sendContractDefinitionDeleteRequest(contractDefinitionJson)
-        this.sendPolicyDeleteRequest(policyJson)
+        this.sendPolicyDeleteRequest(accessPolicyJson)
+        this.sendPolicyDeleteRequest(contractPolicyJson)
         this.sendAssetDeleteRequest(assetJson)
     }
 
     private fun sendAssetRequest(assetJson: String) {
         this.webClient.post()
-            .uri("$connectorEndpoint/assets")
+            .uri("${edcProperties.connectorUrl}/assets")
             .contentType(MediaType.APPLICATION_JSON)
             .header("X-Api-Key", "password")
             .body(Mono.just(assetJson))
@@ -186,7 +190,7 @@ class EdcIntegrationService(private val minioService: MinioService) : HasLogger 
 
     private fun sendPolicyRequest(policyJson: String) {
         this.webClient.post()
-            .uri("$connectorEndpoint/policydefinitions")
+            .uri("${edcProperties.connectorUrl}/policydefinitions")
             .contentType(MediaType.APPLICATION_JSON)
             .header("X-Api-Key", "password")
             .body(Mono.just(policyJson))
@@ -197,7 +201,7 @@ class EdcIntegrationService(private val minioService: MinioService) : HasLogger 
 
     private fun sendContractDefinitionRequest(contractDefinitionJson: String) {
         this.webClient.post()
-            .uri("$connectorEndpoint/contractdefinitions")
+            .uri("${edcProperties.connectorUrl}/contractdefinitions")
             .contentType(MediaType.APPLICATION_JSON)
             .header("X-Api-Key", "password")
             .body(Mono.just(contractDefinitionJson))
@@ -208,7 +212,7 @@ class EdcIntegrationService(private val minioService: MinioService) : HasLogger 
 
     private fun sendContractDefinitionDeleteRequest(contractDefinitionJson: String) {
         this.webClient.method(HttpMethod.DELETE)
-            .uri("$connectorEndpoint/contractdefinitions/$contractDefinitionJson")
+            .uri("${edcProperties.connectorUrl}/contractdefinitions/$contractDefinitionJson")
             .contentType(MediaType.APPLICATION_JSON)
             .header("X-Api-Key", "password")
             .retrieve()
@@ -218,7 +222,7 @@ class EdcIntegrationService(private val minioService: MinioService) : HasLogger 
 
     private fun sendPolicyDeleteRequest(policyJson: String) {
         this.webClient.method(HttpMethod.DELETE)
-            .uri("$connectorEndpoint/policydefinitions/$policyJson")
+            .uri("${edcProperties.connectorUrl}/policydefinitions/$policyJson")
             .contentType(MediaType.APPLICATION_JSON)
             .header("X-Api-Key", "password")
             .retrieve()
@@ -228,7 +232,7 @@ class EdcIntegrationService(private val minioService: MinioService) : HasLogger 
 
     private fun sendAssetDeleteRequest(assetJson: String) {
         this.webClient.method(HttpMethod.DELETE)
-            .uri("$connectorEndpoint/assets/$assetJson")
+            .uri("${edcProperties.connectorUrl}/assets/$assetJson")
             .header("X-Api-Key", "password")
             .retrieve()
             .bodyToMono(String::class.java)
