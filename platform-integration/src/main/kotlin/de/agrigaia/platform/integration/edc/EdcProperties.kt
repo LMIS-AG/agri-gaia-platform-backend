@@ -6,5 +6,5 @@ import org.springframework.context.annotation.Configuration
 @Configuration
 @ConfigurationProperties(prefix = "agrigaia-platform.edc")
 open class EdcProperties(
-    var lmisConnectorUrl: String? = null
+    var connectorUrl: String? = null
 )

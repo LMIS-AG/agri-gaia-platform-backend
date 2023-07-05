@@ -179,7 +179,7 @@ class EdcIntegrationService(
 
     private fun sendAssetRequest(assetJson: String) {
         this.webClient.post()
-            .uri("${edcProperties.lmisConnectorUrl}/assets")
+            .uri("${edcProperties.connectorUrl}/assets")
             .contentType(MediaType.APPLICATION_JSON)
             .header("X-Api-Key", "password")
             .body(Mono.just(assetJson))
@@ -190,7 +190,7 @@ class EdcIntegrationService(
 
     private fun sendPolicyRequest(policyJson: String) {
         this.webClient.post()
-            .uri("${edcProperties.lmisConnectorUrl}/policydefinitions")
+            .uri("${edcProperties.connectorUrl}/policydefinitions")
             .contentType(MediaType.APPLICATION_JSON)
             .header("X-Api-Key", "password")
             .body(Mono.just(policyJson))
@@ -201,7 +201,7 @@ class EdcIntegrationService(
 
     private fun sendContractDefinitionRequest(contractDefinitionJson: String) {
         this.webClient.post()
-            .uri("${edcProperties.lmisConnectorUrl}/contractdefinitions")
+            .uri("${edcProperties.connectorUrl}/contractdefinitions")
             .contentType(MediaType.APPLICATION_JSON)
             .header("X-Api-Key", "password")
             .body(Mono.just(contractDefinitionJson))
@@ -212,7 +212,7 @@ class EdcIntegrationService(
 
     private fun sendContractDefinitionDeleteRequest(contractDefinitionJson: String) {
         this.webClient.method(HttpMethod.DELETE)
-            .uri("${edcProperties.lmisConnectorUrl}/contractdefinitions/$contractDefinitionJson")
+            .uri("${edcProperties.connectorUrl}/contractdefinitions/$contractDefinitionJson")
             .contentType(MediaType.APPLICATION_JSON)
             .header("X-Api-Key", "password")
             .retrieve()
@@ -222,7 +222,7 @@ class EdcIntegrationService(
 
     private fun sendPolicyDeleteRequest(policyJson: String) {
         this.webClient.method(HttpMethod.DELETE)
-            .uri("${edcProperties.lmisConnectorUrl}/policydefinitions/$policyJson")
+            .uri("${edcProperties.connectorUrl}/policydefinitions/$policyJson")
             .contentType(MediaType.APPLICATION_JSON)
             .header("X-Api-Key", "password")
             .retrieve()
@@ -232,7 +232,7 @@ class EdcIntegrationService(
 
     private fun sendAssetDeleteRequest(assetJson: String) {
         this.webClient.method(HttpMethod.DELETE)
-            .uri("${edcProperties.lmisConnectorUrl}/assets/$assetJson")
+            .uri("${edcProperties.connectorUrl}/assets/$assetJson")
             .header("X-Api-Key", "password")
             .retrieve()
             .bodyToMono(String::class.java)
