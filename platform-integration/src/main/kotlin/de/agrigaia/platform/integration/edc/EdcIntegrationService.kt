@@ -7,8 +7,6 @@ import de.agrigaia.platform.model.edc.PolicyType
 import io.minio.errors.ErrorResponseException
 import org.springframework.http.HttpMethod
 import org.springframework.http.MediaType
-import org.springframework.security.core.context.SecurityContextHolder
-import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken
 import org.springframework.stereotype.Service
 import org.springframework.web.reactive.function.client.WebClient
 import org.springframework.web.reactive.function.client.body
@@ -20,29 +18,9 @@ import reactor.core.publisher.Mono
 @Service
 class EdcIntegrationService(
     private val minioService: MinioService,
-    private val edcProperties: EdcProperties
+    private val edcProperties: EdcProperties,
     ) : HasLogger {
     private val webClient: WebClient = WebClient.create()
-
-    /**
-     * Set Connector endpoint dynamically, depending on the logged-in user and its organisation
-     * @return Connector endpoint as string
-     */
-    private fun setConnectorEndpoint(): String? {
-        val jwtAuthenticationToken = SecurityContextHolder.getContext().authentication as JwtAuthenticationToken
-        val jwt = jwtAuthenticationToken.token
-        val userGroups = jwt.claims["usergroup"] as? List<String>
-
-        val isAgBrainMember = userGroups?.contains("/AgBrain/Users") ?: false
-
-        val connectorEndpoint = if (isAgBrainMember) {
-            edcProperties.agbrainConnectorUrl
-        } else {
-            edcProperties.lmisConnectorUrl
-        }
-
-        return connectorEndpoint
-    }
 
     /**
      * Upload assetjson to MinIO.
@@ -200,10 +178,8 @@ class EdcIntegrationService(
     }
 
     private fun sendAssetRequest(assetJson: String) {
-        val connectorEndpoint = setConnectorEndpoint()
-
         this.webClient.post()
-            .uri("$connectorEndpoint/assets")
+            .uri("${edcProperties.lmisConnectorUrl}/assets")
             .contentType(MediaType.APPLICATION_JSON)
             .header("X-Api-Key", "password")
             .body(Mono.just(assetJson))
@@ -213,10 +189,8 @@ class EdcIntegrationService(
     }
 
     private fun sendPolicyRequest(policyJson: String) {
-        val connectorEndpoint = setConnectorEndpoint()
-
         this.webClient.post()
-            .uri("$connectorEndpoint/policydefinitions")
+            .uri("${edcProperties.lmisConnectorUrl}/policydefinitions")
             .contentType(MediaType.APPLICATION_JSON)
             .header("X-Api-Key", "password")
             .body(Mono.just(policyJson))
@@ -226,10 +200,8 @@ class EdcIntegrationService(
     }
 
     private fun sendContractDefinitionRequest(contractDefinitionJson: String) {
-        val connectorEndpoint = setConnectorEndpoint()
-
         this.webClient.post()
-            .uri("$connectorEndpoint/contractdefinitions")
+            .uri("${edcProperties.lmisConnectorUrl}/contractdefinitions")
             .contentType(MediaType.APPLICATION_JSON)
             .header("X-Api-Key", "password")
             .body(Mono.just(contractDefinitionJson))
@@ -239,10 +211,8 @@ class EdcIntegrationService(
     }
 
     private fun sendContractDefinitionDeleteRequest(contractDefinitionJson: String) {
-        val connectorEndpoint = setConnectorEndpoint()
-
         this.webClient.method(HttpMethod.DELETE)
-            .uri("$connectorEndpoint/contractdefinitions/$contractDefinitionJson")
+            .uri("${edcProperties.lmisConnectorUrl}/contractdefinitions/$contractDefinitionJson")
             .contentType(MediaType.APPLICATION_JSON)
             .header("X-Api-Key", "password")
             .retrieve()
@@ -251,10 +221,8 @@ class EdcIntegrationService(
     }
 
     private fun sendPolicyDeleteRequest(policyJson: String) {
-        val connectorEndpoint = setConnectorEndpoint()
-
         this.webClient.method(HttpMethod.DELETE)
-            .uri("$connectorEndpoint/policydefinitions/$policyJson")
+            .uri("${edcProperties.lmisConnectorUrl}/policydefinitions/$policyJson")
             .contentType(MediaType.APPLICATION_JSON)
             .header("X-Api-Key", "password")
             .retrieve()
@@ -263,10 +231,8 @@ class EdcIntegrationService(
     }
 
     private fun sendAssetDeleteRequest(assetJson: String) {
-        val connectorEndpoint = setConnectorEndpoint()
-
         this.webClient.method(HttpMethod.DELETE)
-            .uri("$connectorEndpoint/assets/$assetJson")
+            .uri("${edcProperties.lmisConnectorUrl}/assets/$assetJson")
             .header("X-Api-Key", "password")
             .retrieve()
             .bodyToMono(String::class.java)
