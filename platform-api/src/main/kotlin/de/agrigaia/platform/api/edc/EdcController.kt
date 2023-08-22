@@ -65,6 +65,7 @@ class EdcController @Autowired constructor(
             assetJsonDto.latitude,
             assetJsonDto.longitude,
             assetJsonDto.dateRange,
+            assetJsonDto.openApiDescription,
             assetJsonDto.dataAddressKeyName
         )
 
@@ -234,7 +235,8 @@ class EdcController @Autowired constructor(
             assetJsonDto.latitude,
             assetJsonDto.longitude,
             assetJsonDto.dateRange,
-            assetJsonDto.dataAddressKeyName
+            assetJsonDto.openApiDescription,
+            assetJsonDto.dataAddressKeyName,
         )
 
         val jwtToken = getJwtToken().tokenValue

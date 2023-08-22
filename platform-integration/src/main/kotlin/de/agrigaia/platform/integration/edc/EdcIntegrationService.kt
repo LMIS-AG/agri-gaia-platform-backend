@@ -20,7 +20,7 @@ import reactor.core.publisher.Mono
 class EdcIntegrationService(
     private val minioService: MinioService,
     private val edcProperties: EdcProperties,
-    ) : HasLogger {
+) : HasLogger {
     private val webClient: WebClient = WebClient.create()
 
     /**
@@ -164,14 +164,24 @@ class EdcIntegrationService(
         )
     }
 
-    fun publishAsset(assetJson: String, accessPolicyJson: String, contractPolicyJson: String, contractDefinitionJson: String) {
+    fun publishAsset(
+        assetJson: String,
+        accessPolicyJson: String,
+        contractPolicyJson: String,
+        contractDefinitionJson: String
+    ) {
         this.sendAssetRequest(assetJson)
         this.sendPolicyRequest(accessPolicyJson)
         this.sendPolicyRequest(contractPolicyJson)
         this.sendContractDefinitionRequest(contractDefinitionJson)
     }
 
-    fun unpublishAsset(assetJson: String, accessPolicyJson: String, contractPolicyJson: String, contractDefinitionJson: String) {
+    fun unpublishAsset(
+        assetJson: String,
+        accessPolicyJson: String,
+        contractPolicyJson: String,
+        contractDefinitionJson: String
+    ) {
         this.sendContractDefinitionDeleteRequest(contractDefinitionJson)
         this.sendPolicyDeleteRequest(accessPolicyJson)
         this.sendPolicyDeleteRequest(contractPolicyJson)

@@ -13,6 +13,7 @@ data class AssetJsonDto(
     val latitude: String?,
     val longitude: String?,
     val dateRange: String?,
+    val openApiDescription: String?,
     val dataAddressType: String?,
     val dataAddressRegion: String?,
     val dataAddressBucketName: String?,
