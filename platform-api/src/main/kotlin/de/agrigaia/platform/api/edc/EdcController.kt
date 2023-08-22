@@ -27,17 +27,6 @@ class EdcController @Autowired constructor(
     private val assetRepository: AssetRepository,
 ) : HasLogger, BaseController() {
 
-//    /**
-//     * Return a list of all assets from the user's Minio bucket.
-//     *
-//     * @return list of assets in MinIO user's bucket
-//     */
-//    @GetMapping("assetjsons")
-//    fun getAllAssetjsons(): ResponseEntity<List<String>> {
-//        TODO("Not yet implemented")
-//    }
-
-
     /**
      * Get an assetjson from the user's MinIO bucket.
      *
@@ -130,7 +119,8 @@ class EdcController @Autowired constructor(
     @PostMapping("policies")
     fun addPolicy(@RequestBody policyDto: PolicyDto) {
         val policyName: String = policyDto.name ?: throw BusinessException("name was null", ErrorType.BAD_REQUEST)
-        val policyType: PolicyType = policyDto.policyType ?: throw BusinessException("policyType was null", ErrorType.BAD_REQUEST)
+        val policyType: PolicyType =
+            policyDto.policyType ?: throw BusinessException("policyType was null", ErrorType.BAD_REQUEST)
         val policyJson: String = edcBusinessService.createPolicyJson(policyDto)
         val jwtTokenValue = getJwtToken().tokenValue
         val bucketName = getBucketName()
@@ -256,7 +246,12 @@ class EdcController @Autowired constructor(
         val contractPolicyUUID: String = this.edcBusinessService.extractIdfromPolicy(contractPolicyJson)
         val contractUUID = UUID.randomUUID().toString()
         val contractDefinitionJson =
-            edcBusinessService.createContractDefinitionJson(assetPropId, accessPolicyUUID, contractPolicyUUID, contractUUID)
+            edcBusinessService.createContractDefinitionJson(
+                assetPropId,
+                accessPolicyUUID,
+                contractPolicyUUID,
+                contractUUID
+            )
 
         this.edcIntegrationService.publishAsset(assetJson, accessPolicyJson, contractPolicyJson, contractDefinitionJson)
 
