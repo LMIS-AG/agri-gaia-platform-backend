@@ -8,6 +8,7 @@ import io.minio.errors.ErrorResponseException
 import org.springframework.http.HttpMethod
 import org.springframework.http.MediaType
 import org.springframework.stereotype.Service
+import org.springframework.web.reactive.function.client.ClientResponse
 import org.springframework.web.reactive.function.client.WebClient
 import org.springframework.web.reactive.function.client.body
 import reactor.core.publisher.Mono
@@ -19,7 +20,7 @@ import reactor.core.publisher.Mono
 class EdcIntegrationService(
     private val minioService: MinioService,
     private val edcProperties: EdcProperties,
-    ) : HasLogger {
+) : HasLogger {
     private val webClient: WebClient = WebClient.create()
 
     /**
@@ -163,14 +164,24 @@ class EdcIntegrationService(
         )
     }
 
-    fun publishAsset(assetJson: String, accessPolicyJson: String, contractPolicyJson: String, contractDefinitionJson: String) {
+    fun publishAsset(
+        assetJson: String,
+        accessPolicyJson: String,
+        contractPolicyJson: String,
+        contractDefinitionJson: String
+    ) {
         this.sendAssetRequest(assetJson)
         this.sendPolicyRequest(accessPolicyJson)
         this.sendPolicyRequest(contractPolicyJson)
         this.sendContractDefinitionRequest(contractDefinitionJson)
     }
 
-    fun unpublishAsset(assetJson: String, accessPolicyJson: String, contractPolicyJson: String, contractDefinitionJson: String) {
+    fun unpublishAsset(
+        assetJson: String,
+        accessPolicyJson: String,
+        contractPolicyJson: String,
+        contractDefinitionJson: String
+    ) {
         this.sendContractDefinitionDeleteRequest(contractDefinitionJson)
         this.sendPolicyDeleteRequest(accessPolicyJson)
         this.sendPolicyDeleteRequest(contractPolicyJson)
@@ -178,15 +189,27 @@ class EdcIntegrationService(
     }
 
     private fun sendAssetRequest(assetJson: String) {
-        this.webClient.post()
+        val request = this.webClient.post()
             .uri("${edcProperties.connectorUrl}/assets")
             .contentType(MediaType.APPLICATION_JSON)
             .header("X-Api-Key", "password")
             .body(Mono.just(assetJson))
-            .retrieve()
+
+        request.retrieve()
+            .onStatus({ it.is4xxClientError }, ::handleClientError)
+            .onStatus({ it.is5xxServerError }, ::handleServerError)
             .bodyToMono(String::class.java)
             .block()
     }
+
+    private fun handleClientError(clientResponse: ClientResponse): Mono<out Throwable>? {
+        return clientResponse.bodyToMono(String::class.java)
+            .doOnNext { getLogger().error("${clientResponse.statusCode()}: $it") }
+            .then(clientResponse.createException())
+    }
+
+    private fun handleServerError(clientResponse: ClientResponse): Mono<out Throwable>? =
+        handleClientError(clientResponse)
 
     private fun sendPolicyRequest(policyJson: String) {
         this.webClient.post()

@@ -26,6 +26,7 @@ class EdcServiceTest {
         val latitude = "someLatitude"
         val longitude = "someLongitude"
         val dateRange = "someDateRange"
+        val openApiDescription = "someOpenApiDescription"
         val dataAddressKeyName = "someDataAddressKeyName"
 
         val expected = """
@@ -40,7 +41,8 @@ class EdcServiceTest {
               "asset:prop:id": "someId",
               "theme": ["someAgrovocUri", "someAgrovocUri"],
               "spatial": "someGeoNamesUri",
-              "temporal": "someDateRange"
+              "temporal": "someDateRange",
+              "openApiDescription": "someOpenApiDescription"
             },
             "id": "someId"
           },
@@ -66,6 +68,7 @@ class EdcServiceTest {
             latitude,
             longitude,
             dateRange,
+            openApiDescription,
             dataAddressKeyName,
         )
         val expectedLines = expected.lines()
@@ -73,6 +76,5 @@ class EdcServiceTest {
         for (i in 0 until actualLines.size){
             assertEquals(expectedLines[i].trimStart(), actualLines[i].trimStart())
         }
-//        assertEquals(expected, actual)
     }
 }

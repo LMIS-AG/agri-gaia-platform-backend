@@ -107,6 +107,7 @@ class EdcBusinessService(
         latitude: String?,
         longitude: String?,
         dateRange: String?,
+        openApiDescription: String?,
         dataAddressKeyName: String?,
     ): String {
         val spatial = if (latitude.isNullOrEmpty() || longitude.isNullOrEmpty()) {
@@ -126,7 +127,7 @@ class EdcBusinessService(
                   "asset:prop:id": "$assetPropId",
                   "theme": ${agrovocKeywords?.map { w -> "\"${this.fusekiConnectorService.getConceptUriFromKeyword(w)}\"" }},
                   "spatial": ${spatial},
-                  "temporal": "${dateRange ?: ""}"
+                  "temporal": "${dateRange ?: ""}"${if (openApiDescription.isNullOrEmpty()) "" else ",\n                  \"openApiDescription\": \"$openApiDescription\""}
                 },
                 "id": "$assetPropId"
               },
