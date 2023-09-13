@@ -2,6 +2,7 @@ package de.agrigaia.platform.integration.edc
 
 import de.agrigaia.platform.common.HasLogger
 import de.agrigaia.platform.integration.minio.MinioService
+import de.agrigaia.platform.model.edc.Company
 import de.agrigaia.platform.model.edc.PolicyDto
 import de.agrigaia.platform.model.edc.PolicyType
 import io.minio.errors.ErrorResponseException
@@ -20,7 +21,7 @@ import reactor.core.publisher.Mono
 class EdcIntegrationService(
     private val minioService: MinioService,
     private val edcProperties: EdcProperties,
-) : HasLogger {
+    ) : HasLogger {
     private val webClient: WebClient = WebClient.create()
 
     /**
@@ -165,32 +166,54 @@ class EdcIntegrationService(
     }
 
     fun publishAsset(
+        company: Company,
         assetJson: String,
         accessPolicyJson: String,
         contractPolicyJson: String,
         contractDefinitionJson: String
     ) {
-        this.sendAssetRequest(assetJson)
-        this.sendPolicyRequest(accessPolicyJson)
-        this.sendPolicyRequest(contractPolicyJson)
-        this.sendContractDefinitionRequest(contractDefinitionJson)
+        val connectorUrl: String = connectorUrlByCompany(company)
+        this.sendAssetRequest(connectorUrl, assetJson)
+        this.sendPolicyRequest(connectorUrl, accessPolicyJson)
+        this.sendPolicyRequest(connectorUrl, contractPolicyJson)
+        this.sendContractDefinitionRequest(connectorUrl, contractDefinitionJson)
     }
 
     fun unpublishAsset(
+        company: Company,
         assetJson: String,
         accessPolicyJson: String,
         contractPolicyJson: String,
         contractDefinitionJson: String
     ) {
-        this.sendContractDefinitionDeleteRequest(contractDefinitionJson)
-        this.sendPolicyDeleteRequest(accessPolicyJson)
-        this.sendPolicyDeleteRequest(contractPolicyJson)
-        this.sendAssetDeleteRequest(assetJson)
+        val connectorUrl: String = connectorUrlByCompany(company)
+        this.sendContractDefinitionDeleteRequest(connectorUrl, contractDefinitionJson)
+        this.sendPolicyDeleteRequest(connectorUrl, accessPolicyJson)
+        this.sendPolicyDeleteRequest(connectorUrl, contractPolicyJson)
+        this.sendAssetDeleteRequest(connectorUrl, assetJson)
     }
 
-    private fun sendAssetRequest(assetJson: String) {
+    private fun connectorUrlByCompany(company: Company): String {
+        val connectorUrl: String? = when (company) {
+            Company.agBrain -> edcProperties.agBrain
+            Company.agrotechValley -> edcProperties.agrotechValley
+            Company.amazone -> edcProperties.amazone
+            Company.bosch -> edcProperties.bosch
+            Company.claas -> edcProperties.claas
+            Company.dfki -> edcProperties.dfki
+            Company.hsos -> edcProperties.hsos
+            Company.kotte -> edcProperties.kotte
+            Company.krone -> edcProperties.krone
+            Company.lmis -> edcProperties.lmis
+            Company.uos -> edcProperties.uos
+            Company.wernsing -> edcProperties.wernsing
+        }
+        return connectorUrl ?: throw Exception("No connector URL found for company $company")
+    }
+
+    private fun sendAssetRequest(connectorUrl: String, assetJson: String) {
         val request = this.webClient.post()
-            .uri("${edcProperties.connectorUrl}/assets")
+            .uri("${connectorUrl}/assets")
             .contentType(MediaType.APPLICATION_JSON)
             .header("X-Api-Key", "password")
             .body(Mono.just(assetJson))
@@ -211,9 +234,9 @@ class EdcIntegrationService(
     private fun handleServerError(clientResponse: ClientResponse): Mono<out Throwable>? =
         handleClientError(clientResponse)
 
-    private fun sendPolicyRequest(policyJson: String) {
+    private fun sendPolicyRequest(connectorUrl: String, policyJson: String) {
         this.webClient.post()
-            .uri("${edcProperties.connectorUrl}/policydefinitions")
+            .uri("${connectorUrl}/policydefinitions")
             .contentType(MediaType.APPLICATION_JSON)
             .header("X-Api-Key", "password")
             .body(Mono.just(policyJson))
@@ -222,9 +245,9 @@ class EdcIntegrationService(
             .block()
     }
 
-    private fun sendContractDefinitionRequest(contractDefinitionJson: String) {
+    private fun sendContractDefinitionRequest(connectorUrl: String, contractDefinitionJson: String) {
         this.webClient.post()
-            .uri("${edcProperties.connectorUrl}/contractdefinitions")
+            .uri("${connectorUrl}/contractdefinitions")
             .contentType(MediaType.APPLICATION_JSON)
             .header("X-Api-Key", "password")
             .body(Mono.just(contractDefinitionJson))
@@ -233,9 +256,9 @@ class EdcIntegrationService(
             .block()
     }
 
-    private fun sendContractDefinitionDeleteRequest(contractDefinitionJson: String) {
+    private fun sendContractDefinitionDeleteRequest(connectorUrl: String, contractDefinitionJson: String) {
         this.webClient.method(HttpMethod.DELETE)
-            .uri("${edcProperties.connectorUrl}/contractdefinitions/$contractDefinitionJson")
+            .uri("${connectorUrl}/contractdefinitions/$contractDefinitionJson")
             .contentType(MediaType.APPLICATION_JSON)
             .header("X-Api-Key", "password")
             .retrieve()
@@ -243,9 +266,9 @@ class EdcIntegrationService(
             .block()
     }
 
-    private fun sendPolicyDeleteRequest(policyJson: String) {
+    private fun sendPolicyDeleteRequest(connectorUrl: String, policyJson: String) {
         this.webClient.method(HttpMethod.DELETE)
-            .uri("${edcProperties.connectorUrl}/policydefinitions/$policyJson")
+            .uri("${connectorUrl}/policydefinitions/$policyJson")
             .contentType(MediaType.APPLICATION_JSON)
             .header("X-Api-Key", "password")
             .retrieve()
@@ -253,9 +276,9 @@ class EdcIntegrationService(
             .block()
     }
 
-    private fun sendAssetDeleteRequest(assetJson: String) {
+    private fun sendAssetDeleteRequest(connectorUrl: String, assetJson: String) {
         this.webClient.method(HttpMethod.DELETE)
-            .uri("${edcProperties.connectorUrl}/assets/$assetJson")
+            .uri("${connectorUrl}/assets/$assetJson")
             .header("X-Api-Key", "password")
             .retrieve()
             .bodyToMono(String::class.java)
