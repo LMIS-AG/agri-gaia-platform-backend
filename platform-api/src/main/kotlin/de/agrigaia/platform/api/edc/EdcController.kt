@@ -29,7 +29,6 @@ class EdcController @Autowired constructor(
     private val assetRepository: AssetRepository,
 ) : HasLogger, BaseController() {
 
-
     /**
      * Get an assetjson from the user's MinIO bucket.
      *
@@ -68,6 +67,7 @@ class EdcController @Autowired constructor(
             assetJsonDto.latitude,
             assetJsonDto.longitude,
             assetJsonDto.dateRange,
+            assetJsonDto.openApiDescription,
             assetJsonDto.dataAddressKeyName
         )
 
@@ -243,7 +243,8 @@ class EdcController @Autowired constructor(
             assetJsonDto.latitude,
             assetJsonDto.longitude,
             assetJsonDto.dateRange,
-            assetJsonDto.dataAddressKeyName
+            assetJsonDto.openApiDescription,
+            assetJsonDto.dataAddressKeyName,
         )
 
         val jwtToken = getJwtToken().tokenValue
