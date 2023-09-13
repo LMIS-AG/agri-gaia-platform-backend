@@ -195,8 +195,8 @@ class EdcIntegrationService(
 
     private fun connectorUrlByCompany(company: Company): String {
         val connectorUrl: String? = when (company) {
-            Company.agBrain -> edcProperties.agBrain
-            Company.agrotechValley -> edcProperties.agrotechValley
+            Company.agbrain -> edcProperties.agBrain
+            Company.agrotechvalley -> edcProperties.agrotechValley
             Company.amazone -> edcProperties.amazone
             Company.bosch -> edcProperties.bosch
             Company.claas -> edcProperties.claas
