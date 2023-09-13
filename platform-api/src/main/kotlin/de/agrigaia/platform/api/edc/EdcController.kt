@@ -285,12 +285,18 @@ class EdcController @Autowired constructor(
     }
 
     private fun getUserCompany(authentication: Authentication): Company {
-        val companyString: String = authentication.authorities
-            .asSequence()
-            .map { it.authority }
-            .filter { it.contains("company-") }
-            .map { it.removePrefix("company-") }.distinct().first().lowercase()
-        return Company.valueOf(companyString)
+        val companyStrings: List<String> = authentication.authorities
+            .map { it.authority.lowercase() }
+            .filter { it.contains("company-") && !it.contains("agri") }
+            .map { it.removePrefix("company-") }.distinct()
+        getLogger().error("Extracted companies: $companyStrings")
+        if (companyStrings.size != 1) {
+            throw BusinessException(
+                "User is member of ${companyStrings.size} companies. Cannot determine correct EDC.",
+                ErrorType.BAD_REQUEST
+            )
+        }
+        return Company.valueOf(companyStrings.first())
     }
 
     private fun getJwtToken(): Jwt {
