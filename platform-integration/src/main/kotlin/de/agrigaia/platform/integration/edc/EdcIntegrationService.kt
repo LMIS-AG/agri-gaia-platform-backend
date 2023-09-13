@@ -212,7 +212,7 @@ class EdcIntegrationService(
     }
 
     private fun sendAssetRequest(connectorUrl: String, assetJson: String) {
-        this.webClient.post()
+        val request = this.webClient.post()
             .uri("${connectorUrl}/assets")
             .contentType(MediaType.APPLICATION_JSON)
             .header("X-Api-Key", "password")
