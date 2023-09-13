@@ -289,7 +289,6 @@ class EdcController @Autowired constructor(
             .map { it.authority.lowercase() }
             .filter { it.contains("company-") && !it.contains("agri") }
             .map { it.removePrefix("company-") }.distinct()
-        getLogger().error("Extracted companies: $companyStrings")
         if (companyStrings.size != 1) {
             throw BusinessException(
                 "User is member of ${companyStrings.size} companies. Cannot determine correct EDC.",
