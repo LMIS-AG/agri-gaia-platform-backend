@@ -1,8 +1,8 @@
 package de.agrigaia.platform.model.edc
 
 enum class Company {
-    agBrain,
-    agrotechValley,
+    agbrain,
+    agrotechvalley,
     amazone,
     bosch,
     claas,
