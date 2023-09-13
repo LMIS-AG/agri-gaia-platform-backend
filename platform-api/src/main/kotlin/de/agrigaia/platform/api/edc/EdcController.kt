@@ -7,12 +7,14 @@ import de.agrigaia.platform.business.errors.ErrorType
 import de.agrigaia.platform.common.HasLogger
 import de.agrigaia.platform.integration.edc.EdcIntegrationService
 import de.agrigaia.platform.model.edc.Asset
+import de.agrigaia.platform.model.edc.Company
 import de.agrigaia.platform.model.edc.PolicyDto
 import de.agrigaia.platform.model.edc.PolicyType
 import de.agrigaia.platform.persistence.repository.AssetRepository
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
+import org.springframework.security.core.Authentication
 import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.security.oauth2.jwt.Jwt
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken
@@ -191,7 +193,11 @@ class EdcController @Autowired constructor(
 
     @DeleteMapping("unpublish/{bucketName}/{assetName}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    fun unpublishAsset(@PathVariable bucketName: String, @PathVariable assetName: String) {
+    fun unpublishAsset(
+        @PathVariable bucketName: String,
+        @PathVariable assetName: String,
+        authentication: Authentication,
+    ) {
 
         val asset: Asset = assetRepository.findByBucketAndName(bucketName, assetName)
             ?: throw BusinessException("Asset was null", ErrorType.BAD_REQUEST)
@@ -206,7 +212,8 @@ class EdcController @Autowired constructor(
             ?: throw BusinessException("contractId was null", ErrorType.BAD_REQUEST)
 
         assetRepository.delete(asset)
-        this.edcIntegrationService.unpublishAsset(assetId, accessPolicyId, contractPolicyId, contractId)
+        val company: Company = getUserCompany(authentication)
+        this.edcIntegrationService.unpublishAsset(company, assetId, accessPolicyId, contractPolicyId, contractId)
     }
 
     @PostMapping("publish/{bucketName}/{assetName}/{accessPolicyName}/{contractPolicyName}")
@@ -217,6 +224,7 @@ class EdcController @Autowired constructor(
         @PathVariable accessPolicyName: String,
         @PathVariable contractPolicyName: String,
         @RequestBody assetJsonDto: AssetJsonDto,
+        authentication: Authentication,
     ) {
         val assetPropName: String =
             assetJsonDto.assetPropName ?: throw BusinessException("No asset name in AssetJsonDto.", ErrorType.NOT_FOUND)
@@ -255,10 +263,17 @@ class EdcController @Autowired constructor(
                 contractUUID
             )
 
-        this.edcIntegrationService.publishAsset(assetJson, accessPolicyJson, contractPolicyJson, contractDefinitionJson)
+        val company: Company = getUserCompany(authentication)
+        this.edcIntegrationService.publishAsset(
+            company,
+            assetJson,
+            accessPolicyJson,
+            contractPolicyJson,
+            contractDefinitionJson
+        )
 
+        // TODO: This is so redundant.
         val publishedAsset = Asset()
-
         publishedAsset.bucket = bucketName
         publishedAsset.name = assetName
         publishedAsset.assetId = assetPropId
@@ -267,6 +282,20 @@ class EdcController @Autowired constructor(
         publishedAsset.contractId = contractUUID
 
         assetRepository.save(publishedAsset)
+    }
+
+    private fun getUserCompany(authentication: Authentication): Company {
+        val companyStrings: List<String> = authentication.authorities
+            .map { it.authority.lowercase() }
+            .filter { it.contains("company-") && !it.contains("agri") }
+            .map { it.removePrefix("company-") }.distinct()
+        if (companyStrings.size != 1) {
+            throw BusinessException(
+                "User is member of ${companyStrings.size} companies. Cannot determine correct EDC.",
+                ErrorType.BAD_REQUEST
+            )
+        }
+        return Company.valueOf(companyStrings.first())
     }
 
     private fun getJwtToken(): Jwt {
