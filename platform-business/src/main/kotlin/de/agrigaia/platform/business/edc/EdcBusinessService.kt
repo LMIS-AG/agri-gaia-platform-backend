@@ -31,7 +31,7 @@ class EdcBusinessService(
         return """
             {
                 "uid": "use-eu",
-                "id": "${policyDto.name}",
+                "id": "${policyDto.name}-<UUID>",
                 "policy": {
                     "permissions": [
                         {

@@ -13,6 +13,7 @@ import org.springframework.web.reactive.function.client.ClientResponse
 import org.springframework.web.reactive.function.client.WebClient
 import org.springframework.web.reactive.function.client.body
 import reactor.core.publisher.Mono
+import java.util.*
 
 /**
  * Service communicating with EDC directly.
@@ -23,7 +24,6 @@ class EdcIntegrationService(
     private val edcProperties: EdcProperties,
 ) : HasLogger {
     private val webClient: WebClient = WebClient.create()
-
     /**
      * Upload assetjson to MinIO.
      */
@@ -292,7 +292,9 @@ class EdcIntegrationService(
      * @return String containing the policy JSON with correct field values for asset.
      */
     private fun fillInPolicyTemplate(policyTemplate: String, target: String): String {
-        return policyTemplate.replace("<TARGET>", target)
+        return policyTemplate
+            .replace("<TARGET>", target)
+            .replace("<UUID>", UUID.randomUUID().toString())
     }
 
     private fun policyPathToName(policyPath: String): String {
