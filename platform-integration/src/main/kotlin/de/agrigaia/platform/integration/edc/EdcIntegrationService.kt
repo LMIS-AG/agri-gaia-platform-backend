@@ -11,7 +11,7 @@ import org.springframework.stereotype.Service
 import org.springframework.web.reactive.function.client.WebClient
 import org.springframework.web.reactive.function.client.body
 import reactor.core.publisher.Mono
-import java.util.UUID
+import java.util.*
 
 /**
  * Service communicating with EDC directly.
@@ -110,7 +110,7 @@ class EdcIntegrationService(
      */
     fun getPolicyforAsset(jwtTokenValue: String, bucketName: String, policyName: String, assetName: String): String {
         val policyTemplate: String = getPolicyJson(jwtTokenValue, bucketName, policyName)
-        return fillInPolicyTemplate(policyTemplate, assetName, policyName)
+        return fillInPolicyTemplate(policyTemplate, assetName)
     }
 
     /**
@@ -245,10 +245,10 @@ class EdcIntegrationService(
      * @param target value to set target field to
      * @return String containing the policy JSON with correct field values for asset.
      */
-    private fun fillInPolicyTemplate(policyTemplate: String, target: String, policyName: String): String {
+    private fun fillInPolicyTemplate(policyTemplate: String, target: String): String {
         return policyTemplate
             .replace("<TARGET>", target)
-            .replace(policyName, "${policyName}-${UUID.randomUUID()}")
+            .replace("<UUID>", UUID.randomUUID().toString())
     }
 
     private fun policyPathToName(policyPath: String): String {
