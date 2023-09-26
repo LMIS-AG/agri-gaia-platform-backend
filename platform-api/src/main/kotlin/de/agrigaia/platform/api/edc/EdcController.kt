@@ -212,7 +212,7 @@ class EdcController @Autowired constructor(
             ?: throw BusinessException("contractId was null", ErrorType.BAD_REQUEST)
 
         assetRepository.delete(asset)
-        val company: Company = getUserCompany(authentication)
+        val company: Company = getUserCompany()
         this.edcIntegrationService.unpublishAsset(company, assetId, accessPolicyId, contractPolicyId, contractId)
     }
 
@@ -263,7 +263,7 @@ class EdcController @Autowired constructor(
                 contractUUID
             )
 
-        val company: Company = getUserCompany(authentication)
+        val company: Company = getUserCompany()
         this.edcIntegrationService.publishAsset(
             company,
             assetJson,
@@ -284,19 +284,34 @@ class EdcController @Autowired constructor(
         assetRepository.save(publishedAsset)
     }
 
-    private fun getUserCompany(authentication: Authentication): Company {
-        val companyStrings: List<String> = authentication.authorities
-            .map { it.authority.lowercase() }
-            .filter { it.contains("company-") && !it.contains("agri") }
-            .map { it.removePrefix("company-") }.distinct()
-        if (companyStrings.size != 1) {
-            throw BusinessException(
-                "User is member of ${companyStrings.size} companies. Cannot determine correct EDC.",
-                ErrorType.BAD_REQUEST
-            )
+    private fun getUserCompany(): Company {
+        val jwtAuthenticationToken = SecurityContextHolder.getContext().authentication as JwtAuthenticationToken
+        val usergroups = jwtAuthenticationToken.token.claims["usergroup"] as? List<String> ?: emptyList()
+
+        val companyNames: List<Company> = usergroups.mapNotNull { usergroup ->
+            val parts = usergroup.split("/")
+            if (parts[2] == "Users" && parts[1] != "AgriGaia") {
+                Company.valueOf(parts[1].lowercase())
+            } else {
+                null
+            }
         }
-        return Company.valueOf(companyStrings.first())
+
+        return companyNames.first()
     }
+
+//        val companyStrings: List<String> = authentication.authorities
+//            .map { it.authority.lowercase() }
+//            .filter { it.contains("company-") && !it.contains("agri") }
+//            .map { it.removePrefix("company-") }.distinct()
+//        if (companyStrings.size != 1) {
+//            throw BusinessException(
+//                "User is member of ${companyStrings.size} companies. Cannot determine correct EDC.",
+//                ErrorType.BAD_REQUEST
+//            )
+//        }
+//        return Company.valueOf(companyStrings.first())
+//    }
 
     private fun getJwtToken(): Jwt {
         val jwtAuthenticationToken = SecurityContextHolder.getContext().authentication as JwtAuthenticationToken
