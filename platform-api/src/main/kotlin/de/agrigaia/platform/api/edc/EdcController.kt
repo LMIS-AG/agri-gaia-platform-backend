@@ -290,16 +290,18 @@ class EdcController @Autowired constructor(
         val userGroupsAny: List<*> = userGroupsClaim as List<*>
         val userGroupsString: List<String> = userGroupsAny.filterIsInstance<String>()
 
-        val companyNames: List<Company> = userGroupsString.mapNotNull { usergroup ->
+        return extractUserCompanyFromUsergroups(userGroupsString)
+    }
+
+    public fun extractUserCompanyFromUsergroups(userGroupsString: List<String>): Company {
+        return userGroupsString.mapNotNull { usergroup ->
             val parts = usergroup.split("/")
             if (parts[2] == "Users" && parts[1] != "AgriGaia") {
                 Company.valueOf(parts[1].lowercase())
             } else {
                 null
             }
-        }
-
-        return companyNames.first()
+        }.first()
     }
 
 //        val companyStrings: List<String> = authentication.authorities
