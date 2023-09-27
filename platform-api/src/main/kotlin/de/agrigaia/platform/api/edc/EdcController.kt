@@ -286,7 +286,7 @@ class EdcController @Autowired constructor(
 
     private fun getUserCompany(): Company {
         val jwtAuthenticationToken = SecurityContextHolder.getContext().authentication as JwtAuthenticationToken
-        val userGroupsClaim: Any? = jwtAuthenticationToken.token.claims["usergroup"]
+        val userGroupsClaim: Any = jwtAuthenticationToken.token.claims["usergroup"] ?: throw BusinessException("Could not extract usergroup claim from jwt.", ErrorType.BAD_REQUEST)
         val userGroupsAny: List<*> = userGroupsClaim as List<*>
         val userGroupsString: List<String> = userGroupsAny.filterIsInstance<String>()
 
