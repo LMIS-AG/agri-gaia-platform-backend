@@ -170,14 +170,19 @@ class EdcBusinessService(
     }
 
     fun extractUserCompanyFromUserGroups(userGroupsString: List<String>): Company {
-        return userGroupsString.mapNotNull { usergroup ->
-            val parts = usergroup.split("/")
-            if (parts[2] == "Users" && parts[1] != "AgriGaia") {
-                Company.valueOf(parts[1].lowercase())
-            } else {
-                null
-            }
-        }.first()
+        val filteredUserGroups: List<String> = userGroupsString
+            .map { it.lowercase() }
+            .filter { it.contains("users") && !it.contains("agrigaia") }
+        if (filteredUserGroups.isEmpty()) {
+            throw BusinessException("User is not in any company.", ErrorType.BAD_REQUEST)
+        }
+        if (filteredUserGroups.size > 1) {
+            throw BusinessException(
+                "User is member of ${filteredUserGroups.size} companies, cannot determin correct EDC.",
+                ErrorType.BAD_REQUEST,
+            )
+        }
+        return Company.valueOf(filteredUserGroups.first().split("/")[1])
     }
 
 }
