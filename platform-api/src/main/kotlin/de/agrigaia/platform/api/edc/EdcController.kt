@@ -290,7 +290,7 @@ class EdcController @Autowired constructor(
         val userGroupsAny: List<*> = userGroupsClaim as List<*>
         val userGroupsString: List<String> = userGroupsAny.filterIsInstance<String>()
 
-        return edcBusinessService.extractUserCompanyFromUsergroups(userGroupsString)
+        return edcBusinessService.extractUserCompanyFromUserGroups(userGroupsString)
     }
 
 //        val companyStrings: List<String> = authentication.authorities

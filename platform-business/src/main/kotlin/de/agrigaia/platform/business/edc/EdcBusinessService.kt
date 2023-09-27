@@ -169,7 +169,7 @@ class EdcBusinessService(
         return idLine.substringBeforeLast("\"").substringAfterLast("\"")
     }
 
-    fun extractUserCompanyFromUsergroups(userGroupsString: List<String>): Company {
+    fun extractUserCompanyFromUserGroups(userGroupsString: List<String>): Company {
         return userGroupsString.mapNotNull { usergroup ->
             val parts = usergroup.split("/")
             if (parts[2] == "Users" && parts[1] != "AgriGaia") {
