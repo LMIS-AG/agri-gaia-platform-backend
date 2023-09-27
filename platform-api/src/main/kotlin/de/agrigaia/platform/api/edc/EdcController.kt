@@ -286,9 +286,11 @@ class EdcController @Autowired constructor(
 
     private fun getUserCompany(): Company {
         val jwtAuthenticationToken = SecurityContextHolder.getContext().authentication as JwtAuthenticationToken
-        val usergroups = jwtAuthenticationToken.token.claims["usergroup"] as? List<String> ?: emptyList()
+        val userGroupsClaim: Any? = jwtAuthenticationToken.token.claims["usergroup"]
+        val userGroupsAny: List<*> = userGroupsClaim as List<*>
+        val userGroupsString: List<String> = userGroupsAny.filterIsInstance<String>()
 
-        val companyNames: List<Company> = usergroups.mapNotNull { usergroup ->
+        val companyNames: List<Company> = userGroupsString.mapNotNull { usergroup ->
             val parts = usergroup.split("/")
             if (parts[2] == "Users" && parts[1] != "AgriGaia") {
                 Company.valueOf(parts[1].lowercase())
