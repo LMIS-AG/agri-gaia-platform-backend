@@ -4,6 +4,7 @@ import de.agrigaia.platform.business.errors.BusinessException
 import de.agrigaia.platform.business.errors.ErrorType
 import de.agrigaia.platform.common.HasLogger
 import de.agrigaia.platform.integration.fuseki.FusekiConnectorService
+import de.agrigaia.platform.model.edc.Company
 import de.agrigaia.platform.model.edc.ConstraintDto
 import de.agrigaia.platform.model.edc.PolicyDto
 import org.springframework.stereotype.Service
@@ -167,4 +168,16 @@ class EdcBusinessService(
             ?: throw BusinessException("Could not extract id from policy.", ErrorType.UNKNOWN)
         return idLine.substringBeforeLast("\"").substringAfterLast("\"")
     }
+
+    fun extractUserCompanyFromUsergroups(userGroupsString: List<String>): Company {
+        return userGroupsString.mapNotNull { usergroup ->
+            val parts = usergroup.split("/")
+            if (parts[2] == "Users" && parts[1] != "AgriGaia") {
+                Company.valueOf(parts[1].lowercase())
+            } else {
+                null
+            }
+        }.first()
+    }
+
 }
